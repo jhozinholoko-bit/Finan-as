@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Finanças 2026 | Sistema Victor</title>
+<title>Finanças 2026 | Victor Secure</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -63,14 +62,11 @@
 </div>
 
 <div class="kpi-grid" id="kpiGrid"></div>
-
 <div class="panel"><div class="panel-title">Evolução Anual</div><canvas id="barChart"></canvas></div>
-
 <div class="panel"><div class="panel-title">Renda Mensal</div><div id="rendaSection"></div><button class="add-row-btn" onclick="addRow('renda')">+ Nova Renda</button></div>
 <div class="panel"><div class="panel-title">Despesas Fixas</div><div id="fixasSection"></div><button class="add-row-btn" onclick="addRow('fixas')">+ Nova Fixa</button></div>
 <div class="panel"><div class="panel-title">Temporárias</div><div id="tempSection"></div><button class="add-row-btn" onclick="addRow('temp')">+ Nova Temporária</button></div>
 <div class="panel"><div class="panel-title">A Receber</div><div id="descontosSection"></div><button class="add-row-btn" onclick="addRow('descontos')">+ Novo Desconto</button></div>
-
 <div class="toast" id="toast">✓ SINCRONIZADO!</div>
 
 <script>
@@ -85,6 +81,7 @@ document.getElementById('userLabel').innerText = `DASHBOARD: ${CURRENT_USER.toUp
 const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 let activeMes = new Date().getMonth(); 
 let appData = null;
+let userPassword = "";
 let barInst;
 
 const createEmptyData = () => {
@@ -94,15 +91,28 @@ const createEmptyData = () => {
 };
 
 async function loadFromCloud() {
-  const { data } = await _supabase.from('registros').select('dados').eq('usuario', CURRENT_USER).maybeSingle();
-  appData = data ? data.dados : createEmptyData();
+  const { data } = await _supabase.from('registros').select('dados, senha').eq('usuario', CURRENT_USER).maybeSingle();
+  
+  if (data && data.senha) {
+    const p = prompt(`Senha para ${CURRENT_USER}:`);
+    if (p !== data.senha) { alert("Senha incorreta!"); document.body.innerHTML = "<h1>Acesso Negado</h1>"; return; }
+    userPassword = data.senha;
+  } else {
+    userPassword = prompt(`Novo usuário detectado (${CURRENT_USER}). Defina uma senha:`);
+    if (!userPassword) { location.reload(); return; }
+  }
+
+  appData = (data && data.dados) ? data.dados : createEmptyData();
   render();
 }
 
 async function saveToCloud() {
   const btn = document.querySelector('.save-btn');
   btn.innerText = 'SALVANDO...';
-  const { error } = await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: appData }, { onConflict: 'usuario' });
+  const { error } = await _supabase.from('registros').upsert({ 
+    usuario: CURRENT_USER, dados: appData, senha: userPassword 
+  }, { onConflict: 'usuario' });
+  
   if (!error) {
     document.getElementById('saveBadge').classList.remove('show');
     btn.innerText = 'SALVAR NUVEM';
@@ -113,17 +123,12 @@ async function saveToCloud() {
 
 function addRow(cat) {
   const n = prompt("Nome do item:");
-  if(n) {
-    appData[MONTHS[activeMes]][cat][n] = 0;
-    render();
-    document.getElementById('saveBadge').classList.add('show');
-  }
+  if(n) { appData[MONTHS[activeMes]][cat][n] = 0; render(); document.getElementById('saveBadge').classList.add('show'); }
 }
 
 function deleteItem(cat, key) {
   if(confirm(`Excluir "${key}" em ${MONTHS[activeMes]}?`)) {
-    delete appData[MONTHS[activeMes]][cat][key];
-    render();
+    delete appData[MONTHS[activeMes]][cat][key]; render();
     document.getElementById('saveBadge').classList.add('show');
   }
 }
@@ -132,8 +137,7 @@ function togglePaid(key) {
   const mes = MONTHS[activeMes];
   if(!appData[mes].paid) appData[mes].paid = {};
   appData[mes].paid[key] = !appData[mes].paid[key];
-  render();
-  document.getElementById('saveBadge').classList.add('show');
+  render(); document.getElementById('saveBadge').classList.add('show');
 }
 
 function updateName(cat, oldKey, newKey) {
@@ -142,18 +146,15 @@ function updateName(cat, oldKey, newKey) {
   appData[mes][cat][newKey] = appData[mes][cat][oldKey];
   delete appData[mes][cat][oldKey];
   if(appData[mes].paid && appData[mes].paid[oldKey]) {
-    appData[mes].paid[newKey] = true;
-    delete appData[mes].paid[oldKey];
+    appData[mes].paid[newKey] = true; delete appData[mes].paid[oldKey];
   }
-  render();
-  document.getElementById('saveBadge').classList.add('show');
+  render(); document.getElementById('saveBadge').classList.add('show');
 }
 
 function render() {
   const mes = MONTHS[activeMes];
   const d = appData[mes];
   const sum = (cat) => Object.values(d[cat]).reduce((a,v) => a + (parseFloat(v)||0), 0);
-  
   const r = sum('renda'), f = sum('fixas'), t = sum('temp'), desc = sum('descontos');
   const desp = f + t, saldo = (r + desc) - desp;
 
@@ -165,38 +166,30 @@ function render() {
   const build = (id, cat) => {
     const w = document.getElementById(id); w.innerHTML = '';
     const groups = {};
-    
     Object.entries(d[cat]).forEach(([k,v]) => {
       const split = k.split(':');
       if(split.length > 1) {
-        const groupName = split[0].trim().toUpperCase();
-        if(!groups[groupName]) groups[groupName] = { total: 0, items: [] };
-        groups[groupName].total += parseFloat(v) || 0;
-        groups[groupName].items.push([k, v]);
-      } else {
-        renderRow(w, cat, k, v);
-      }
+        const gName = split[0].trim().toUpperCase();
+        if(!groups[gName]) groups[gName] = { total: 0, items: [] };
+        groups[gName].total += parseFloat(v) || 0; groups[gName].items.push([k, v]);
+      } else { renderRow(w, cat, k, v); }
     });
-
     Object.entries(groups).forEach(([name, data]) => {
-      const gHeader = document.createElement('div');
-      gHeader.className = 'group-header';
-      gHeader.innerHTML = `<span>📂 ${name}</span> <span style="float:right">Total: R$ ${data.total.toLocaleString('pt-BR')}</span>`;
-      w.appendChild(gHeader);
+      const gH = document.createElement('div'); gH.className = 'group-header';
+      gH.innerHTML = `<span>📂 ${name}</span> <span style="float:right">R$ ${data.total.toLocaleString('pt-BR')}</span>`;
+      w.appendChild(gH);
       data.items.forEach(([k,v]) => renderRow(w, cat, k, v));
     });
   };
 
   const renderRow = (w, cat, k, v) => {
     const isPaid = d.paid && d.paid[k];
-    const row = document.createElement('div');
-    row.className = `edit-row ${isPaid?'paid':''}`;
+    const row = document.createElement('div'); row.className = `edit-row ${isPaid?'paid':''}`;
     row.innerHTML = `
       <div class="check-circle ${isPaid?'checked':''}" onclick="togglePaid('${k}')">${isPaid?'✓':''}</div>
       <div class="edit-name" contenteditable="true" onblur="updateName('${cat}', '${k}', this.innerText)">${k}</div>
       <input class="edit-input" type="number" step="0.01" value="${v}">
       <button class="del-btn" onclick="deleteItem('${cat}', '${k}')">✕</button>`;
-    
     row.querySelector('.edit-input').onchange = (e) => {
       appData[mes][cat][k] = parseFloat(e.target.value) || 0;
       document.getElementById('saveBadge').classList.add('show');
@@ -217,8 +210,7 @@ function render() {
 }
 
 function updateKPIsOnly() {
-  const mes = MONTHS[activeMes];
-  const d = appData[mes];
+  const mes = MONTHS[activeMes]; const d = appData[mes];
   const sum = (cat) => Object.values(d[cat]).reduce((a,v) => a + (parseFloat(v)||0), 0);
   const r = sum('renda'), f = sum('fixas'), t = sum('temp'), desc = sum('descontos');
   const desp = f + t, saldo = (r + desc) - desp;
@@ -239,7 +231,6 @@ function updateKPIsOnly() {
     options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: '#5a6070', font: { size: 9 } }, grid: { display: false } } } }
   });
 }
-
 window.onload = loadFromCloud;
 </script>
 </body>
