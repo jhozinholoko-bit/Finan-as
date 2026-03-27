@@ -20,24 +20,19 @@
     --text: #2b2d42;
   }
   body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; padding: 20px 15px 60px; transition: 0.3s; }
-  
   #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .login-card { background: var(--surface); padding: 30px; border: 1px solid var(--border); border-radius: 8px; width: 100%; max-width: 350px; text-align: center; }
   .login-input { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; width: 100%; margin: 15px 0; border-radius: 4px; font-family: var(--font-mono); outline: none; }
   .login-btn { background: var(--accent); color: #000; border: none; padding: 12px; width: 100%; font-weight: 700; cursor: pointer; border-radius: 4px; }
-
   .header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
   .header-title h1 { font-family: var(--font-head); font-size: clamp(20px, 5vw, 36px); font-weight: 800; letter-spacing: -1px; }
   .header-title h1 span { color: var(--accent); }
-  
   .tools-row { display: flex; gap: 8px; align-items: center; margin-top: 5px; }
   .btn-ui { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 10px; text-transform: uppercase; }
-
   .nav-area { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
   .month-nav { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
   .month-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 5px 9px; cursor: pointer; text-transform: uppercase; border-radius: 2px; }
   .month-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
-  
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
   .kpi-card { background: var(--surface); border: 1px solid var(--border); padding: 15px; position: relative; border-radius: 4px; }
   .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
@@ -46,22 +41,18 @@
   .kpi-card.yellow::before { background: var(--accent3); }
   .kpi-label { font-size: 9px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
   .kpi-value { font-family:var(--font-head); font-size: 22px; font-weight: 700; }
-
   .panel { background: var(--surface); border: 1px solid var(--border); padding: 15px; margin-bottom: 10px; border-radius: 4px; }
   .panel-title { font-size: 9px; text-transform: uppercase; color: var(--muted); margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
   .panel-title::after { content:''; flex: 1; height: 1px; background: var(--border); }
-  
   .edit-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); gap: 10px; }
   .edit-row.paid { opacity: 0.4; }
-  .check-circle { width: 18px; height: 18px; border: 1px solid var(--muted); border-radius: 50%; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+  .check-circle { width: 18px; height: 18px; border: 1px solid var(--muted); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; }
   .check-circle.checked { background: var(--accent); border-color: var(--accent); color: #000; }
   .edit-name { flex: 1; font-size: 11px; outline: none; }
   .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 11px; text-align: right; width: 80px; }
-  
   .group-header { font-size: 10px; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
   .group-content { display: none; padding-left: 15px; border-left: 1px solid var(--border); }
   .group-content.open { display: block; }
-
   .add-row-btn { background: none; border: 1px dashed var(--border); color: var(--muted); font-size: 9px; padding: 10px; width: 100%; cursor: pointer; margin-top: 10px; text-transform: uppercase; border-radius: 4px; }
   .save-badge { display: none; align-items: center; gap: 6px; font-size: 10px; color: var(--accent3); margin-bottom: 5px; }
   .save-badge.show { display: flex; }
@@ -70,16 +61,13 @@
 </style>
 </head>
 <body>
-
 <div id="loginOverlay">
   <div class="login-card">
     <h2 style="font-family: 'Syne'; margin-bottom: 5px;">FINANÇAS <span>2026</span></h2>
-    <p style="font-size: 10px; color: var(--muted);">ACESSO MULTI-USUÁRIO</p>
     <input type="text" id="userInput" class="login-input" placeholder="Seu nome de usuário...">
-    <button class="login-btn" onclick="initApp()">ENTRAR NO DASHBOARD</button>
+    <button class="login-btn" onclick="initApp()">ENTRAR</button>
   </div>
 </div>
-
 <div class="header">
   <div class="header-title">
     <h1>FINANÇAS <span>2026</span></h1>
@@ -95,7 +83,6 @@
     <button class="btn-ui" style="color:var(--accent3); margin-top: 5px;" onclick="copyPreviousMonth()">📂 Replicar Mês Anterior</button>
   </div>
 </div>
-
 <div class="kpi-grid" id="kpiGrid"></div>
 <div class="panel"><div class="panel-title">Evolução Anual</div><canvas id="barChart"></canvas></div>
 <div class="panel"><div class="panel-title">Renda Mensal</div><div id="rendaSection"></div><button class="add-row-btn" onclick="addRow('renda')">+ Nova Renda</button></div>
@@ -103,16 +90,15 @@
 <div class="panel"><div class="panel-title">Temporárias</div><div id="tempSection"></div><button class="add-row-btn" onclick="addRow('temp')">+ Nova Temporária</button></div>
 <div class="panel"><div class="panel-title">A Receber</div><div id="descontosSection"></div><button class="add-row-btn" onclick="addRow('descontos')">+ Novo Desconto</button></div>
 <div class="toast" id="toast">✓ SINCRONIZADO!</div>
-
 <script>
 const SUPABASE_URL = 'https://rozwrlcgxklyhutwuklb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvendybGNneGtseWh1dHd1a2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0OTgxNzAsImV4cCI6MjA5MDA3NDE3MH0.oqucMNMeUiNE60pLX5oJGuJF-m8kcpvcQYyjE2fkmrc';
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 let CURRENT_USER = "";
 let activeMes = new Date().getMonth(); 
-let appData = null;
+let fullData = null; // Guardará a estrutura completa com anos
+let appData = null; // Guardará o ano atual (2026)
 let userPassword = "";
 let barInst;
 let openGroups = {};
@@ -125,7 +111,6 @@ function initApp() {
   document.getElementById('userLabel').innerText = `DASHBOARD: ${CURRENT_USER.toUpperCase()}`;
   loadFromCloud();
 }
-
 function toggleTheme() {
   const theme = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
   document.body.setAttribute('data-theme', theme);
@@ -143,83 +128,73 @@ async function loadFromCloud() {
     } else { userPassword = prompt(`Defina uma senha:`); }
   } else { userPassword = prompt(`Novo usuário. Defina uma senha:`); }
   
-  appData = data ? data.dados : createEmptyData();
-  render(); // Isso desenha os meses e o resto da tela
+  fullData = data ? data.dados : {};
+  // SEUS DADOS ESTÃO AQUI: Entramos na pasta 2026
+  if (fullData["2026"]) {
+      appData = fullData["2026"];
+  } else {
+      appData = fullData; // Fallback se os dados estiverem na raiz
+  }
+  if (!appData["JAN"]) appData = createEmptyYear();
+  render();
 }
-
-const createEmptyData = () => {
+const createEmptyYear = () => {
   const d = {}; MONTHS.forEach(m => d[m] = { renda: {}, fixas: {}, temp: {}, descontos: {}, paid: {} }); return d;
 };
-
 async function saveToCloud() {
   const btn = document.querySelector('.save-btn'); btn.innerText = 'SALVANDO...';
-  await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: appData, senha: userPassword }, { onConflict: 'usuario' });
+  // IMPORTANTE: Mantemos a estrutura de pasta para não perder o PicPay e outros anos
+  fullData["2026"] = appData;
+  await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: fullData, senha: userPassword }, { onConflict: 'usuario' });
   document.getElementById('saveBadge').classList.remove('show');
   btn.innerText = 'SALVAR NUVEM';
   const t = document.getElementById('toast'); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000);
 }
-
 function copyPreviousMonth() {
   if (activeMes === 0) return alert("Janeiro não possui mês anterior.");
   const prev = MONTHS[activeMes - 1]; const curr = MONTHS[activeMes];
   if (confirm(`Deseja copiar todos os itens de ${prev} para ${curr}?`)) {
-    appData[curr] = JSON.parse(JSON.stringify(appData[prev]));
-    appData[curr].paid = {}; 
-    render();
+    appData[curr] = JSON.parse(JSON.stringify(appData[prev])); appData[curr].paid = {}; render();
     document.getElementById('saveBadge').classList.add('show');
   }
 }
-
 function addRow(cat) {
-  const n = prompt("Nome do item:"); if(!n) return;
+  const n = prompt("Nome:"); if(!n) return;
   const val = parseFloat(prompt("Valor:")) || 0;
   const match = n.match(/\[(\d+)\/(\d+)\]/);
   if (match) {
     const atual = parseInt(match[1]); const total = parseInt(match[2]);
     const base = n.replace(/\[\d+\/\d+\]/, "").trim();
     for (let i = 0; i <= (total - atual); i++) {
-      const mesIndex = (activeMes + i) % 12;
-      appData[MONTHS[mesIndex]][cat][`${base} [${atual + i}/${total}]`] = val;
+      const mIdx = (activeMes + i) % 12;
+      appData[MONTHS[mIdx]][cat][`${base} [${atual + i}/${total}]`] = val;
     }
   } else { appData[MONTHS[activeMes]][cat][n] = val; }
   render(); document.getElementById('saveBadge').classList.add('show');
 }
-
 function updateValue(cat, key, val) {
   appData[MONTHS[activeMes]][cat][key] = val;
   const match = key.match(/\[(\d+)\/(\d+)\]/);
   if (match && confirm("Atualizar parcelas futuras?")) {
     const base = key.replace(/\[\d+\/\d+\]/, "").trim();
     for (let i = 1; i < 12; i++) {
-      const m = MONTHS[(activeMes + i) % 12];
-      Object.keys(appData[m][cat]).forEach(k => { if(k.startsWith(base)) appData[m][cat][k] = val; });
+        const m = MONTHS[(activeMes + i) % 12];
+        Object.keys(appData[m][cat]).forEach(k => { if(k.startsWith(base)) appData[m][cat][k] = val; });
     }
   }
   document.getElementById('saveBadge').classList.add('show'); updateKPIsOnly();
 }
-
-function updateName(cat, oldK, newK) {
-  if(!newK || oldK === newK) return;
-  appData[MONTHS[activeMes]][cat][newK] = appData[MONTHS[activeMes]][cat][oldK];
-  delete appData[MONTHS[activeMes]][cat][oldK];
-  render(); document.getElementById('saveBadge').classList.add('show');
-}
-
 function togglePaid(k) {
   const m = MONTHS[activeMes]; if(!appData[m].paid) appData[m].paid = {};
   appData[m].paid[k] = !appData[m].paid[k]; render(); document.getElementById('saveBadge').classList.add('show');
 }
-
 function render() {
   const m = MONTHS[activeMes]; const d = appData[m];
-  
-  // Desenhar Meses
   const nav = document.getElementById('monthNav'); nav.innerHTML = '';
   MONTHS.forEach((mn,i) => {
     const b = document.createElement('button'); b.className = 'month-btn'+(i===activeMes?' active':'');
     b.textContent = mn; b.onclick = () => { activeMes = i; render(); }; nav.appendChild(b);
   });
-
   const build = (id, cat) => {
     const w = document.getElementById(id); w.innerHTML = ''; const groups = {};
     Object.entries(d[cat]).forEach(([k,v]) => {
@@ -240,7 +215,7 @@ function render() {
   const renderRow = (cont, cat, k, v) => {
     const isP = d.paid && d.paid[k]; const r = document.createElement('div'); r.className = `edit-row ${isP?'paid':''}`;
     r.innerHTML = `<div class="check-circle ${isP?'checked':''}" onclick="togglePaid('${k}')">${isP?'✓':''}</div>
-      <div class="edit-name" contenteditable="true" onblur="updateName('${cat}','${k}',this.innerText)">${k}</div>
+      <div class="edit-name" contenteditable="true" onblur="if(this.innerText!=='${k}'){appData[MONTHS[activeMes]]['${cat}'][this.innerText]=v;delete appData[MONTHS[activeMes]]['${cat}']['${k}'];render();document.getElementById('saveBadge').classList.add('show');}">${k}</div>
       <input class="edit-input" type="number" step="0.01" value="${v}">
       <span style="cursor:pointer; opacity:0.3; font-size:14px;" onclick="if(confirm('Excluir?')){delete appData[MONTHS[activeMes]]['${cat}']['${k}']; render(); document.getElementById('saveBadge').classList.add('show');}">✕</span>`;
     r.querySelector('.edit-input').onchange = (e) => updateValue(cat, k, parseFloat(e.target.value)||0); cont.appendChild(r);
@@ -248,7 +223,6 @@ function render() {
   build('rendaSection','renda'); build('fixasSection','fixas'); build('tempSection','temp'); build('descontosSection','descontos');
   updateKPIsOnly();
 }
-
 function updateKPIsOnly() {
   const m = MONTHS[activeMes]; const d = appData[m];
   const sum = (c) => Object.values(d[c]).reduce((a,v) => a + (parseFloat(v)||0), 0);
@@ -257,7 +231,6 @@ function updateKPIsOnly() {
   document.querySelector('.kpi-card.green .kpi-value').innerText = `R$ ${(r+desc).toLocaleString('pt-BR')}`;
   document.querySelector('.kpi-card.red .kpi-value').innerText = `R$ ${desp.toLocaleString('pt-BR')}`;
   document.querySelector('.kpi-card.yellow .kpi-value').innerText = `R$ ${s.toLocaleString('pt-BR')}`;
-  
   if(barInst) barInst.destroy();
   barInst = new Chart(document.getElementById('barChart'), {
     type:'bar', data: {
