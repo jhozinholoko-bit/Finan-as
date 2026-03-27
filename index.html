@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Finanças 2026 | Victor Secure</title>
+<title>Finanças 2026 | Victor Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -41,7 +41,15 @@
   .edit-name { flex: 1; font-size: 11px; cursor: text; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 11px; text-align: right; width: 80px; padding: 4px; }
   .edit-input:focus { border-color: var(--accent); background: #1a1e26; }
-  .group-header { font-size: 10px; color: var(--accent3); padding: 5px 0; border-bottom: 1px dashed var(--border); margin-top: 10px; font-weight: bold; }
+  
+  /* Estilos das Pastas */
+  .group-header { font-size: 10px; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+  .group-header:hover { color: var(--accent); }
+  .group-content { display: none; padding-left: 15px; border-left: 1px solid var(--border); margin-bottom: 10px; }
+  .group-content.open { display: block; }
+  .group-arrow { margin-right: 8px; font-size: 8px; transition: 0.2s; }
+  .group-arrow.open { transform: rotate(90deg); display: inline-block; }
+
   .add-row-btn { background: none; border: 1px dashed var(--border); color: var(--muted); font-size: 9px; padding: 8px; width: 100%; cursor: pointer; margin-top: 10px; text-transform: uppercase; border-radius: 4px; }
   .del-btn { color: var(--muted); cursor: pointer; font-size: 14px; background: none; border: none; }
   .save-badge { display: none; align-items: center; gap: 6px; font-size: 10px; color: var(--accent3); text-transform: uppercase; margin-bottom: 5px; }
@@ -83,6 +91,7 @@ let activeMes = new Date().getMonth();
 let appData = null;
 let userPassword = "";
 let barInst;
+let openGroups = {}; // Guarda quais pastas estão abertas
 
 const createEmptyData = () => {
   const data = {};
@@ -93,10 +102,15 @@ const createEmptyData = () => {
 async function loadFromCloud() {
   const { data } = await _supabase.from('registros').select('dados, senha').eq('usuario', CURRENT_USER).maybeSingle();
   
-  if (data && data.senha) {
-    const p = prompt(`Senha para ${CURRENT_USER}:`);
-    if (p !== data.senha) { alert("Senha incorreta!"); document.body.innerHTML = "<h1>Acesso Negado</h1>"; return; }
-    userPassword = data.senha;
+  if (data) {
+    if (data.senha) {
+      const p = prompt(`Senha para ${CURRENT_USER}:`);
+      if (p !== data.senha) { alert("Senha incorreta!"); document.body.innerHTML = "<h1>Acesso Negado</h1>"; return; }
+      userPassword = data.senha;
+    } else {
+      userPassword = prompt(`Dados encontrados! Defina uma senha para protegê-los:`);
+      if (!userPassword) { location.reload(); return; }
+    }
   } else {
     userPassword = prompt(`Novo usuário detectado (${CURRENT_USER}). Defina uma senha:`);
     if (!userPassword) { location.reload(); return; }
@@ -122,7 +136,7 @@ async function saveToCloud() {
 }
 
 function addRow(cat) {
-  const n = prompt("Nome do item:");
+  const n = prompt("Nome do item (Use 'Nome: Item' para agrupar):");
   if(n) { appData[MONTHS[activeMes]][cat][n] = 0; render(); document.getElementById('saveBadge').classList.add('show'); }
 }
 
@@ -151,6 +165,11 @@ function updateName(cat, oldKey, newKey) {
   render(); document.getElementById('saveBadge').classList.add('show');
 }
 
+function toggleGroup(gName) {
+  openGroups[gName] = !openGroups[gName];
+  render();
+}
+
 function render() {
   const mes = MONTHS[activeMes];
   const d = appData[mes];
@@ -166,6 +185,7 @@ function render() {
   const build = (id, cat) => {
     const w = document.getElementById(id); w.innerHTML = '';
     const groups = {};
+    
     Object.entries(d[cat]).forEach(([k,v]) => {
       const split = k.split(':');
       if(split.length > 1) {
@@ -174,15 +194,25 @@ function render() {
         groups[gName].total += parseFloat(v) || 0; groups[gName].items.push([k, v]);
       } else { renderRow(w, cat, k, v); }
     });
+
     Object.entries(groups).forEach(([name, data]) => {
-      const gH = document.createElement('div'); gH.className = 'group-header';
-      gH.innerHTML = `<span>📂 ${name}</span> <span style="float:right">R$ ${data.total.toLocaleString('pt-BR')}</span>`;
+      const isOpen = openGroups[name];
+      const gH = document.createElement('div'); 
+      gH.className = 'group-header';
+      gH.onclick = () => toggleGroup(name);
+      gH.innerHTML = `
+        <span><span class="group-arrow ${isOpen?'open':''}">▶</span>📂 ${name}</span> 
+        <span style="font-weight: normal; font-family: 'DM Mono'">R$ ${data.total.toLocaleString('pt-BR')}</span>`;
       w.appendChild(gH);
-      data.items.forEach(([k,v]) => renderRow(w, cat, k, v));
+      
+      const gContent = document.createElement('div');
+      gContent.className = `group-content ${isOpen?'open':''}`;
+      data.items.forEach(([k,v]) => renderRow(gContent, cat, k, v));
+      w.appendChild(gContent);
     });
   };
 
-  const renderRow = (w, cat, k, v) => {
+  const renderRow = (container, cat, k, v) => {
     const isPaid = d.paid && d.paid[k];
     const row = document.createElement('div'); row.className = `edit-row ${isPaid?'paid':''}`;
     row.innerHTML = `
@@ -195,7 +225,7 @@ function render() {
       document.getElementById('saveBadge').classList.add('show');
       updateKPIsOnly();
     };
-    w.appendChild(row);
+    container.appendChild(row);
   };
 
   build('rendaSection','renda'); build('fixasSection','fixas');
@@ -235,3 +265,4 @@ window.onload = loadFromCloud;
 </script>
 </body>
 </html>
+
