@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Finanças 2026 | Victor PRO</title>
+<title>Finanças Victor | Multi-Ano PRO</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -34,7 +34,9 @@
   .user-tools { display: flex; gap: 8px; align-items: center; margin-top: 5px; }
   .btn-tool { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; cursor: pointer; border-radius: 4px; font-size: 9px; text-transform: uppercase; }
 
-  /* NAV & MONTHS */
+  /* NAV & YEARS */
+  .nav-container { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .year-select { background: var(--surface); border: 1px solid var(--border); color: var(--accent); font-family: var(--font-mono); font-size: 12px; padding: 4px; border-radius: 4px; outline: none; }
   .month-nav { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
   .month-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 5px 9px; cursor: pointer; text-transform: uppercase; border-radius: 2px; }
   .month-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
@@ -76,30 +78,40 @@
 
 <div id="loginOverlay">
   <div class="login-card">
-    <h2 style="font-family: 'Syne';">FINANÇAS <span>2026</span></h2>
+    <h2 style="font-family: 'Syne';">FINANÇAS <span>VICTOR</span></h2>
     <input type="text" id="userInput" class="login-input" placeholder="Usuário (ex: victor)">
-    <button class="login-btn" onclick="initApp()">ENTRAR</button>
+    <button class="login-btn" onclick="initApp()">ENTRAR NO SISTEMA</button>
   </div>
 </div>
 
 <div class="header">
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span></h1>
+    <h1>FINANÇAS <span>VICTOR</span></h1>
     <div class="user-tools">
       <span id="userLabel" style="font-size: 10px; color: var(--muted);"></span>
       <button class="btn-tool" onclick="toggleTheme()">🌓 TEMA</button>
       <button class="btn-tool" onclick="location.reload()">🚪 SAIR</button>
     </div>
   </div>
-  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+  <div class="nav-container">
     <div class="save-badge" id="saveBadge">● Alterado <button class="save-btn" onclick="saveToCloud()">SALVAR NUVEM</button></div>
-    <div class="month-nav" id="monthNav"></div>
+    <div style="display:flex; gap:10px; align-items:center">
+        <select id="yearSelect" class="year-select" onchange="changeYear(this.value)">
+            <option value="2025">2025</option>
+            <option value="2026" selected>2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+            <option value="2029">2029</option>
+            <option value="2030">2030</option>
+        </select>
+        <div class="month-nav" id="monthNav"></div>
+    </div>
     <button class="btn-tool" style="color:var(--accent3)" onclick="copyPreviousMonth()">📂 REPLICAR MÊS ANTERIOR</button>
   </div>
 </div>
 
 <div class="kpi-grid" id="kpiGrid"></div>
-<div class="panel"><div class="panel-title">Evolução Anual</div><canvas id="barChart"></canvas></div>
+<div class="panel"><div class="panel-title">Evolução Anual (<span id="chartYearLabel">2026</span>)</div><canvas id="barChart"></canvas></div>
 <div class="panel"><div class="panel-title">Renda Mensal</div><div id="rendaSection"></div><button class="add-row-btn" onclick="addRow('renda')">+ Nova Renda</button></div>
 <div class="panel"><div class="panel-title">Despesas Fixas</div><div id="fixasSection"></div><button class="add-row-btn" onclick="addRow('fixas')">+ Nova Fixa (Ex: Item [1/12])</button></div>
 <div class="panel"><div class="panel-title">Temporárias</div><div id="tempSection"></div><button class="add-row-btn" onclick="addRow('temp')">+ Nova Temporária</button></div>
@@ -114,6 +126,7 @@ const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 let CURRENT_USER = "";
 let activeMes = new Date().getMonth(); 
+let activeYear = "2026";
 let appData = null;
 let userPassword = "";
 let barInst;
@@ -143,17 +156,19 @@ async function loadFromCloud() {
       if (p !== data.senha) { alert("Senha incorreta!"); location.reload(); return; }
       userPassword = data.senha;
     } else {
-      userPassword = prompt(`Dados encontrados! Defina uma senha:`);
+      userPassword = prompt(`Defina uma senha para proteger seus dados:`);
     }
   } else {
     userPassword = prompt(`Novo usuário detectado. Defina uma senha:`);
   }
-  appData = data ? data.dados : createEmptyData();
+  appData = data ? data.dados : {};
+  // Garante que a estrutura básica exista
+  if(!appData[activeYear]) appData[activeYear] = createEmptyYear();
   render();
 }
 
-const createEmptyData = () => {
-  const d = {}; MONTHS.forEach(m => d[m] = { renda: {}, fixas: {}, temp: {}, descontos: {}, paid: {} }); return d;
+const createEmptyYear = () => {
+  const y = {}; MONTHS.forEach(m => y[m] = { renda: {}, fixas: {}, temp: {}, descontos: {}, paid: {} }); return y;
 };
 
 async function saveToCloud() {
@@ -164,40 +179,63 @@ async function saveToCloud() {
   const t = document.getElementById('toast'); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000);
 }
 
+function changeYear(val) {
+    activeYear = val;
+    if(!appData[activeYear]) appData[activeYear] = createEmptyYear();
+    document.getElementById('chartYearLabel').innerText = val;
+    render();
+}
+
 function copyPreviousMonth() {
   if (activeMes === 0) return;
   const prev = MONTHS[activeMes - 1]; const curr = MONTHS[activeMes];
-  if (confirm(`Copiar estrutura de ${prev} para ${curr}?`)) {
-    appData[curr] = JSON.parse(JSON.stringify(appData[prev])); appData[curr].paid = {}; render();
+  if (confirm(`Copiar estrutura de ${prev} para ${curr} em ${activeYear}?`)) {
+    appData[activeYear][curr] = JSON.parse(JSON.stringify(appData[activeYear][prev])); 
+    appData[activeYear][curr].paid = {}; 
+    render();
     document.getElementById('saveBadge').classList.add('show');
   }
 }
 
 function addRow(cat) {
-  const n = prompt("Nome (Ex: Picpay [1/46] ou Gabi: Conta):"); if(!n) return;
+  const n = prompt("Nome (Ex: Picpay [1/48]):"); if(!n) return;
   const val = parseFloat(prompt("Valor:")) || 0;
   const match = n.match(/\[(\d+)\/(\d+)\]/);
 
   if (match) {
     const atual = parseInt(match[1]); const total = parseInt(match[2]);
     const base = n.replace(/\[\d+\/\d+\]/, "").trim();
+    
     for (let i = 0; i <= (total - atual); i++) {
-      const targetIdx = (activeMes + i) % 12;
-      const targetMes = MONTHS[targetIdx];
-      appData[targetMes][cat][`${base} [${atual + i}/${total}]`] = val;
+      let absoluteMonth = (parseInt(activeYear) * 12) + activeMes + i;
+      let targetYear = Math.floor(absoluteMonth / 12).toString();
+      let targetMonthIdx = absoluteMonth % 12;
+      let targetMonthName = MONTHS[targetMonthIdx];
+
+      if(!appData[targetYear]) appData[targetYear] = createEmptyYear();
+      appData[targetYear][targetMonthName][cat][`${base} [${atual + i}/${total}]`] = val;
     }
-  } else { appData[MONTHS[activeMes]][cat][n] = val; }
+  } else { 
+    appData[activeYear][MONTHS[activeMes]][cat][n] = val; 
+  }
   render(); document.getElementById('saveBadge').classList.add('show');
 }
 
 function updateValue(cat, key, val) {
-  appData[MONTHS[activeMes]][cat][key] = val;
+  appData[activeYear][MONTHS[activeMes]][cat][key] = val;
   const match = key.match(/\[(\d+)\/(\d+)\]/);
-  if (match && confirm("Atualizar parcelas futuras?")) {
+  if (match && confirm("Atualizar parcelas futuras em todos os anos?")) {
     const base = key.replace(/\[\d+\/\d+\]/, "").trim();
-    for (let i = 1; i < 12; i++) {
-      const m = MONTHS[(activeMes + i) % 12];
-      Object.keys(appData[m][cat]).forEach(k => { if(k.startsWith(base)) appData[m][cat][k] = val; });
+    // Atualiza parcelas futuras em um range de 5 anos para garantir
+    for (let yr = parseInt(activeYear); yr <= parseInt(activeYear)+5; yr++) {
+        const yStr = yr.toString();
+        if(appData[yStr]) {
+            MONTHS.forEach(m => {
+                Object.keys(appData[yStr][m][cat]).forEach(k => {
+                    if(k.startsWith(base)) appData[yStr][m][cat][k] = val;
+                });
+            });
+        }
     }
   }
   document.getElementById('saveBadge').classList.add('show'); updateKPIsOnly();
@@ -205,18 +243,18 @@ function updateValue(cat, key, val) {
 
 function updateName(cat, oldK, newK) {
   if(!newK || oldK === newK) return;
-  appData[MONTHS[activeMes]][cat][newK] = appData[MONTHS[activeMes]][cat][oldK];
-  delete appData[MONTHS[activeMes]][cat][oldK];
+  appData[activeYear][MONTHS[activeMes]][cat][newK] = appData[activeYear][MONTHS[activeMes]][cat][oldK];
+  delete appData[activeYear][MONTHS[activeMes]][cat][oldK];
   render(); document.getElementById('saveBadge').classList.add('show');
 }
 
 function togglePaid(k) {
-  const m = MONTHS[activeMes]; if(!appData[m].paid) appData[m].paid = {};
-  appData[m].paid[k] = !appData[m].paid[k]; render(); document.getElementById('saveBadge').classList.add('show');
+  const m = MONTHS[activeMes]; if(!appData[activeYear][m].paid) appData[activeYear][m].paid = {};
+  appData[activeYear][m].paid[k] = !appData[activeYear][m].paid[k]; render(); document.getElementById('saveBadge').classList.add('show');
 }
 
 function render() {
-  const m = MONTHS[activeMes]; const d = appData[m];
+  const m = MONTHS[activeMes]; const d = appData[activeYear][m];
   const build = (id, cat) => {
     const w = document.getElementById(id); w.innerHTML = ''; const groups = {};
     Object.entries(d[cat]).forEach(([k,v]) => {
@@ -239,7 +277,7 @@ function render() {
     r.innerHTML = `<div class="check-circle ${isP?'checked':''}" onclick="togglePaid('${k}')">${isP?'✓':''}</div>
       <div class="edit-name" contenteditable="true" onblur="updateName('${cat}','${k}',this.innerText)">${k}</div>
       <input class="edit-input" type="number" step="0.01" value="${v}">
-      <span style="cursor:pointer; opacity:0.3" onclick="if(confirm('Excluir?')){delete appData[MONTHS[activeMes]]['${cat}']['${k}']; render(); document.getElementById('saveBadge').classList.add('show');}">✕</span>`;
+      <span style="cursor:pointer; opacity:0.3" onclick="if(confirm('Excluir?')){delete appData[activeYear][MONTHS[activeMes]]['${cat}']['${k}']; render(); document.getElementById('saveBadge').classList.add('show');}">✕</span>`;
     r.querySelector('.edit-input').onchange = (e) => updateValue(cat, k, parseFloat(e.target.value)||0); cont.appendChild(r);
   };
   build('rendaSection','renda'); build('fixasSection','fixas'); build('tempSection','temp'); build('descontosSection','descontos');
@@ -252,7 +290,7 @@ function render() {
 }
 
 function updateKPIsOnly() {
-  const m = MONTHS[activeMes]; const d = appData[m];
+  const m = MONTHS[activeMes]; const d = appData[activeYear][m];
   const sum = (c) => Object.values(d[c]).reduce((a,v) => a + (parseFloat(v)||0), 0);
   const r = sum('renda'), f = sum('fixas'), t = sum('temp'), desc = sum('descontos');
   const desp = f + t, s = (r + desc) - desp;
@@ -263,8 +301,8 @@ function updateKPIsOnly() {
   barInst = new Chart(document.getElementById('barChart'), {
     type:'bar', data: {
       labels: MONTHS, datasets: [
-        { label: 'Renda', data: MONTHS.map(mn => Object.values(appData[mn].renda).reduce((a,v)=>a+v,0) + Object.values(appData[mn].descontos).reduce((a,v)=>a+v,0)), backgroundColor: '#00e5a0' },
-        { label: 'Gastos', data: MONTHS.map(mn => Object.values(appData[mn].fixas).reduce((a,v)=>a+v,0) + Object.values(appData[mn].temp).reduce((a,v)=>a+v,0)), backgroundColor: '#ff4d6d' }
+        { label: 'Renda', data: MONTHS.map(mn => (Object.values(appData[activeYear][mn].renda).reduce((a,v)=>a+v,0) + Object.values(appData[activeYear][mn].descontos).reduce((a,v)=>a+v,0))), backgroundColor: '#00e5a0' },
+        { label: 'Gastos', data: MONTHS.map(mn => (Object.values(appData[activeYear][mn].fixas).reduce((a,v)=>a+v,0) + Object.values(appData[activeYear][mn].temp).reduce((a,v)=>a+v,0))), backgroundColor: '#ff4d6d' }
       ]
     }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: '#5a6070', font: { size: 9 } }, grid: { display: false } } } }
   });
