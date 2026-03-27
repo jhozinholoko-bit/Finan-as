@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Finanças Victor | Multi-Ano PRO</title>
+<title>Finanças 2026 | Victor PRO</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -21,20 +21,19 @@
   }
   body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; padding: 20px 15px 60px; transition: 0.3s; }
   
-  /* LOGIN OVERLAY */
   #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .login-card { background: var(--surface); padding: 30px; border: 1px solid var(--border); border-radius: 8px; width: 100%; max-width: 350px; text-align: center; }
   .login-input { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; width: 100%; margin: 15px 0; border-radius: 4px; font-family: var(--font-mono); outline: none; }
   .login-btn { background: var(--accent); color: #000; border: none; padding: 12px; width: 100%; font-weight: 700; cursor: pointer; border-radius: 4px; }
 
-  /* HEADER & NAV */
   .header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
   .header-title h1 { font-family: var(--font-head); font-size: clamp(20px, 5vw, 36px); font-weight: 800; letter-spacing: -1px; }
   .header-title h1 span { color: var(--accent); }
-  .theme-toggle { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 10px; }
   
+  .tools-row { display: flex; gap: 8px; align-items: center; margin-top: 5px; }
+  .btn-ui { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 10px; text-transform: uppercase; }
+
   .nav-area { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-  .year-select { background: var(--surface); border: 1px solid var(--border); color: var(--accent); font-family: var(--font-mono); padding: 5px; border-radius: 4px; outline: none; cursor: pointer; }
   .month-nav { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
   .month-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 5px 9px; cursor: pointer; text-transform: uppercase; border-radius: 2px; }
   .month-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
@@ -46,7 +45,7 @@
   .kpi-card.red::before { background: var(--accent2); }
   .kpi-card.yellow::before { background: var(--accent3); }
   .kpi-label { font-size: 9px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-  .kpi-value { font-family:var(--font-head); font-size: clamp(18px, 5vw, 24px); font-weight: 700; }
+  .kpi-value { font-family:var(--font-head); font-size: 22px; font-weight: 700; }
 
   .panel { background: var(--surface); border: 1px solid var(--border); padding: 15px; margin-bottom: 10px; border-radius: 4px; }
   .panel-title { font-size: 9px; text-transform: uppercase; color: var(--muted); margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
@@ -56,8 +55,8 @@
   .edit-row.paid { opacity: 0.4; }
   .check-circle { width: 18px; height: 18px; border: 1px solid var(--muted); border-radius: 50%; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
   .check-circle.checked { background: var(--accent); border-color: var(--accent); color: #000; }
-  .edit-name { flex: 1; font-size: 11px; cursor: text; outline: none; }
-  .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 11px; text-align: right; width: 80px; padding: 4px; }
+  .edit-name { flex: 1; font-size: 11px; outline: none; }
+  .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 11px; text-align: right; width: 80px; }
   
   .group-header { font-size: 10px; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
   .group-content { display: none; padding-left: 15px; border-left: 1px solid var(--border); }
@@ -67,15 +66,14 @@
   .save-badge { display: none; align-items: center; gap: 6px; font-size: 10px; color: var(--accent3); margin-bottom: 5px; }
   .save-badge.show { display: flex; }
   .save-btn { background: var(--accent); border: none; color: #000; padding: 6px 14px; cursor: pointer; font-weight: 600; font-size: 11px; border-radius: 2px; }
-  .toast { position: fixed; bottom: 15px; right: 15px; background: var(--accent); color: #000; padding: 10px 15px; opacity: 0; transition: 0.3s; z-index: 999; font-weight: 600; border-radius: 4px; font-size: 11px; }
-  .toast.show { opacity: 1; }
+  .toast { position: fixed; bottom: 15px; right: 15px; background: var(--accent); color: #000; padding: 10px 15px; opacity: 0; transition: 0.3s; z-index: 999; font-weight: 600; border-radius: 4px; }
 </style>
 </head>
 <body>
 
 <div id="loginOverlay">
   <div class="login-card">
-    <h2 style="font-family: 'Syne'; margin-bottom: 5px;">FINANÇAS <span>VICTOR</span></h2>
+    <h2 style="font-family: 'Syne'; margin-bottom: 5px;">FINANÇAS <span>2026</span></h2>
     <p style="font-size: 10px; color: var(--muted);">ACESSO MULTI-USUÁRIO</p>
     <input type="text" id="userInput" class="login-input" placeholder="Seu nome de usuário...">
     <button class="login-btn" onclick="initApp()">ENTRAR NO DASHBOARD</button>
@@ -84,31 +82,22 @@
 
 <div class="header">
   <div class="header-title">
-    <h1>FINANÇAS <span>VICTOR</span></h1>
-    <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+    <h1>FINANÇAS <span>2026</span></h1>
+    <div class="tools-row">
       <p id="userLabel" style="font-size: 10px; color: var(--muted);">DASHBOARD</p>
-      <button class="theme-toggle" onclick="toggleTheme()">🌓 TEMA</button>
-      <button class="theme-toggle" onclick="location.reload()">🚪 SAIR</button>
+      <button class="btn-ui" onclick="toggleTheme()">🌓 TEMA</button>
+      <button class="btn-ui" onclick="location.reload()">🚪 SAIR</button>
     </div>
   </div>
   <div class="nav-area">
     <div class="save-badge" id="saveBadge">● Alterado <button class="save-btn" onclick="saveToCloud()">SALVAR NUVEM</button></div>
-    <div style="display: flex; gap: 10px; align-items: center;">
-      <select id="yearSelect" class="year-select" onchange="changeYear(this.value)">
-        <option value="2025">2025</option>
-        <option value="2026" selected>2026</option>
-        <option value="2027">2027</option>
-        <option value="2028">2028</option>
-        <option value="2029">2029</option>
-        <option value="2030">2030</option>
-      </select>
-      <div class="month-nav" id="monthNav"></div>
-    </div>
+    <div class="month-nav" id="monthNav"></div>
+    <button class="btn-ui" style="color:var(--accent3)" onclick="copyPreviousMonth()">📂 Replicar Mês Anterior</button>
   </div>
 </div>
 
 <div class="kpi-grid" id="kpiGrid"></div>
-<div class="panel"><div class="panel-title">Evolução Anual (<span id="yearDisplay">2026</span>)</div><canvas id="barChart"></canvas></div>
+<div class="panel"><div class="panel-title">Evolução Anual</div><canvas id="barChart"></canvas></div>
 <div class="panel"><div class="panel-title">Renda Mensal</div><div id="rendaSection"></div><button class="add-row-btn" onclick="addRow('renda')">+ Nova Renda</button></div>
 <div class="panel"><div class="panel-title">Despesas Fixas</div><div id="fixasSection"></div><button class="add-row-btn" onclick="addRow('fixas')">+ Nova Fixa (Ex: Item [1/12])</button></div>
 <div class="panel"><div class="panel-title">Temporárias</div><div id="tempSection"></div><button class="add-row-btn" onclick="addRow('temp')">+ Nova Temporária</button></div>
@@ -123,7 +112,6 @@ const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 let CURRENT_USER = "";
 let activeMes = new Date().getMonth(); 
-let activeYear = "2026";
 let appData = null;
 let userPassword = "";
 let barInst;
@@ -134,7 +122,7 @@ function initApp() {
   if(!name) return;
   CURRENT_USER = name;
   document.getElementById('loginOverlay').style.display = 'none';
-  document.getElementById('userLabel').innerText = `USUÁRIO: ${CURRENT_USER.toUpperCase()}`;
+  document.getElementById('userLabel').innerText = `DASHBOARD: ${CURRENT_USER.toUpperCase()}`;
   loadFromCloud();
 }
 
@@ -145,19 +133,6 @@ function toggleTheme() {
 }
 if(localStorage.getItem('theme') === 'light') document.body.setAttribute('data-theme', 'light');
 
-function changeYear(val) {
-  activeYear = val;
-  document.getElementById('yearDisplay').innerText = val;
-  if(!appData[activeYear]) appData[activeYear] = createEmptyYear();
-  render();
-}
-
-const createEmptyYear = () => {
-  const y = {}; 
-  MONTHS.forEach(m => { y[m] = { renda: {}, fixas: {}, temp: {}, descontos: {}, paid: {} }; });
-  return y;
-};
-
 async function loadFromCloud() {
   const { data } = await _supabase.from('registros').select('dados, senha').eq('usuario', CURRENT_USER).maybeSingle();
   if (data) {
@@ -165,24 +140,16 @@ async function loadFromCloud() {
       const p = prompt(`Senha para ${CURRENT_USER}:`);
       if (p !== data.senha) { alert("Senha incorreta!"); location.reload(); return; }
       userPassword = data.senha;
-    } else {
-      userPassword = prompt(`Defina uma senha:`);
-    }
-  } else {
-    userPassword = prompt(`Novo usuário detectado. Defina uma senha:`);
-  }
+    } else { userPassword = prompt(`Defina uma senha:`); }
+  } else { userPassword = prompt(`Novo usuário. Defina uma senha:`); }
   
-  let raw = data ? data.dados : {};
-  // Se os dados estiverem no formato antigo (sem anos), migra para dentro de "2026"
-  if (raw["JAN"] && !raw["2026"]) {
-    appData = { "2026": raw };
-  } else {
-    appData = raw;
-  }
-  
-  if(!appData[activeYear]) appData[activeYear] = createEmptyYear();
+  appData = data ? data.dados : createEmptyData();
   render();
 }
+
+const createEmptyData = () => {
+  const d = {}; MONTHS.forEach(m => d[m] = { renda: {}, fixas: {}, temp: {}, descontos: {}, paid: {} }); return d;
+};
 
 async function saveToCloud() {
   const btn = document.querySelector('.save-btn'); btn.innerText = 'SALVANDO...';
@@ -192,42 +159,40 @@ async function saveToCloud() {
   const t = document.getElementById('toast'); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000);
 }
 
+function copyPreviousMonth() {
+  if (activeMes === 0) return alert("Janeiro não possui mês anterior.");
+  const prev = MONTHS[activeMes - 1]; const curr = MONTHS[activeMes];
+  if (confirm(`Deseja copiar todos os itens de ${prev} para ${curr}?`)) {
+    appData[curr] = JSON.parse(JSON.stringify(appData[prev]));
+    appData[curr].paid = {}; 
+    render();
+    document.getElementById('saveBadge').classList.add('show');
+  }
+}
+
 function addRow(cat) {
-  const n = prompt("Nome (Ex: iPhone [1/12]):"); if(!n) return;
+  const n = prompt("Nome do item:"); if(!n) return;
   const val = parseFloat(prompt("Valor:")) || 0;
   const match = n.match(/\[(\d+)\/(\d+)\]/);
-
   if (match) {
     const atual = parseInt(match[1]); const total = parseInt(match[2]);
     const base = n.replace(/\[\d+\/\d+\]/, "").trim();
     for (let i = 0; i <= (total - atual); i++) {
-      let absM = (parseInt(activeYear) * 12) + activeMes + i;
-      let tY = Math.floor(absM / 12).toString();
-      let tMIdx = absM % 12;
-      let tMName = MONTHS[tMIdx];
-      if(!appData[tY]) appData[tY] = createEmptyYear();
-      appData[tY][tMName][cat][`${base} [${atual + i}/${total}]`] = val;
+      const mesIndex = (activeMes + i) % 12;
+      appData[MONTHS[mesIndex]][cat][`${base} [${atual + i}/${total}]`] = val;
     }
-  } else { 
-    appData[activeYear][MONTHS[activeMes]][cat][n] = val; 
-  }
+  } else { appData[MONTHS[activeMes]][cat][n] = val; }
   render(); document.getElementById('saveBadge').classList.add('show');
 }
 
 function updateValue(cat, key, val) {
-  appData[activeYear][MONTHS[activeMes]][cat][key] = val;
+  appData[MONTHS[activeMes]][cat][key] = val;
   const match = key.match(/\[(\d+)\/(\d+)\]/);
   if (match && confirm("Atualizar parcelas futuras?")) {
     const base = key.replace(/\[\d+\/\d+\]/, "").trim();
-    for (let yr = parseInt(activeYear); yr <= parseInt(activeYear)+5; yr++) {
-        const yStr = yr.toString();
-        if(appData[yStr]) {
-            MONTHS.forEach(m => {
-                Object.keys(appData[yStr][m][cat]).forEach(k => {
-                    if(k.startsWith(base)) appData[yStr][m][cat][k] = val;
-                });
-            });
-        }
+    for (let i = 1; i < 12; i++) {
+      const m = MONTHS[(activeMes + i) % 12];
+      Object.keys(appData[m][cat]).forEach(k => { if(k.startsWith(base)) appData[m][cat][k] = val; });
     }
   }
   document.getElementById('saveBadge').classList.add('show'); updateKPIsOnly();
@@ -235,22 +200,18 @@ function updateValue(cat, key, val) {
 
 function updateName(cat, oldK, newK) {
   if(!newK || oldK === newK) return;
-  appData[activeYear][MONTHS[activeMes]][cat][newK] = appData[activeYear][MONTHS[activeMes]][cat][oldK];
-  delete appData[activeYear][MONTHS[activeMes]][cat][oldK];
-  if(appData[activeYear][MONTHS[activeMes]].paid && appData[activeYear][MONTHS[activeMes]].paid[oldK]) {
-    appData[activeYear][MONTHS[activeMes]].paid[newK] = true;
-    delete appData[activeYear][MONTHS[activeMes]].paid[oldK];
-  }
+  appData[MONTHS[activeMes]][cat][newK] = appData[MONTHS[activeMes]][cat][oldK];
+  delete appData[MONTHS[activeMes]][cat][oldK];
   render(); document.getElementById('saveBadge').classList.add('show');
 }
 
 function togglePaid(k) {
-  const m = MONTHS[activeMes]; if(!appData[activeYear][m].paid) appData[activeYear][m].paid = {};
-  appData[activeYear][m].paid[k] = !appData[activeYear][m].paid[k]; render(); document.getElementById('saveBadge').classList.add('show');
+  const m = MONTHS[activeMes]; if(!appData[m].paid) appData[m].paid = {};
+  appData[m].paid[k] = !appData[m].paid[k]; render(); document.getElementById('saveBadge').classList.add('show');
 }
 
 function render() {
-  const m = MONTHS[activeMes]; const d = appData[activeYear][m];
+  const m = MONTHS[activeMes]; const d = appData[m];
   const build = (id, cat) => {
     const w = document.getElementById(id); w.innerHTML = ''; const groups = {};
     Object.entries(d[cat]).forEach(([k,v]) => {
@@ -273,7 +234,7 @@ function render() {
     r.innerHTML = `<div class="check-circle ${isP?'checked':''}" onclick="togglePaid('${k}')">${isP?'✓':''}</div>
       <div class="edit-name" contenteditable="true" onblur="updateName('${cat}','${k}',this.innerText)">${k}</div>
       <input class="edit-input" type="number" step="0.01" value="${v}">
-      <span style="cursor:pointer; opacity:0.3; font-size: 14px;" onclick="if(confirm('Excluir?')){delete appData[activeYear][MONTHS[activeMes]]['${cat}']['${k}']; render(); document.getElementById('saveBadge').classList.add('show');}">✕</span>`;
+      <span style="cursor:pointer; opacity:0.3; font-size:14px;" onclick="if(confirm('Excluir?')){delete appData[MONTHS[activeMes]]['${cat}']['${k}']; render(); document.getElementById('saveBadge').classList.add('show');}">✕</span>`;
     r.querySelector('.edit-input').onchange = (e) => updateValue(cat, k, parseFloat(e.target.value)||0); cont.appendChild(r);
   };
   build('rendaSection','renda'); build('fixasSection','fixas'); build('tempSection','temp'); build('descontosSection','descontos');
@@ -286,19 +247,20 @@ function render() {
 }
 
 function updateKPIsOnly() {
-  const m = MONTHS[activeMes]; const d = appData[activeYear][m];
+  const m = MONTHS[activeMes]; const d = appData[m];
   const sum = (c) => Object.values(d[c]).reduce((a,v) => a + (parseFloat(v)||0), 0);
   const r = sum('renda'), f = sum('fixas'), t = sum('temp'), desc = sum('descontos');
   const desp = f + t, s = (r + desc) - desp;
   document.querySelector('.kpi-card.green .kpi-value').innerText = `R$ ${(r+desc).toLocaleString('pt-BR')}`;
   document.querySelector('.kpi-card.red .kpi-value').innerText = `R$ ${desp.toLocaleString('pt-BR')}`;
   document.querySelector('.kpi-card.yellow .kpi-value').innerText = `R$ ${s.toLocaleString('pt-BR')}`;
+  
   if(barInst) barInst.destroy();
   barInst = new Chart(document.getElementById('barChart'), {
     type:'bar', data: {
       labels: MONTHS, datasets: [
-        { label: 'Renda', data: MONTHS.map(mn => (Object.values(appData[activeYear][mn].renda).reduce((a,v)=>a+v,0) + Object.values(appData[activeYear][mn].descontos).reduce((a,v)=>a+v,0))), backgroundColor: '#00e5a0' },
-        { label: 'Gastos', data: MONTHS.map(mn => (Object.values(appData[activeYear][mn].fixas).reduce((a,v)=>a+v,0) + Object.values(appData[activeYear][mn].temp).reduce((a,v)=>a+v,0))), backgroundColor: '#ff4d6d' }
+        { label: 'Renda', data: MONTHS.map(mn => (Object.values(appData[mn].renda).reduce((a,v)=>a+v,0) + Object.values(appData[mn].descontos).reduce((a,v)=>a+v,0))), backgroundColor: '#00e5a0' },
+        { label: 'Gastos', data: MONTHS.map(mn => (Object.values(appData[mn].fixas).reduce((a,v)=>a+v,0) + Object.values(appData[mn].temp).reduce((a,v)=>a+v,0))), backgroundColor: '#ff4d6d' }
       ]
     }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: '#5a6070', font: { size: 9 } }, grid: { display: false } } } }
   });
