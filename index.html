@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Finanças Victor | Resgate PRO</title>
+<title>Finanças Victor | Inteligência Multi-Ano</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -19,7 +19,7 @@
     --accent: #00b37e; --accent2: #e63946; --accent3: #f4a261; --muted: #8d99ae;
     --text: #2b2d42;
   }
-  body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; padding: 20px 15px 60px; transition: background 0.3s; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; padding: 20px 15px 60px; }
   #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .login-card { background: var(--surface); padding: 30px; border: 1px solid var(--border); border-radius: 8px; width: 100%; max-width: 350px; text-align: center; }
   .login-input { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; width: 100%; margin: 15px 0; border-radius: 4px; font-family: var(--font-mono); outline: none; }
@@ -144,17 +144,9 @@ async function loadFromCloud() {
       if (p !== data.senha) { alert("Senha incorreta!"); location.reload(); return; }
       userPassword = data.senha;
     } else { userPassword = prompt(`Defina uma senha:`); }
-  } else { userPassword = prompt(`Novo usuário detectado. Defina uma senha:`); }
+  } else { userPassword = prompt(`Novo usuário. Defina uma senha:`); }
   
-  let rawData = data ? data.dados : {};
-  // RESGATE: Se tiver meses na raiz mas não tiver 2026, move pra 2026
-  if (rawData["JAN"] && !rawData["2026"]) {
-      appData = { "2026": JSON.parse(JSON.stringify(rawData)) };
-      setTimeout(saveToCloud, 1000);
-  } else {
-      appData = rawData;
-  }
-
+  appData = data ? data.dados : {};
   if(!appData[activeYear]) appData[activeYear] = createEmptyYear();
   render();
 }
@@ -226,13 +218,6 @@ function updateValue(cat, key, val) {
   document.getElementById('saveBadge').classList.add('show'); updateKPIsOnly();
 }
 
-function updateName(cat, oldK, newK) {
-  if(!newK || oldK === newK) return;
-  appData[activeYear][MONTHS[activeMes]][cat][newK] = appData[activeYear][MONTHS[activeMes]][cat][oldK];
-  delete appData[activeYear][MONTHS[activeMes]][cat][oldK];
-  render(); document.getElementById('saveBadge').classList.add('show');
-}
-
 function togglePaid(k) {
   const m = MONTHS[activeMes]; if(!appData[activeYear][m].paid) appData[activeYear][m].paid = {};
   appData[activeYear][m].paid[k] = !appData[activeYear][m].paid[k]; render(); document.getElementById('saveBadge').classList.add('show');
@@ -260,7 +245,7 @@ function render() {
   const renderRow = (cont, cat, k, v) => {
     const isP = d.paid && d.paid[k]; const r = document.createElement('div'); r.className = `edit-row ${isP?'paid':''}`;
     r.innerHTML = `<div class="check-circle ${isP?'checked':''}" onclick="togglePaid('${k}')">${isP?'✓':''}</div>
-      <div class="edit-name" contenteditable="true" onblur="updateName('${cat}','${k}',this.innerText)">${k}</div>
+      <div class="edit-name" contenteditable="true" onblur="if(this.innerText !== '${k}'){ appData[activeYear][MONTHS[activeMes]]['${cat}'][this.innerText] = v; delete appData[activeYear][MONTHS[activeMes]]['${cat}']['${k}']; render(); document.getElementById('saveBadge').classList.add('show'); }">${k}</div>
       <input class="edit-input" type="number" step="0.01" value="${v}">
       <span style="cursor:pointer; opacity:0.3" onclick="if(confirm('Excluir?')){delete appData[activeYear][MONTHS[activeMes]]['${cat}']['${k}']; render(); document.getElementById('saveBadge').classList.add('show');}">✕</span>`;
     r.querySelector('.edit-input').onchange = (e) => updateValue(cat, k, parseFloat(e.target.value)||0); cont.appendChild(r);
