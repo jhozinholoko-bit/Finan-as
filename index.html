@@ -22,6 +22,7 @@
   .month-nav { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
   .month-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 5px 9px; cursor: pointer; text-transform: uppercase; border-radius: 2px; }
   .month-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+  .copy-btn { background: none; border: 1px solid var(--border); color: var(--accent3); font-size: 9px; padding: 4px 8px; cursor: pointer; border-radius: 2px; text-transform: uppercase; margin-left: 10px; }
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
   .kpi-card { background: var(--surface); border: 1px solid var(--border); padding: 15px; position: relative; border-radius: 4px; }
   .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
@@ -41,15 +42,12 @@
   .edit-name { flex: 1; font-size: 11px; cursor: text; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 11px; text-align: right; width: 80px; padding: 4px; }
   .edit-input:focus { border-color: var(--accent); background: #1a1e26; }
-  
-  /* Estilos das Pastas */
   .group-header { font-size: 10px; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
   .group-header:hover { color: var(--accent); }
   .group-content { display: none; padding-left: 15px; border-left: 1px solid var(--border); margin-bottom: 10px; }
   .group-content.open { display: block; }
   .group-arrow { margin-right: 8px; font-size: 8px; transition: 0.2s; }
   .group-arrow.open { transform: rotate(90deg); display: inline-block; }
-
   .add-row-btn { background: none; border: 1px dashed var(--border); color: var(--muted); font-size: 9px; padding: 8px; width: 100%; cursor: pointer; margin-top: 10px; text-transform: uppercase; border-radius: 4px; }
   .del-btn { color: var(--muted); cursor: pointer; font-size: 14px; background: none; border: none; }
   .save-badge { display: none; align-items: center; gap: 6px; font-size: 10px; color: var(--accent3); text-transform: uppercase; margin-bottom: 5px; }
@@ -66,6 +64,7 @@
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
     <div class="save-badge" id="saveBadge">● Alterado <button class="save-btn" onclick="saveToCloud()">SALVAR NUVEM</button></div>
     <div class="month-nav" id="monthNav"></div>
+    <button class="copy-btn" id="copyBtn" onclick="copyPreviousMonth()">📂 Replicar Mês Anterior</button>
   </div>
 </div>
 
@@ -91,7 +90,7 @@ let activeMes = new Date().getMonth();
 let appData = null;
 let userPassword = "";
 let barInst;
-let openGroups = {}; // Guarda quais pastas estão abertas
+let openGroups = {};
 
 const createEmptyData = () => {
   const data = {};
@@ -101,22 +100,20 @@ const createEmptyData = () => {
 
 async function loadFromCloud() {
   const { data } = await _supabase.from('registros').select('dados, senha').eq('usuario', CURRENT_USER).maybeSingle();
-  
   if (data) {
     if (data.senha) {
       const p = prompt(`Senha para ${CURRENT_USER}:`);
       if (p !== data.senha) { alert("Senha incorreta!"); document.body.innerHTML = "<h1>Acesso Negado</h1>"; return; }
       userPassword = data.senha;
     } else {
-      userPassword = prompt(`Dados encontrados! Defina uma senha para protegê-los:`);
+      userPassword = prompt(`Dados encontrados! Defina uma senha:`);
       if (!userPassword) { location.reload(); return; }
     }
   } else {
     userPassword = prompt(`Novo usuário detectado (${CURRENT_USER}). Defina uma senha:`);
     if (!userPassword) { location.reload(); return; }
   }
-
-  appData = (data && data.dados) ? data.dados : createEmptyData();
+  appData = data ? data.dados : createEmptyData();
   render();
 }
 
@@ -126,12 +123,24 @@ async function saveToCloud() {
   const { error } = await _supabase.from('registros').upsert({ 
     usuario: CURRENT_USER, dados: appData, senha: userPassword 
   }, { onConflict: 'usuario' });
-  
   if (!error) {
     document.getElementById('saveBadge').classList.remove('show');
     btn.innerText = 'SALVAR NUVEM';
     const t = document.getElementById('toast'); t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
+  }
+}
+
+function copyPreviousMonth() {
+  if (activeMes === 0) { alert("Janeiro não possui mês anterior."); return; }
+  const prevMes = MONTHS[activeMes - 1];
+  const currMes = MONTHS[activeMes];
+  if (confirm(`Deseja copiar todos os itens de ${prevMes} para ${currMes}? (Os valores atuais de ${currMes} serão substituídos)`)) {
+    // Copia profunda dos dados, mas limpa os estados de "pago"
+    appData[currMes] = JSON.parse(JSON.stringify(appData[prevMes]));
+    appData[currMes].paid = {}; 
+    render();
+    document.getElementById('saveBadge').classList.add('show');
   }
 }
 
@@ -165,10 +174,7 @@ function updateName(cat, oldKey, newKey) {
   render(); document.getElementById('saveBadge').classList.add('show');
 }
 
-function toggleGroup(gName) {
-  openGroups[gName] = !openGroups[gName];
-  render();
-}
+function toggleGroup(gName) { openGroups[gName] = !openGroups[gName]; render(); }
 
 function render() {
   const mes = MONTHS[activeMes];
@@ -185,7 +191,6 @@ function render() {
   const build = (id, cat) => {
     const w = document.getElementById(id); w.innerHTML = '';
     const groups = {};
-    
     Object.entries(d[cat]).forEach(([k,v]) => {
       const split = k.split(':');
       if(split.length > 1) {
@@ -194,19 +199,13 @@ function render() {
         groups[gName].total += parseFloat(v) || 0; groups[gName].items.push([k, v]);
       } else { renderRow(w, cat, k, v); }
     });
-
     Object.entries(groups).forEach(([name, data]) => {
       const isOpen = openGroups[name];
-      const gH = document.createElement('div'); 
-      gH.className = 'group-header';
+      const gH = document.createElement('div'); gH.className = 'group-header';
       gH.onclick = () => toggleGroup(name);
-      gH.innerHTML = `
-        <span><span class="group-arrow ${isOpen?'open':''}">▶</span>📂 ${name}</span> 
-        <span style="font-weight: normal; font-family: 'DM Mono'">R$ ${data.total.toLocaleString('pt-BR')}</span>`;
+      gH.innerHTML = `<span><span class="group-arrow ${isOpen?'open':''}">▶</span>📂 ${name}</span> <span style="font-weight: normal; font-family: 'DM Mono'">R$ ${data.total.toLocaleString('pt-BR')}</span>`;
       w.appendChild(gH);
-      
-      const gContent = document.createElement('div');
-      gContent.className = `group-content ${isOpen?'open':''}`;
+      const gContent = document.createElement('div'); gContent.className = `group-content ${isOpen?'open':''}`;
       data.items.forEach(([k,v]) => renderRow(gContent, cat, k, v));
       w.appendChild(gContent);
     });
@@ -265,4 +264,5 @@ window.onload = loadFromCloud;
 </script>
 </body>
 </html>
+
 
