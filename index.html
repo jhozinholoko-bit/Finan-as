@@ -1,0 +1,246 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Finanças 2026 | Sistema Victor</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0c10; --surface: #111318; --border: #1e2330;
+    --accent: #00e5a0; --accent2: #ff4d6d; --accent3: #ffd166; --muted: #5a6070;
+    --text: #e8eaf0; --font-head: 'Syne', sans-serif; --font-mono: 'DM Mono', monospace;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; padding: 20px 15px 60px; }
+  .header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+  .header-title h1 { font-family: var(--font-head); font-size: clamp(20px, 5vw, 36px); font-weight: 800; letter-spacing: -1px; }
+  .header-title h1 span { color: var(--accent); }
+  .header-title p { font-size: 10px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+  .month-nav { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .month-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 5px 9px; cursor: pointer; text-transform: uppercase; border-radius: 2px; }
+  .month-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); padding: 15px; position: relative; border-radius: 4px; }
+  .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+  .kpi-card.green::before { background: var(--accent); }
+  .kpi-card.red::before { background: var(--accent2); }
+  .kpi-card.yellow::before { background: var(--accent3); }
+  .kpi-label { font-size: 9px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .kpi-value { font-family:var(--font-head); font-size: clamp(18px, 5vw, 26px); font-weight: 700; }
+  .panel { background: var(--surface); border: 1px solid var(--border); padding: 15px; margin-bottom: 10px; border-radius: 4px; }
+  .panel-title { font-size: 9px; text-transform: uppercase; color: var(--muted); margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
+  .panel-title::after { content:''; flex: 1; height: 1px; background: var(--border); }
+  .edit-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); gap: 10px; transition: 0.3s; }
+  .edit-row.paid { opacity: 0.5; }
+  .edit-row.paid .edit-name { text-decoration: line-through; color: var(--accent); }
+  .check-circle { width: 16px; height: 16px; border: 1px solid var(--muted); border-radius: 50%; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+  .check-circle.checked { background: var(--accent); border-color: var(--accent); color: #000; }
+  .edit-name { flex: 1; font-size: 11px; cursor: text; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 11px; text-align: right; width: 80px; padding: 4px; }
+  .edit-input:focus { border-color: var(--accent); background: #1a1e26; }
+  .group-header { font-size: 10px; color: var(--accent3); padding: 5px 0; border-bottom: 1px dashed var(--border); margin-top: 10px; font-weight: bold; }
+  .add-row-btn { background: none; border: 1px dashed var(--border); color: var(--muted); font-size: 9px; padding: 8px; width: 100%; cursor: pointer; margin-top: 10px; text-transform: uppercase; border-radius: 4px; }
+  .del-btn { color: var(--muted); cursor: pointer; font-size: 14px; background: none; border: none; }
+  .save-badge { display: none; align-items: center; gap: 6px; font-size: 10px; color: var(--accent3); text-transform: uppercase; margin-bottom: 5px; }
+  .save-badge.show { display: flex; }
+  .save-btn { background: var(--accent); border: none; color: #000; padding: 6px 14px; cursor: pointer; font-weight: 600; font-size: 11px; border-radius: 2px; }
+  .toast { position: fixed; bottom: 15px; right: 15px; background: var(--accent); color: #000; padding: 10px 15px; opacity: 0; transition: 0.3s; z-index: 999; font-weight: 600; border-radius: 4px; font-size: 11px; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title"><h1>FINANÇAS <span>2026</span></h1><p id="userLabel">Carregando...</p></div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+    <div class="save-badge" id="saveBadge">● Alterado <button class="save-btn" onclick="saveToCloud()">SALVAR NUVEM</button></div>
+    <div class="month-nav" id="monthNav"></div>
+  </div>
+</div>
+
+<div class="kpi-grid" id="kpiGrid"></div>
+
+<div class="panel"><div class="panel-title">Evolução Anual</div><canvas id="barChart"></canvas></div>
+
+<div class="panel"><div class="panel-title">Renda Mensal</div><div id="rendaSection"></div><button class="add-row-btn" onclick="addRow('renda')">+ Nova Renda</button></div>
+<div class="panel"><div class="panel-title">Despesas Fixas</div><div id="fixasSection"></div><button class="add-row-btn" onclick="addRow('fixas')">+ Nova Fixa</button></div>
+<div class="panel"><div class="panel-title">Temporárias</div><div id="tempSection"></div><button class="add-row-btn" onclick="addRow('temp')">+ Nova Temporária</button></div>
+<div class="panel"><div class="panel-title">A Receber</div><div id="descontosSection"></div><button class="add-row-btn" onclick="addRow('descontos')">+ Novo Desconto</button></div>
+
+<div class="toast" id="toast">✓ SINCRONIZADO!</div>
+
+<script>
+const SUPABASE_URL = 'https://rozwrlcgxklyhutwuklb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvendybGNneGtseWh1dHd1a2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0OTgxNzAsImV4cCI6MjA5MDA3NDE3MH0.oqucMNMeUiNE60pLX5oJGuJF-m8kcpvcQYyjE2fkmrc';
+const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const urlParams = new URLSearchParams(window.location.search);
+const CURRENT_USER = urlParams.get('user') || 'victor';
+document.getElementById('userLabel').innerText = `DASHBOARD: ${CURRENT_USER.toUpperCase()}`;
+
+const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+let activeMes = new Date().getMonth(); 
+let appData = null;
+let barInst;
+
+const createEmptyData = () => {
+  const data = {};
+  MONTHS.forEach(m => { data[m] = { renda: {}, fixas: {}, temp: {}, descontos: {}, paid: {} }; });
+  return data;
+};
+
+async function loadFromCloud() {
+  const { data } = await _supabase.from('registros').select('dados').eq('usuario', CURRENT_USER).maybeSingle();
+  appData = data ? data.dados : createEmptyData();
+  render();
+}
+
+async function saveToCloud() {
+  const btn = document.querySelector('.save-btn');
+  btn.innerText = 'SALVANDO...';
+  const { error } = await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: appData }, { onConflict: 'usuario' });
+  if (!error) {
+    document.getElementById('saveBadge').classList.remove('show');
+    btn.innerText = 'SALVAR NUVEM';
+    const t = document.getElementById('toast'); t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+}
+
+function addRow(cat) {
+  const n = prompt("Nome do item:");
+  if(n) {
+    appData[MONTHS[activeMes]][cat][n] = 0;
+    render();
+    document.getElementById('saveBadge').classList.add('show');
+  }
+}
+
+function deleteItem(cat, key) {
+  if(confirm(`Excluir "${key}" em ${MONTHS[activeMes]}?`)) {
+    delete appData[MONTHS[activeMes]][cat][key];
+    render();
+    document.getElementById('saveBadge').classList.add('show');
+  }
+}
+
+function togglePaid(key) {
+  const mes = MONTHS[activeMes];
+  if(!appData[mes].paid) appData[mes].paid = {};
+  appData[mes].paid[key] = !appData[mes].paid[key];
+  render();
+  document.getElementById('saveBadge').classList.add('show');
+}
+
+function updateName(cat, oldKey, newKey) {
+  if(oldKey === newKey || !newKey) return;
+  const mes = MONTHS[activeMes];
+  appData[mes][cat][newKey] = appData[mes][cat][oldKey];
+  delete appData[mes][cat][oldKey];
+  if(appData[mes].paid && appData[mes].paid[oldKey]) {
+    appData[mes].paid[newKey] = true;
+    delete appData[mes].paid[oldKey];
+  }
+  render();
+  document.getElementById('saveBadge').classList.add('show');
+}
+
+function render() {
+  const mes = MONTHS[activeMes];
+  const d = appData[mes];
+  const sum = (cat) => Object.values(d[cat]).reduce((a,v) => a + (parseFloat(v)||0), 0);
+  
+  const r = sum('renda'), f = sum('fixas'), t = sum('temp'), desc = sum('descontos');
+  const desp = f + t, saldo = (r + desc) - desp;
+
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card green"><div class="kpi-label">Renda+Desc</div><div class="kpi-value">R$ ${(r+desc).toLocaleString('pt-BR')}</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Gastos</div><div class="kpi-value">R$ ${desp.toLocaleString('pt-BR')}</div></div>
+    <div class="kpi-card yellow"><div class="kpi-label">Saldo</div><div class="kpi-value">R$ ${saldo.toLocaleString('pt-BR')}</div></div>`;
+
+  const build = (id, cat) => {
+    const w = document.getElementById(id); w.innerHTML = '';
+    const groups = {};
+    
+    Object.entries(d[cat]).forEach(([k,v]) => {
+      const split = k.split(':');
+      if(split.length > 1) {
+        const groupName = split[0].trim().toUpperCase();
+        if(!groups[groupName]) groups[groupName] = { total: 0, items: [] };
+        groups[groupName].total += parseFloat(v) || 0;
+        groups[groupName].items.push([k, v]);
+      } else {
+        renderRow(w, cat, k, v);
+      }
+    });
+
+    Object.entries(groups).forEach(([name, data]) => {
+      const gHeader = document.createElement('div');
+      gHeader.className = 'group-header';
+      gHeader.innerHTML = `<span>📂 ${name}</span> <span style="float:right">Total: R$ ${data.total.toLocaleString('pt-BR')}</span>`;
+      w.appendChild(gHeader);
+      data.items.forEach(([k,v]) => renderRow(w, cat, k, v));
+    });
+  };
+
+  const renderRow = (w, cat, k, v) => {
+    const isPaid = d.paid && d.paid[k];
+    const row = document.createElement('div');
+    row.className = `edit-row ${isPaid?'paid':''}`;
+    row.innerHTML = `
+      <div class="check-circle ${isPaid?'checked':''}" onclick="togglePaid('${k}')">${isPaid?'✓':''}</div>
+      <div class="edit-name" contenteditable="true" onblur="updateName('${cat}', '${k}', this.innerText)">${k}</div>
+      <input class="edit-input" type="number" step="0.01" value="${v}">
+      <button class="del-btn" onclick="deleteItem('${cat}', '${k}')">✕</button>`;
+    
+    row.querySelector('.edit-input').onchange = (e) => {
+      appData[mes][cat][k] = parseFloat(e.target.value) || 0;
+      document.getElementById('saveBadge').classList.add('show');
+      updateKPIsOnly();
+    };
+    w.appendChild(row);
+  };
+
+  build('rendaSection','renda'); build('fixasSection','fixas');
+  build('tempSection','temp'); build('descontosSection','descontos');
+  
+  const nav = document.getElementById('monthNav'); nav.innerHTML = '';
+  MONTHS.forEach((m,i) => {
+    const b = document.createElement('button'); b.className = 'month-btn'+(i===activeMes?' active':'');
+    b.textContent = m; b.onclick = () => { activeMes = i; render(); }; nav.appendChild(b);
+  });
+  updateKPIsOnly();
+}
+
+function updateKPIsOnly() {
+  const mes = MONTHS[activeMes];
+  const d = appData[mes];
+  const sum = (cat) => Object.values(d[cat]).reduce((a,v) => a + (parseFloat(v)||0), 0);
+  const r = sum('renda'), f = sum('fixas'), t = sum('temp'), desc = sum('descontos');
+  const desp = f + t, saldo = (r + desc) - desp;
+
+  document.querySelector('.kpi-card.green .kpi-value').innerText = `R$ ${(r+desc).toLocaleString('pt-BR')}`;
+  document.querySelector('.kpi-card.red .kpi-value').innerText = `R$ ${desp.toLocaleString('pt-BR')}`;
+  document.querySelector('.kpi-card.yellow .kpi-value').innerText = `R$ ${saldo.toLocaleString('pt-BR')}`;
+
+  if(barInst) barInst.destroy();
+  barInst = new Chart(document.getElementById('barChart'), {
+    type:'bar', data: {
+      labels: MONTHS,
+      datasets: [
+        { label: 'Renda', data: MONTHS.map(m => Object.values(appData[m].renda).reduce((a,v)=>a+v,0) + Object.values(appData[m].descontos).reduce((a,v)=>a+v,0)), backgroundColor: '#00e5a0' },
+        { label: 'Gastos', data: MONTHS.map(m => Object.values(appData[m].fixas).reduce((a,v)=>a+v,0) + Object.values(appData[m].temp).reduce((a,v)=>a+v,0)), backgroundColor: '#ff4d6d' }
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: '#5a6070', font: { size: 9 } }, grid: { display: false } } } }
+  });
+}
+
+window.onload = loadFromCloud;
+</script>
+</body>
+</html>
