@@ -54,9 +54,9 @@
   .group-content { display: none; padding-left: 15px; border-left: 1px solid var(--border); }
   .group-content.open { display: block; }
   .add-row-btn { background: none; border: 1px dashed var(--border); color: var(--muted); font-size: 9px; padding: 10px; width: 100%; cursor: pointer; margin-top: 10px; text-transform: uppercase; border-radius: 4px; }
-  .save-badge { display: none; align-items: center; gap: 6px; font-size: 10px; color: var(--accent3); margin-bottom: 5px; }
-  .save-badge.show { display: flex; }
-  .save-btn { background: var(--accent); border: none; color: #000; padding: 6px 14px; cursor: pointer; font-weight: 600; font-size: 11px; border-radius: 2px; }
+  .sync-indicator { font-size: 9px; color: var(--muted); margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
+  .sync-indicator.saving { color: var(--accent3); }
+  .sync-indicator.saved { color: var(--accent); }
   .toast { position: fixed; bottom: 15px; right: 15px; background: var(--accent); color: #000; padding: 10px 15px; opacity: 0; transition: 0.3s; z-index: 999; font-weight: 600; border-radius: 4px; }
 </style>
 </head>
@@ -64,7 +64,7 @@
 <div id="loginOverlay">
   <div class="login-card">
     <h2 style="font-family: 'Syne'; margin-bottom: 5px;">FINANÇAS <span>2026</span></h2>
-    <input type="text" id="userInput" class="login-input" placeholder="Seu nome de usuário...">
+    <input type="text" id="userInput" class="login-input" placeholder="Usuário...">
     <button class="login-btn" onclick="initApp()">ENTRAR</button>
   </div>
 </div>
@@ -78,18 +78,23 @@
     </div>
   </div>
   <div class="nav-area">
-    <div class="save-badge" id="saveBadge">● Alterado <button class="save-btn" onclick="saveToCloud()">SALVAR NUVEM</button></div>
+    <div class="sync-indicator" id="syncStatus">☁️ Nuvem Ativa</div>
     <div class="month-nav" id="monthNav"></div>
     <button class="btn-ui" style="color:var(--accent3); margin-top: 5px;" onclick="copyPreviousMonth()">📂 Replicar Mês Anterior</button>
   </div>
 </div>
-<div class="kpi-grid" id="kpiGrid"></div>
-<div class="panel"><div class="panel-title">Evolução Anual</div><canvas id="barChart"></canvas></div>
+<div class="kpi-grid" id="kpiGrid">
+  <div class="kpi-card green"><div class="kpi-label">Entradas</div><div class="kpi-value">R$ 0,00</div></div>
+  <div class="kpi-card red"><div class="kpi-label">Saídas</div><div class="kpi-value">R$ 0,00</div></div>
+  <div class="kpi-card yellow"><div class="kpi-label">Saldo</div><div class="kpi-value">R$ 0,00</div></div>
+</div>
+<div class="panel"><div class="panel-title">Evolução Anual</div><div style="height: 180px;"><canvas id="barChart"></canvas></div></div>
 <div class="panel"><div class="panel-title">Renda Mensal</div><div id="rendaSection"></div><button class="add-row-btn" onclick="addRow('renda')">+ Nova Renda</button></div>
-<div class="panel"><div class="panel-title">Despesas Fixas</div><div id="fixasSection"></div><button class="add-row-btn" onclick="addRow('fixas')">+ Nova Fixa (Ex: Item [1/12])</button></div>
+<div class="panel"><div class="panel-title">Despesas Fixas</div><div id="fixasSection"></div><button class="add-row-btn" onclick="addRow('fixas')">+ Nova Fixa</button></div>
 <div class="panel"><div class="panel-title">Temporárias</div><div id="tempSection"></div><button class="add-row-btn" onclick="addRow('temp')">+ Nova Temporária</button></div>
 <div class="panel"><div class="panel-title">A Receber</div><div id="descontosSection"></div><button class="add-row-btn" onclick="addRow('descontos')">+ Novo Desconto</button></div>
-<div class="toast" id="toast">✓ SINCRONIZADO!</div>
+<div class="toast" id="toast">✓ SALVO AUTOMATICAMENTE</div>
+
 <script>
 const SUPABASE_URL = 'https://rozwrlcgxklyhutwuklb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvendybGNneGtseWh1dHd1a2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0OTgxNzAsImV4cCI6MjA5MDA3NDE3MH0.oqucMNMeUiNE60pLX5oJGuJF-m8kcpvcQYyjE2fkmrc';
@@ -97,26 +102,26 @@ const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 let CURRENT_USER = "";
 let activeMes = new Date().getMonth(); 
-let fullData = null; // Guardará a estrutura completa com anos
-let appData = null; // Guardará o ano atual (2026)
+let fullData = null;
+let appData = null;
 let userPassword = "";
 let barInst;
 let openGroups = {};
+let saveTimeout;
 
 function initApp() {
   const name = document.getElementById('userInput').value.trim().toLowerCase();
   if(!name) return;
   CURRENT_USER = name;
   document.getElementById('loginOverlay').style.display = 'none';
-  document.getElementById('userLabel').innerText = `DASHBOARD: ${CURRENT_USER.toUpperCase()}`;
   loadFromCloud();
 }
+
 function toggleTheme() {
   const theme = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
   document.body.setAttribute('data-theme', theme);
   localStorage.setItem('theme', theme);
 }
-if(localStorage.getItem('theme') === 'light') document.body.setAttribute('data-theme', 'light');
 
 async function loadFromCloud() {
   const { data } = await _supabase.from('registros').select('dados, senha').eq('usuario', CURRENT_USER).maybeSingle();
@@ -129,35 +134,38 @@ async function loadFromCloud() {
   } else { userPassword = prompt(`Novo usuário. Defina uma senha:`); }
   
   fullData = data ? data.dados : {};
-  // SEUS DADOS ESTÃO AQUI: Entramos na pasta 2026
-  if (fullData["2026"]) {
-      appData = fullData["2026"];
-  } else {
-      appData = fullData; // Fallback se os dados estiverem na raiz
-  }
+  appData = fullData["2026"] || fullData;
   if (!appData["JAN"]) appData = createEmptyYear();
   render();
 }
+
 const createEmptyYear = () => {
   const d = {}; MONTHS.forEach(m => d[m] = { renda: {}, fixas: {}, temp: {}, descontos: {}, paid: {} }); return d;
 };
-async function saveToCloud() {
-  const btn = document.querySelector('.save-btn'); btn.innerText = 'SALVANDO...';
-  // IMPORTANTE: Mantemos a estrutura de pasta para não perder o PicPay e outros anos
-  fullData["2026"] = appData;
-  await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: fullData, senha: userPassword }, { onConflict: 'usuario' });
-  document.getElementById('saveBadge').classList.remove('show');
-  btn.innerText = 'SALVAR NUVEM';
-  const t = document.getElementById('toast'); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000);
+
+// --- FUNÇÃO DE AUTO-SAVE ---
+function autoSave() {
+  clearTimeout(saveTimeout);
+  document.getElementById('syncStatus').innerText = "⏳ Sincronizando...";
+  document.getElementById('syncStatus').className = "sync-indicator saving";
+  
+  saveTimeout = setTimeout(async () => {
+    fullData["2026"] = appData;
+    await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: fullData, senha: userPassword }, { onConflict: 'usuario' });
+    document.getElementById('syncStatus').innerText = "☁️ Sincronizado";
+    document.getElementById('syncStatus').className = "sync-indicator saved";
+  }, 1000); // Salva 1 segundo após a última alteração
 }
+
 function copyPreviousMonth() {
   if (activeMes === 0) return alert("Janeiro não possui mês anterior.");
   const prev = MONTHS[activeMes - 1]; const curr = MONTHS[activeMes];
-  if (confirm(`Deseja copiar todos os itens de ${prev} para ${curr}?`)) {
-    appData[curr] = JSON.parse(JSON.stringify(appData[prev])); appData[curr].paid = {}; render();
-    document.getElementById('saveBadge').classList.add('show');
+  if (confirm(`Copiar dados de ${prev} para ${curr}?`)) {
+    appData[curr] = JSON.parse(JSON.stringify(appData[prev]));
+    appData[curr].paid = {}; render(); autoSave();
   }
 }
+
 function addRow(cat) {
   const n = prompt("Nome:"); if(!n) return;
   const val = parseFloat(prompt("Valor:")) || 0;
@@ -167,11 +175,12 @@ function addRow(cat) {
     const base = n.replace(/\[\d+\/\d+\]/, "").trim();
     for (let i = 0; i <= (total - atual); i++) {
       const mIdx = (activeMes + i) % 12;
-      appData[MONTHS[mIdx]][cat][`${base} [${atual + i}/${total}]`] = val;
+      if(appData[MONTHS[mIdx]]) appData[MONTHS[mIdx]][cat][`${base} [${atual + i}/${total}]`] = val;
     }
   } else { appData[MONTHS[activeMes]][cat][n] = val; }
-  render(); document.getElementById('saveBadge').classList.add('show');
+  render(); autoSave();
 }
+
 function updateValue(cat, key, val) {
   appData[MONTHS[activeMes]][cat][key] = val;
   const match = key.match(/\[(\d+)\/(\d+)\]/);
@@ -179,15 +188,17 @@ function updateValue(cat, key, val) {
     const base = key.replace(/\[\d+\/\d+\]/, "").trim();
     for (let i = 1; i < 12; i++) {
         const m = MONTHS[(activeMes + i) % 12];
-        Object.keys(appData[m][cat]).forEach(k => { if(k.startsWith(base)) appData[m][cat][k] = val; });
+        if(appData[m]) Object.keys(appData[m][cat]).forEach(k => { if(k.startsWith(base)) appData[m][cat][k] = val; });
     }
   }
-  document.getElementById('saveBadge').classList.add('show'); updateKPIsOnly();
+  updateKPIsOnly(); autoSave();
 }
+
 function togglePaid(k) {
   const m = MONTHS[activeMes]; if(!appData[m].paid) appData[m].paid = {};
-  appData[m].paid[k] = !appData[m].paid[k]; render(); document.getElementById('saveBadge').classList.add('show');
+  appData[m].paid[k] = !appData[m].paid[k]; render(); autoSave();
 }
+
 function render() {
   const m = MONTHS[activeMes]; const d = appData[m];
   const nav = document.getElementById('monthNav'); nav.innerHTML = '';
@@ -215,30 +226,48 @@ function render() {
   const renderRow = (cont, cat, k, v) => {
     const isP = d.paid && d.paid[k]; const r = document.createElement('div'); r.className = `edit-row ${isP?'paid':''}`;
     r.innerHTML = `<div class="check-circle ${isP?'checked':''}" onclick="togglePaid('${k}')">${isP?'✓':''}</div>
-      <div class="edit-name" contenteditable="true" onblur="if(this.innerText!=='${k}'){appData[MONTHS[activeMes]]['${cat}'][this.innerText]=v;delete appData[MONTHS[activeMes]]['${cat}']['${k}'];render();document.getElementById('saveBadge').classList.add('show');}">${k}</div>
+      <div class="edit-name" contenteditable="true" onblur="if(this.innerText!=='${k}'){appData[MONTHS[activeMes]]['${cat}'][this.innerText]=v;delete appData[MONTHS[activeMes]]['${cat}']['${k}'];render();autoSave();}">${k}</div>
       <input class="edit-input" type="number" step="0.01" value="${v}">
-      <span style="cursor:pointer; opacity:0.3; font-size:14px;" onclick="if(confirm('Excluir?')){delete appData[MONTHS[activeMes]]['${cat}']['${k}']; render(); document.getElementById('saveBadge').classList.add('show');}">✕</span>`;
+      <span style="cursor:pointer; opacity:0.3; font-size:14px;" onclick="if(confirm('Excluir?')){delete appData[MONTHS[activeMes]]['${cat}']['${k}']; render(); autoSave();}">✕</span>`;
     r.querySelector('.edit-input').onchange = (e) => updateValue(cat, k, parseFloat(e.target.value)||0); cont.appendChild(r);
   };
   build('rendaSection','renda'); build('fixasSection','fixas'); build('tempSection','temp'); build('descontosSection','descontos');
   updateKPIsOnly();
 }
+
 function updateKPIsOnly() {
   const m = MONTHS[activeMes]; const d = appData[m];
-  const sum = (c) => Object.values(d[c]).reduce((a,v) => a + (parseFloat(v)||0), 0);
-  const r = sum('renda'), f = sum('fixas'), t = sum('temp'), desc = sum('descontos');
+  const sum = (mesData, c) => Object.values(mesData[c] || {}).reduce((a,v) => a + (parseFloat(v)||0), 0);
+  
+  const r = sum(d, 'renda'), f = sum(d, 'fixas'), t = sum(d, 'temp'), desc = sum(d, 'descontos');
   const desp = f + t, s = (r + desc) - desp;
+  
   document.querySelector('.kpi-card.green .kpi-value').innerText = `R$ ${(r+desc).toLocaleString('pt-BR')}`;
   document.querySelector('.kpi-card.red .kpi-value').innerText = `R$ ${desp.toLocaleString('pt-BR')}`;
   document.querySelector('.kpi-card.yellow .kpi-value').innerText = `R$ ${s.toLocaleString('pt-BR')}`;
+
+  // Atualização do Gráfico
+  const dataRenda = MONTHS.map(mn => sum(appData[mn], 'renda') + sum(appData[mn], 'descontos'));
+  const dataGastos = MONTHS.map(mn => sum(appData[mn], 'fixas') + sum(appData[mn], 'temp'));
+
   if(barInst) barInst.destroy();
   barInst = new Chart(document.getElementById('barChart'), {
-    type:'bar', data: {
-      labels: MONTHS, datasets: [
-        { label: 'Renda', data: MONTHS.map(mn => (Object.values(appData[mn].renda).reduce((a,v)=>a+v,0) + Object.values(appData[mn].descontos).reduce((a,v)=>a+v,0))), backgroundColor: '#00e5a0' },
-        { label: 'Gastos', data: MONTHS.map(mn => (Object.values(appData[mn].fixas).reduce((a,v)=>a+v,0) + Object.values(appData[mn].temp).reduce((a,v)=>a+v,0))), backgroundColor: '#ff4d6d' }
+    type:'bar', 
+    data: {
+      labels: MONTHS, 
+      datasets: [
+        { label: 'Renda', data: dataRenda, backgroundColor: '#00e5a0', borderRadius: 2 },
+        { label: 'Gastos', data: dataGastos, backgroundColor: '#ff4d6d', borderRadius: 2 }
       ]
-    }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: '#5a6070', font: { size: 9 } }, grid: { display: false } } } }
+    }, 
+    options: { 
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } }, 
+      scales: { 
+        y: { grid: { color: '#1e2330' }, ticks: { color: '#5a6070', font: { size: 8 } } }, 
+        x: { ticks: { color: '#5a6070', font: { size: 9 } }, grid: { display: false } } 
+      } 
+    }
   });
 }
 </script>
