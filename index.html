@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Finanças 2026 | Victor PRO</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0c10; --surface: #111318; --border: #1e2330;
+    --accent: #00e5a0; --accent2: #ff4d6d; --accent3: #ffd166; --muted: #5a6070;
+    --text: #e8eaf0; --font-head: 'Syne', sans-serif; --font-mono: 'DM Mono', monospace;
+  }
+  [data-theme="light"] {
+    --bg: #f4f7fa; --surface: #ffffff; --border: #dce1e8;
+    --accent: #00b37e; --accent2: #e63946; --accent3: #f4a261; --muted: #8d99ae;
+    --text: #2b2d42;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; padding: 20px 15px 60px; transition: 0.3s; font-size: 14px; }
+  
+  #helpModal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+  .help-card { background: var(--surface); border: 1px solid var(--border); padding: 25px; border-radius: 12px; width: 100%; max-width: 450px; position: relative; }
+  .help-card h3 { font-family: var(--font-head); margin-bottom: 15px; color: var(--accent); }
+  .help-item { margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; font-size: 13px; }
+  .help-item b { color: var(--accent3); display: block; margin-bottom: 2px; }
+
+  #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .login-card { background: var(--surface); padding: 35px; border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 380px; text-align: center; }
+  .login-input { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 14px; width: 100%; margin: 15px 0 5px; border-radius: 6px; font-family: var(--font-mono); outline: none; font-size: 14px; }
+  .login-btn { background: var(--accent); color: #000; border: none; padding: 14px; width: 100%; font-weight: 700; cursor: pointer; border-radius: 6px; margin-top: 10px; font-size: 14px; }
+  .login-remember { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 14px; font-size: 12px; color: var(--muted); text-align: center; cursor: pointer; user-select: none; }
+  .login-remember input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+
+  .header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 15px; }
+  .header-title h1 { font-family: var(--font-head); font-size: clamp(24px, 6vw, 42px); font-weight: 800; letter-spacing: -1px; }
+  .header-title h1 span { color: var(--accent); }
+  
+  .tools-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+  .btn-ui { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; cursor: pointer; border-radius: 6px; font-size: 10px; text-transform: uppercase; font-weight: 600; }
+  .btn-ui.active { background: var(--accent3); color: #000; border-color: var(--accent3); }
+
+  .nav-area { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .month-nav { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .month-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 6px 10px; cursor: pointer; text-transform: uppercase; border-radius: 4px; }
+  .month-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 700; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); padding: 15px; position: relative; border-radius: 8px; }
+  .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .kpi-card.green::before { background: var(--accent); }
+  .kpi-card.red::before { background: var(--accent2); }
+  .kpi-card.yellow::before { background: var(--accent3); }
+  .kpi-label { font-size: 9px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; letter-spacing: 1px; }
+  .kpi-value { font-family:var(--font-head); font-size: 24px; font-weight: 700; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); padding: 15px; margin-bottom: 12px; border-radius: 8px; }
+  .panel-title { font-size: 10px; text-transform: uppercase; color: var(--muted); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+  .panel-title::after { content:''; flex: 1; height: 1px; background: var(--border); }
+  
+  /* LINHAS COMPACTAS */
+  .edit-row { display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); gap: 10px; min-height: 38px; }
+  .edit-row.paid { opacity: 0.4; }
+  .check-circle { width: 20px; height: 20px; border: 1px solid var(--muted); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+  .check-circle.checked { background: var(--accent); border-color: var(--accent); color: #000; }
+  .edit-name { flex: 1; font-size: 13px; outline: none; cursor: text; padding: 2px 0; }
+  .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 13px; text-align: right; width: 90px; }
+  
+  .group-header { font-size: 11px; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+  .group-content { display: none; padding-left: 15px; border-left: 1px solid var(--border); }
+  .group-content.open { display: block; }
+
+  .add-row-btn { background: none; border: 1px dashed var(--border); color: var(--muted); font-size: 9px; padding: 10px; width: 100%; cursor: pointer; margin-top: 10px; text-transform: uppercase; border-radius: 6px; font-weight: 600; }
+  .sync-indicator { font-size: 9px; color: var(--muted); margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+  .sync-indicator.saving { color: var(--accent3); font-weight: bold; }
+  .sync-indicator.saved { color: var(--accent); }
+  
+  .del-btn { color: var(--accent2); cursor: pointer; font-size: 18px; padding: 0 8px; opacity: 0.5; transition: 0.2s; display: flex; align-items: center; justify-content: center; min-width: 32px; }
+  .del-btn:hover { opacity: 1; transform: scale(1.1); }
+</style>
+</head>
+<body>
+
+<div id="helpModal" onclick="this.style.display='none'">
+  <div class="help-card" onclick="event.stopPropagation()">
+    <h3>Dicas de Atalhos 🚀</h3>
+    <div class="help-item"><b>📂 Pastas</b> Use <code>Nome: Item</code> (Ex: Gabi: Aluguel)</div>
+    <div class="help-item"><b>💳 Parcelas</b> Use <code>[1/12]</code> no nome para distribuir nos meses.</div>
+    <div class="help-item"><b>📊 Saldo Real</b> Quando ativado no topo, os cálculos mostram apenas o que você já deu "Check".</div>
+    <button class="login-btn" onclick="document.getElementById('helpModal').style.display='none'">ENTENDI!</button>
+  </div>
+</div>
+
+<div id="loginOverlay">
+  <div class="login-card">
+    <h2 style="font-family: 'Syne'; font-size: 28px;">FINANÇAS <span>2026</span></h2>
+    <input type="text" id="userInput" class="login-input" placeholder="Usuário...">
+    <label class="login-remember"><input type="checkbox" id="rememberMe"> Lembrar de mim</label>
+    <button class="login-btn" onclick="initApp()">ENTRAR</button>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-title">
+    <h1>FINANÇAS <span>2026</span></h1>
+    <div class="tools-row">
+      <p id="userLabel" style="font-size: 10px; color: var(--muted); font-weight: 700;"></p>
+      <button class="btn-ui" onclick="toggleTheme()">🌓 TEMA</button>
+      <button class="btn-ui" onclick="document.getElementById('helpModal').style.display='flex'">❓ AJUDA</button>
+      <button class="btn-ui" id="btnSaldoReal" onclick="toggleSaldoReal()">📊 MODO SALDO REAL</button>
+      <button class="btn-ui" onclick="location.reload()">🚪 SAIR</button>
+    </div>
+  </div>
+  <div class="nav-area">
+    <div class="sync-indicator" id="syncStatus">☁️ Nuvem Ativa</div>
+    <div class="month-nav" id="monthNav"></div>
+    <button class="btn-ui" style="color:var(--accent3); margin-top: 5px;" onclick="copyPreviousMonth()">📂 Replicar Mês Anterior</button>
+  </div>
+</div>
+
+<div class="kpi-grid" id="kpiGrid"></div>
+<div class="panel"><div class="panel-title">Evolução Anual</div><div style="height: 180px;"><canvas id="barChart"></canvas></div></div>
+<div class="panel"><div class="panel-title">Renda Mensal</div><div id="rendaSection"></div><button class="add-row-btn" onclick="addRow('renda')">+ Nova Renda</button></div>
+<div class="panel"><div class="panel-title">Despesas Fixas</div><div id="fixasSection"></div><button class="add-row-btn" onclick="addRow('fixas')">+ Nova Fixa</button></div>
+<div class="panel"><div class="panel-title">Temporárias</div><div id="tempSection"></div><button class="add-row-btn" onclick="addRow('temp')">+ Nova Temporária</button></div>
+<div class="panel"><div class="panel-title">A Receber</div><div id="descontosSection"></div><button class="add-row-btn" onclick="addRow('descontos')">+ Novo a receber</button></div>
+
+<script>
+const SUPABASE_URL = 'https://rozwrlcgxklyhutwuklb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvendybGNneGtseWh1dHd1a2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0OTgxNzAsImV4cCI6MjA5MDA3NDE3MH0.oqucMNMeUiNE60pLX5oJGuJF-m8kcpvcQYyjE2fkmrc';
+const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const REMEMBER_LS = 'financas_remember_v1';
+function getRemembered() { try { const j = localStorage.getItem(REMEMBER_LS); return j ? JSON.parse(j) : null; } catch (_) { return null; } }
+function setRemembered(usuario, senha) { localStorage.setItem(REMEMBER_LS, JSON.stringify({ usuario, senha })); }
+function clearRemembered() { localStorage.removeItem(REMEMBER_LS); }
+const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+let CURRENT_USER = "", activeMes = new Date().getMonth(), fullData = null, appData = null, userPassword = "", barInst, openGroups = {}, saveTimeout, modoSaldoReal = false;
+
+function initApp() {
+  const name = document.getElementById('userInput').value.trim().toLowerCase();
+  if(!name) return;
+  CURRENT_USER = name;
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('userLabel').innerText = `DASHBOARD: ${CURRENT_USER.toUpperCase()}`;
+  loadFromCloud();
+}
+
+async function loadFromCloud() {
+  const { data } = await _supabase.from('registros').select('dados, senha').eq('usuario', CURRENT_USER).maybeSingle();
+  const remembered = getRemembered();
+  const wantRemember = () => document.getElementById('rememberMe')?.checked;
+
+  if (data) {
+    if (data.senha) {
+      const savedOk = remembered && remembered.usuario === CURRENT_USER && remembered.senha === data.senha;
+      if (savedOk) userPassword = data.senha;
+      else {
+        const p = prompt(`Senha para ${CURRENT_USER}:`);
+        if (p !== data.senha) { alert("Incorreta!"); location.reload(); return; }
+        userPassword = data.senha;
+        if (wantRemember()) setRemembered(CURRENT_USER, userPassword);
+        else if (remembered?.usuario === CURRENT_USER) clearRemembered();
+      }
+    } else {
+      userPassword = prompt(`Defina uma senha:`);
+      if (wantRemember() && userPassword) setRemembered(CURRENT_USER, userPassword);
+    }
+  } else {
+    userPassword = prompt(`Novo usuário. Defina uma senha:`);
+    if (wantRemember() && userPassword) setRemembered(CURRENT_USER, userPassword);
+  }
+  fullData = data ? data.dados : {};
+  appData = fullData["2026"] || fullData;
+  if (!appData["JAN"]) appData = createEmptyYear();
+  render();
+}
+
+(function prefillLoginUser() {
+  const r = getRemembered();
+  if (r?.usuario) { const el = document.getElementById('userInput'); if (el) el.value = r.usuario; }
+})();
+
+function autoSave() {
+  clearTimeout(saveTimeout);
+  const st = document.getElementById('syncStatus');
+  st.innerText = "⏳ Sincronizando..."; st.className = "sync-indicator saving";
+  saveTimeout = setTimeout(async () => {
+    fullData["2026"] = appData;
+    await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: fullData, senha: userPassword }, { onConflict: 'usuario' });
+    st.innerText = "☁️ Sincronizado"; st.className = "sync-indicator saved";
+  }, 400);
+}
+
+function deleteItem(cat, key) {
+  if(confirm(`Excluir "${key}"?`)) {
+    const mes = MONTHS[activeMes];
+    delete appData[mes][cat][key];
+    if (appData[mes].paid) delete appData[mes].paid[key];
+    render();
+    autoSave();
+  }
+}
+
+function renderRow(cat, k, v) {
+    const isP = appData[MONTHS[activeMes]].paid?.[k];
+    const r = document.createElement('div'); r.className = `edit-row ${isP?'paid':''}`;
+    
+    const check = document.createElement('div'); 
+    check.className = `check-circle ${isP?'checked':''}`;
+    check.innerHTML = isP ? '✓' : '';
+    check.onclick = () => togglePaid(k);
+
+    const name = document.createElement('div');
+    name.className = 'edit-name';
+    name.contentEditable = true;
+    name.innerText = k;
+    name.onblur = (e) => updateName(cat, k, e.target.innerText);
+
+    const input = document.createElement('input');
+    input.className = 'edit-input';
+    input.type = 'number';
+    input.step = '0.01';
+    input.value = v;
+    input.onchange = (e) => updateValue(cat, k, parseFloat(e.target.value)||0);
+
+    const del = document.createElement('span');
+    del.className = 'del-btn';
+    del.innerHTML = '✕';
+    del.onclick = () => deleteItem(cat, k);
+
+    r.appendChild(check);
+    r.appendChild(name);
+    r.appendChild(input);
+    r.appendChild(del);
+    return r;
+}
+
+function render() {
+  normalizeAppData();
+  const m = MONTHS[activeMes], d = appData[m];
+  const nav = document.getElementById('monthNav'); nav.innerHTML = '';
+  MONTHS.forEach((mn,i) => {
+    const b = document.createElement('button'); b.className = 'month-btn'+(i===activeMes?' active':'');
+    b.textContent = mn; b.onclick = () => { activeMes = i; render(); }; nav.appendChild(b);
+  });
+
+  const build = (id, cat) => {
+    const w = document.getElementById(id); w.innerHTML = ''; const groups = {};
+    Object.entries(d[cat] || {}).forEach(([k,v]) => {
+      const s = k.split(':');
+      if(s.length > 1) {
+        const gn = s[0].trim().toUpperCase(); if(!groups[gn]) groups[gn]={t:0, i:[]};
+        groups[gn].t += parseFloat(v); groups[gn].i.push([k,v]);
+      } else w.appendChild(renderRow(cat, k, v));
+    });
+    Object.entries(groups).forEach(([n, data]) => {
+      const isOpen = openGroups[n], h = document.createElement('div'); h.className = 'group-header';
+      h.onclick = () => { openGroups[n] = !isOpen; render(); };
+      h.innerHTML = `<span>📂 ${n}</span> <span>R$ ${data.t.toLocaleString('pt-BR')}</span>`; w.appendChild(h);
+      const c = document.createElement('div'); c.className = `group-content ${isOpen?'open':''}`;
+      data.i.forEach(([ik,iv]) => w.appendChild(createGroupRow(cat, ik, iv, c)));
+      w.appendChild(c);
+    });
+  };
+  build('rendaSection','renda'); build('fixasSection','fixas'); build('tempSection','temp'); build('descontosSection','descontos');
+  updateKPIsOnly();
+}
+
+function createGroupRow(cat, k, v, container) {
+  const r = renderRow(cat, k, v);
+  container.appendChild(r);
+  return document.createDocumentFragment();
+}
+
+function createEmptyYear() { const d = {}; MONTHS.forEach(m => d[m] = { renda: {}, fixas: {}, temp: {}, descontos: {}, paid: {} }); return d; }
+function normalizeAppData() {
+  const keys = ['renda', 'fixas', 'temp', 'descontos', 'paid'];
+  MONTHS.forEach(mn => {
+    if (!appData[mn] || typeof appData[mn] !== 'object') appData[mn] = {};
+    keys.forEach(k => {
+      if (appData[mn][k] == null || typeof appData[mn][k] !== 'object') appData[mn][k] = {};
+    });
+  });
+}
+function toggleTheme() { const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; document.body.setAttribute('data-theme', t); localStorage.setItem('theme', t); }
+if(localStorage.getItem('theme') === 'light') document.body.setAttribute('data-theme', 'light');
+function toggleSaldoReal() { modoSaldoReal = !modoSaldoReal; document.getElementById('btnSaldoReal').classList.toggle('active', modoSaldoReal); render(); }
+function togglePaid(k) { const m = appData[MONTHS[activeMes]]; if(!m.paid) m.paid = {}; m.paid[k] = !m.paid[k]; render(); autoSave(); }
+
+function addRow(cat) {
+  const n = prompt("Nome:"); if(!n) return;
+  const val = parseFloat(prompt("Valor:")) || 0;
+  const match = n.match(/\[(\d+)\/(\d+)\]/);
+  if (match) {
+    const a = parseInt(match[1]), t = parseInt(match[2]), base = n.replace(/\[\d+\/\d+\]/, "").trim();
+    for (let i = 0; i <= (t - a); i++) {
+      const mIdx = (activeMes + i) % 12;
+      if(appData[MONTHS[mIdx]]) appData[MONTHS[mIdx]][cat][`${base} [${a + i}/${t}]`] = val;
+    }
+  } else appData[MONTHS[activeMes]][cat][n] = val;
+  render(); autoSave();
+}
+
+function updateName(cat, oldK, newK) {
+  newK = newK.trim();
+  if(!newK || oldK === newK) return;
+  const mes = MONTHS[activeMes];
+  const val = appData[mes][cat][oldK];
+  delete appData[mes][cat][oldK];
+  appData[mes][cat][newK] = val;
+  if(appData[mes].paid?.[oldK]) { appData[mes].paid[newK] = true; delete appData[mes].paid[oldK]; }
+  render(); autoSave();
+}
+
+function updateValue(cat, key, val) {
+  appData[MONTHS[activeMes]][cat][key] = val;
+  const match = key.match(/\[(\d+)\/(\d+)\]/);
+  if (match && confirm("Atualizar parcelas futuras?")) {
+    const base = key.replace(/\[\d+\/\d+\]/, "").trim();
+    for (let i = 1; i < 12; i++) {
+        const m = MONTHS[(activeMes + i) % 12];
+        if(appData[m] && appData[m][cat]) {
+          Object.keys(appData[m][cat]).forEach(k => { if(k.startsWith(base)) appData[m][cat][k] = val; });
+        }
+    }
+  }
+  updateKPIsOnly(); autoSave();
+}
+
+function copyPreviousMonth() {
+  if (activeMes === 0) return;
+  const prev = MONTHS[activeMes - 1], curr = MONTHS[activeMes];
+  if (confirm(`Replicar itens de ${prev}?`)) {
+    const newData = JSON.parse(JSON.stringify(appData[prev])); newData.paid = {};
+    ['renda','fixas','temp','descontos'].forEach(cat => {
+      const ent = Object.entries(newData[cat]); newData[cat] = {};
+      ent.forEach(([k, v]) => {
+        const match = k.match(/\[(\d+)\/(\d+)\]/);
+        if (match) {
+          const a = parseInt(match[1]), t = parseInt(match[2]);
+          if (a < t) newData[cat][k.replace(`[${a}/${t}]`, `[${a + 1}/${t}]`)] = v;
+        } else newData[cat][k] = v;
+      });
+    });
+    appData[curr] = newData; render(); autoSave();
+  }
+}
+
+function updateKPIsOnly() {
+  const m = MONTHS[activeMes], d = appData[m];
+  const sum = (mesData, c) => Object.entries(mesData[c] || {}).reduce((t, [key, val]) => {
+    const v = parseFloat(val) || 0; return modoSaldoReal ? (mesData.paid?.[key] ? t + v : t) : t + v;
+  }, 0);
+  const r = sum(d, 'renda'), f = sum(d, 'fixas'), t = sum(d, 'temp'), desc = sum(d, 'descontos'), desp = f + t, s = (r + desc) - desp;
+  document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card green"><div class="kpi-label">Entradas</div><div class="kpi-value">R$ ${r.toLocaleString('pt-BR')}</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Saídas</div><div class="kpi-value">R$ ${desp.toLocaleString('pt-BR')}</div></div>
+    <div class="kpi-card yellow"><div class="kpi-label">Saldo</div><div class="kpi-value">R$ ${s.toLocaleString('pt-BR')}</div></div>`;
+  const getSumF = (md, c) => Object.values(md[c] || {}).reduce((a,v)=>a+(parseFloat(v)||0),0);
+  const dR = MONTHS.map(mn => getSumF(appData[mn], 'renda') + getSumF(appData[mn], 'descontos'));
+  const dG = MONTHS.map(mn => getSumF(appData[mn], 'fixas') + getSumF(appData[mn], 'temp'));
+  if(barInst) barInst.destroy();
+  barInst = new Chart(document.getElementById('barChart'), {
+    type:'bar', data: { labels: MONTHS, datasets: [{ label: 'Renda', data: dR, backgroundColor: '#00e5a0' }, { label: 'Gastos', data: dG, backgroundColor: '#ff4d6d' }]},
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#1e2330' }, ticks: { color: '#5a6070', font: { size: 9 } } }, x: { ticks: { color: '#5a6070', font: { size: 10 } }, grid: { display: false } } } }
+  });
+}
+</script>
+</body>
+</html>
