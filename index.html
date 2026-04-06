@@ -557,20 +557,32 @@ function updateValue(cat, key, val) {
 function copyPreviousMonth() {
   if (activeMes === 0) return;
   const prev = MONTHS[activeMes - 1], curr = MONTHS[activeMes];
-  if (confirm(`Replicar itens de ${prev}?`)) {
-    const newData = JSON.parse(JSON.stringify(appData[prev])); newData.paid = {};
-    ['renda','fixas','temp','descontos'].forEach(cat => {
-      const ent = Object.entries(newData[cat]); newData[cat] = {};
+  showChoiceModal(
+    'Replicar mês anterior',
+    `Trazer de ${prev} para ${curr} a mesma lista de itens (parcelas seguem para o próximo número). Escolha se os valores vêm iguais ou zerados para você preencher.`,
+    'Com valores',
+    'Sem valores (zerar)'
+  ).then(choice => {
+    if (choice === 'cancel') return;
+    const zerar = choice === 'all';
+    const newData = JSON.parse(JSON.stringify(appData[prev]));
+    newData.paid = {};
+    ['renda', 'fixas', 'temp', 'descontos'].forEach(cat => {
+      const ent = Object.entries(newData[cat]);
+      newData[cat] = {};
       ent.forEach(([k, v]) => {
+        const valOut = zerar ? 0 : v;
         const match = k.match(/\[(\d+)\/(\d+)\]/);
         if (match) {
-          const a = parseInt(match[1]), t = parseInt(match[2]);
-          if (a < t) newData[cat][k.replace(`[${a}/${t}]`, `[${a + 1}/${t}]`)] = v;
-        } else newData[cat][k] = v;
+          const a = parseInt(match[1], 10), t = parseInt(match[2], 10);
+          if (a < t) newData[cat][k.replace(`[${a}/${t}]`, `[${a + 1}/${t}]`)] = valOut;
+        } else newData[cat][k] = valOut;
       });
     });
-    appData[curr] = newData; render(); autoSave();
-  }
+    appData[curr] = newData;
+    render();
+    autoSave();
+  });
 }
 
 function updateKPIsOnly() {
