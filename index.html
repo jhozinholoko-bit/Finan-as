@@ -149,9 +149,12 @@ const SUPABASE_URL = 'https://rozwrlcgxklyhutwuklb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvendybGNneGtseWh1dHd1a2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0OTgxNzAsImV4cCI6MjA5MDA3NDE3MH0.oqucMNMeUiNE60pLX5oJGuJF-m8kcpvcQYyjE2fkmrc';
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const REMEMBER_LS = 'financas_remember_v1';
+const LAST_USER_LS = 'financas_last_user_v1';
 function getRemembered() { try { const j = localStorage.getItem(REMEMBER_LS); return j ? JSON.parse(j) : null; } catch (_) { return null; } }
 function setRemembered(usuario, senha) { localStorage.setItem(REMEMBER_LS, JSON.stringify({ usuario, senha })); }
 function clearRemembered() { localStorage.removeItem(REMEMBER_LS); }
+function getLastUser() { try { return (localStorage.getItem(LAST_USER_LS) || '').trim(); } catch (_) { return ''; } }
+function setLastUser(usuario) { try { if (usuario) localStorage.setItem(LAST_USER_LS, usuario); } catch (_) {} }
 const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 let CURRENT_USER = "", activeMes = new Date().getMonth(), fullData = null, appData = null, userPassword = "", barInst, openGroups = {}, saveTimeout, modoSaldoReal = false;
 
@@ -344,10 +347,66 @@ function convertBaseItemToParcelSeries(cat, oldK, pNew) {
   return true;
 }
 
+function createParcelSeriesFromCurrent(cat, oldK, pNew) {
+  // Cria parcelas nos próximos meses (mesmo que não existiam antes),
+  // baseado no valor do mês atual, e remove o item antigo onde existir.
+  normalizeAppData();
+  const startIdx = activeMes;
+  const startMonth = MONTHS[startIdx];
+  const currBucket = appData[startMonth][cat];
+  if (!currBucket || !(oldK in currBucket)) return false;
+
+  const baseVal = currBucket[oldK];
+  const planned = [];
+  for (let i = 0; i <= (pNew.t - pNew.a) && i < 12; i++) {
+    const idx = (startIdx + i) % 12;
+    const mn = MONTHS[idx];
+    const newKey = `${pNew.base.trim()} [${pNew.a + i}/${pNew.t}]`;
+    planned.push({ mn, newKey });
+  }
+
+  // Valida conflitos antes de mexer em qualquer coisa
+  for (const p of planned) {
+    const bucket = appData[p.mn][cat];
+    if (bucket[p.newKey] !== undefined && !(p.mn === startMonth && p.newKey === oldK)) {
+      alert(`Já existe um item "${p.newKey}" em ${p.mn}. Operação cancelada para evitar conflito.`);
+      render();
+      return false;
+    }
+  }
+
+  // Remove o item antigo onde existir dentro do range (pra não duplicar)
+  for (let i = 0; i < 12; i++) {
+    const mn = MONTHS[(startIdx + i) % 12];
+    const bucket = appData[mn][cat];
+    if (bucket && (oldK in bucket)) {
+      delete bucket[oldK];
+      if (appData[mn].paid?.[oldK]) delete appData[mn].paid[oldK];
+    }
+  }
+
+  // Cria a série com o mesmo valor
+  planned.forEach(p => {
+    appData[p.mn][cat][p.newKey] = baseVal;
+  });
+
+  // Mantém "pago" apenas no mês atual (se estava pago no item antigo)
+  if (appData[startMonth].paid?.[oldK]) {
+    if (!appData[startMonth].paid) appData[startMonth].paid = {};
+    appData[startMonth].paid[`${pNew.base.trim()} [${pNew.a}/${pNew.t}]`] = true;
+    delete appData[startMonth].paid[oldK];
+  }
+
+  render();
+  autoSave();
+  return true;
+}
+
 function initApp() {
   const name = document.getElementById('userInput').value.trim().toLowerCase();
   if(!name) return;
   CURRENT_USER = name;
+  setLastUser(CURRENT_USER);
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('userLabel').innerText = `DASHBOARD: ${CURRENT_USER.toUpperCase()}`;
   loadFromCloud();
@@ -386,7 +445,20 @@ async function loadFromCloud() {
 
 (function prefillLoginUser() {
   const r = getRemembered();
-  if (r?.usuario) { const el = document.getElementById('userInput'); if (el) el.value = r.usuario; }
+  const el = document.getElementById('userInput');
+  const last = getLastUser();
+  if (el) {
+    if (r?.usuario) el.value = r.usuario;
+    else if (last) el.value = last;
+  }
+
+  // Se tiver usuário+senha salvos, entra automático ao recarregar a página
+  if (r?.usuario && r?.senha) {
+    const ck = document.getElementById('rememberMe');
+    if (ck) ck.checked = true;
+    // Deixa o DOM "respirar" antes de abrir conexão/prompt
+    setTimeout(() => initApp(), 0);
+  }
 })();
 
 function autoSave() {
@@ -578,7 +650,7 @@ function updateName(cat, oldK, newK) {
       }
 
       // choice === 'all': tenta converter a série a partir do mês atual
-      const ok = convertBaseItemToParcelSeries(cat, oldK, pNew);
+      const ok = createParcelSeriesFromCurrent(cat, oldK, pNew);
       if (!ok) {
         // Se não conseguiu (nenhum outro mês encontrado), ao menos renomeia o atual como parcela
         const val = appData[mes][cat][oldK];
