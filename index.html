@@ -210,7 +210,8 @@ function parseParcelKey(key) {
   const a = parseInt(m[2], 10);
   const t = parseInt(m[3], 10);
   if (a < 1 || t < 1 || a > t) return null;
-  return { base, a, t };
+  // n representa o número da parcela dentro da série
+  return { base, a, t, n: a };
 }
 
 function collectParcelSeries(cat, pSeries) {
@@ -293,6 +294,54 @@ function deleteParcelSeriesAll(cat, pSeries) {
     delete appData[it.mn][cat][it.k];
     if (appData[it.mn].paid?.[it.k]) delete appData[it.mn].paid[it.k];
   });
+}
+
+function convertBaseItemToParcelSeries(cat, oldK, pNew) {
+  // Transforma um item simples em série de parcelas, usando os meses onde o nome antigo existe,
+  // a partir do mês atual, até completar o total de parcelas ou acabar os meses com aquele nome.
+  normalizeAppData();
+  const startIdx = activeMes;
+  const planned = [];
+  let currentN = pNew.a;
+
+  for (let offset = 0; offset < 12 && currentN <= pNew.t; offset++) {
+    const idx = (startIdx + offset) % 12;
+    const mn = MONTHS[idx];
+    const bucket = appData[mn][cat];
+    if (!bucket || !(oldK in bucket)) continue;
+
+    const newKey = `${pNew.base.trim()} [${currentN}/${pNew.t}]`;
+    // Se já existe outro item com o mesmo nome de parcela no mesmo mês, aborta tudo
+    if (newKey !== oldK && bucket[newKey] !== undefined) {
+      alert(`Já existe um item "${newKey}" em ${mn}. Operação cancelada para evitar conflito.`);
+      render();
+      return;
+    }
+    const paid = !!appData[mn].paid?.[oldK];
+    planned.push({ mn, oldKey: oldK, newKey, val: bucket[oldK], paid });
+    currentN++;
+  }
+
+  if (!planned.length) {
+    // Nenhum outro mês com esse nome; cai para o comportamento padrão de renomear só aqui
+    return false;
+  }
+
+  planned.forEach(p => {
+    delete appData[p.mn][cat][p.oldKey];
+    if (appData[p.mn].paid?.[p.oldKey]) delete appData[p.mn].paid[p.oldKey];
+  });
+  planned.forEach(p => {
+    appData[p.mn][cat][p.newKey] = p.val;
+    if (p.paid) {
+      if (!appData[p.mn].paid) appData[p.mn].paid = {};
+      appData[p.mn].paid[p.newKey] = true;
+    }
+  });
+
+  render();
+  autoSave();
+  return true;
 }
 
 function initApp() {
@@ -497,12 +546,49 @@ function updateName(cat, oldK, newK) {
   const pOld = parseParcelKey(oldK);
 
   if (!pOld) {
-    const val = appData[mes][cat][oldK];
-    delete appData[mes][cat][oldK];
-    appData[mes][cat][newK] = val;
-    migratePaid(mes, cat, oldK, newK);
-    render();
-    autoSave();
+    const pNew = parseParcelKey(newK);
+    // Caso 1: continua sendo item simples (sem [n/t]) -> renomeia só aqui
+    if (!pNew) {
+      const val = appData[mes][cat][oldK];
+      delete appData[mes][cat][oldK];
+      appData[mes][cat][newK] = val;
+      migratePaid(mes, cat, oldK, newK);
+      render();
+      autoSave();
+      return;
+    }
+
+    // Caso 2: transformar um nome simples em série de parcelas
+    showChoiceModal(
+      'Transformar em parcelamento',
+      'Você editou um item simples para o formato de parcelamento (ex.: Conta [1/12]). Quer aplicar isso só neste mês ou também nos outros meses em que este mesmo nome existe, gerando a sequência de parcelas?',
+      `Só em ${mes}`,
+      'Gerar série nos meses vigentes'
+    ).then(choice => {
+      if (choice === 'cancel') { render(); return; }
+
+      if (choice === 'local') {
+        const val = appData[mes][cat][oldK];
+        delete appData[mes][cat][oldK];
+        appData[mes][cat][newK] = val;
+        migratePaid(mes, cat, oldK, newK);
+        render();
+        autoSave();
+        return;
+      }
+
+      // choice === 'all': tenta converter a série a partir do mês atual
+      const ok = convertBaseItemToParcelSeries(cat, oldK, pNew);
+      if (!ok) {
+        // Se não conseguiu (nenhum outro mês encontrado), ao menos renomeia o atual como parcela
+        const val = appData[mes][cat][oldK];
+        delete appData[mes][cat][oldK];
+        appData[mes][cat][newK] = val;
+        migratePaid(mes, cat, oldK, newK);
+        render();
+        autoSave();
+      }
+    });
     return;
   }
 
