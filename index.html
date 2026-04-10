@@ -299,6 +299,41 @@ function deleteParcelSeriesAll(cat, pSeries) {
   });
 }
 
+function replicateItemToNextMonths(cat, key, monthsAhead) {
+  normalizeAppData();
+  const n = Math.max(1, Math.min(11, parseInt(monthsAhead, 10) || 1));
+  const startMn = MONTHS[activeMes];
+  const val = appData[startMn]?.[cat]?.[key];
+  if (val == null) return;
+
+  let copied = 0;
+  for (let i = 1; i <= n; i++) {
+    const mn = MONTHS[(activeMes + i) % 12];
+    // Não sobrescreve automaticamente se já existir item com mesmo nome
+    if (appData[mn][cat][key] !== undefined) continue;
+    appData[mn][cat][key] = val;
+    copied++;
+  }
+  render();
+  autoSave();
+  alert(`Conta replicada para ${copied} mês(es).`);
+}
+
+function askReplicateCommonItem(cat, key) {
+  if (parseParcelKey(key)) return; // fluxo de parcelamento já existe
+  showChoiceModal(
+    'Adicionar aos próximos meses',
+    `Deseja adicionar "${key}" aos próximos meses?`,
+    'Não',
+    'Sim'
+  ).then(choice => {
+    if (choice !== 'all') return;
+    const qtd = prompt('Quantos meses à frente? (1 a 11)', '1');
+    if (qtd == null) return;
+    replicateItemToNextMonths(cat, key, qtd);
+  });
+}
+
 function convertBaseItemToParcelSeries(cat, oldK, pNew) {
   // Transforma um item simples em série de parcelas, usando os meses onde o nome antigo existe,
   // a partir do mês atual, até completar o total de parcelas ou acabar os meses com aquele nome.
@@ -515,6 +550,15 @@ function renderRow(cat, k, v) {
     name.contentEditable = true;
     name.innerText = k;
     name.onblur = (e) => updateName(cat, k, e.target.innerText);
+    name.ondblclick = (e) => { e.preventDefault(); askReplicateCommonItem(cat, k); };
+    let pressTimer = null;
+    name.addEventListener('touchstart', () => {
+      clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => askReplicateCommonItem(cat, k), 600);
+    }, { passive: true });
+    const clearPress = () => { if (pressTimer) clearTimeout(pressTimer); pressTimer = null; };
+    name.addEventListener('touchend', clearPress, { passive: true });
+    name.addEventListener('touchcancel', clearPress, { passive: true });
 
     const input = document.createElement('input');
     input.className = 'edit-input';
