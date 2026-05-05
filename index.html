@@ -575,6 +575,11 @@ function renderRow(cat, k, v) {
       if (Math.abs(parsed - prev) < 1e-9) return;
       updateValue(cat, k, parsed);
     };
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      input.blur();
+    });
 
     const del = document.createElement('span');
     del.className = 'del-btn';
