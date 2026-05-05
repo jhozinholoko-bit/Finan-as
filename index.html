@@ -538,6 +538,45 @@ function deleteItem(cat, key) {
   });
 }
 
+function deleteGroup(cat, groupLabel, keys) {
+  const mes = MONTHS[activeMes];
+  if (!keys.length) return;
+  const parcelKeys = keys.filter((k) => parseParcelKey(k));
+  const run = (parcelScope) => {
+    keys.forEach((k) => {
+      const p = parseParcelKey(k);
+      if (!p) {
+        delete appData[mes][cat][k];
+        if (appData[mes].paid?.[k]) delete appData[mes].paid[k];
+        return;
+      }
+      if (parcelScope === 'local') {
+        delete appData[mes][cat][k];
+        if (appData[mes].paid?.[k]) delete appData[mes].paid[k];
+      } else {
+        deleteParcelSeriesAll(cat, p);
+      }
+    });
+    delete openGroups[groupLabel];
+    render();
+    autoSave();
+  };
+  if (!parcelKeys.length) {
+    if (!confirm(`Excluir todas as ${keys.length} conta(s) da pasta "${groupLabel}" em ${mes}?`)) return;
+    run('local');
+    return;
+  }
+  showChoiceModal(
+    'Excluir pasta',
+    `A pasta "${groupLabel}" tem ${keys.length} conta(s) em ${mes}, incluindo parcelamento(s). Remover só neste mês ou apagar cada série em todos os meses?`,
+    `Só em ${mes}`,
+    'Todas as parcelas (cada série)'
+  ).then((choice) => {
+    if (choice === 'cancel') return;
+    run(choice === 'local' ? 'local' : 'all');
+  });
+}
+
 function renderRow(cat, k, v) {
     const isP = appData[MONTHS[activeMes]].paid?.[k];
     const r = document.createElement('div'); r.className = `edit-row ${isP?'paid':''}`;
@@ -613,8 +652,16 @@ function render() {
     });
     Object.entries(groups).forEach(([n, data]) => {
       const isOpen = openGroups[n], h = document.createElement('div'); h.className = 'group-header';
-      h.onclick = () => { openGroups[n] = !isOpen; render(); };
-      h.innerHTML = `<span class="group-header-name">📂 ${n}</span><span class="group-header-total">${formatMoneyBR(data.t)}</span>`; w.appendChild(h);
+      h.onclick = (ev) => {
+        if (ev.target.closest('.del-btn')) return;
+        openGroups[n] = !isOpen; render();
+      };
+      const nameSpan = document.createElement('span'); nameSpan.className = 'group-header-name'; nameSpan.textContent = `📂 ${n}`;
+      const totalSpan = document.createElement('span'); totalSpan.className = 'group-header-total'; totalSpan.textContent = formatMoneyBR(data.t);
+      const del = document.createElement('span'); del.className = 'del-btn'; del.innerHTML = '✕';
+      del.onclick = (ev) => { ev.stopPropagation(); deleteGroup(cat, n, data.i.map(([k]) => k)); };
+      h.appendChild(nameSpan); h.appendChild(totalSpan); h.appendChild(del);
+      w.appendChild(h);
       const c = document.createElement('div'); c.className = `group-content ${isOpen?'open':''}`;
       data.i.forEach(([ik,iv]) => w.appendChild(createGroupRow(cat, ik, iv, c)));
       w.appendChild(c);
