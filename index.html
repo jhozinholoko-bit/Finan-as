@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Finanças 2026 | Victor PRO</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -19,7 +19,7 @@
     --accent: #00b37e; --accent2: #e63946; --accent3: #f4a261; --muted: #8d99ae;
     --text: #2b2d42;
   }
-  body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; padding: 20px 15px 60px; transition: 0.3s; font-size: 14px; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; padding: 20px 15px 60px; transition: 0.3s; font-size: 15px; font-weight: 500; }
   
   #helpModal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
   .help-card { background: var(--surface); border: 1px solid var(--border); padding: 25px; border-radius: 12px; width: 100%; max-width: 450px; position: relative; }
@@ -65,10 +65,12 @@
   .edit-row.paid { opacity: 0.4; }
   .check-circle { width: 20px; height: 20px; border: 1px solid var(--muted); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
   .check-circle.checked { background: var(--accent); border-color: var(--accent); color: #000; }
-  .edit-name { flex: 1; font-size: 13px; outline: none; cursor: text; padding: 2px 0; }
-  .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 13px; text-align: right; width: 90px; }
+  .edit-name { flex: 1; font-size: 14px; font-weight: 500; outline: none; cursor: text; padding: 2px 0; }
+  .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 14px; font-weight: 500; text-align: right; width: 90px; font-variant-numeric: tabular-nums; }
   
-  .group-header { font-size: 11px; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+  .group-header { font-size: 14px; font-weight: 500; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .group-header-name { flex: 1; min-width: 0; }
+  .group-header-total { font-family: var(--font-mono); font-size: 14px; font-weight: 500; text-align: right; width: 90px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
   .group-content { display: none; padding-left: 15px; border-left: 1px solid var(--border); }
   .group-content.open { display: block; }
 
@@ -607,7 +609,7 @@ function render() {
     Object.entries(groups).forEach(([n, data]) => {
       const isOpen = openGroups[n], h = document.createElement('div'); h.className = 'group-header';
       h.onclick = () => { openGroups[n] = !isOpen; render(); };
-      h.innerHTML = `<span>📂 ${n}</span> <span>R$ ${data.t.toLocaleString('pt-BR')}</span>`; w.appendChild(h);
+      h.innerHTML = `<span class="group-header-name">📂 ${n}</span><span class="group-header-total">R$ ${data.t.toLocaleString('pt-BR')}</span>`; w.appendChild(h);
       const c = document.createElement('div'); c.className = `group-content ${isOpen?'open':''}`;
       data.i.forEach(([ik,iv]) => w.appendChild(createGroupRow(cat, ik, iv, c)));
       w.appendChild(c);
