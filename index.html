@@ -65,12 +65,12 @@
   .edit-row.paid { opacity: 0.4; }
   .check-circle { width: 20px; height: 20px; border: 1px solid var(--muted); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
   .check-circle.checked { background: var(--accent); border-color: var(--accent); color: #000; }
-  .edit-name { flex: 1; font-size: 14px; font-weight: 500; outline: none; cursor: text; padding: 2px 0; }
-  .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 14px; font-weight: 500; text-align: right; width: 90px; font-variant-numeric: tabular-nums; }
+  .edit-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; outline: none; cursor: text; padding: 2px 0; }
+  .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 14px; font-weight: 500; text-align: right; flex: 0 0 auto; min-width: 17ch; width: 17ch; max-width: 42%; white-space: nowrap; font-variant-numeric: tabular-nums; }
   
   .group-header { font-size: 14px; font-weight: 500; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .group-header-name { flex: 1; min-width: 0; }
-  .group-header-total { font-family: var(--font-mono); font-size: 14px; font-weight: 500; text-align: right; width: 90px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .group-header-total { font-family: var(--font-mono); font-size: 14px; font-weight: 500; text-align: right; flex: 0 0 auto; min-width: 17ch; width: 17ch; max-width: 42%; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .group-content { display: none; padding-left: 15px; border-left: 1px solid var(--border); }
   .group-content.open { display: block; }
 
@@ -186,8 +186,8 @@ function parseMoneyBR(raw) {
 }
 function formatMoneyBR(n) {
   const x = Number(n);
-  if (!Number.isFinite(x)) return '0';
-  return x.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  if (!Number.isFinite(x)) return 'R$ 0';
+  return 'R$ ' + x.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 let choiceModalResolve = null;
@@ -609,7 +609,7 @@ function render() {
     Object.entries(groups).forEach(([n, data]) => {
       const isOpen = openGroups[n], h = document.createElement('div'); h.className = 'group-header';
       h.onclick = () => { openGroups[n] = !isOpen; render(); };
-      h.innerHTML = `<span class="group-header-name">📂 ${n}</span><span class="group-header-total">R$ ${data.t.toLocaleString('pt-BR')}</span>`; w.appendChild(h);
+      h.innerHTML = `<span class="group-header-name">📂 ${n}</span><span class="group-header-total">${formatMoneyBR(data.t)}</span>`; w.appendChild(h);
       const c = document.createElement('div'); c.className = `group-content ${isOpen?'open':''}`;
       data.i.forEach(([ik,iv]) => w.appendChild(createGroupRow(cat, ik, iv, c)));
       w.appendChild(c);
@@ -797,9 +797,9 @@ function updateKPIsOnly() {
   const r = sum(d, 'renda'), f = sum(d, 'fixas'), t = sum(d, 'temp'), aReceber = sum(d, 'descontos'), desp = f + t;
   const entradas = r + aReceber;
   const s = entradas - desp;
-  document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card green"><div class="kpi-label">Entradas</div><div class="kpi-value">R$ ${entradas.toLocaleString('pt-BR')}</div></div>
-    <div class="kpi-card red"><div class="kpi-label">Saídas</div><div class="kpi-value">R$ ${desp.toLocaleString('pt-BR')}</div></div>
-    <div class="kpi-card yellow"><div class="kpi-label">Saldo</div><div class="kpi-value">R$ ${s.toLocaleString('pt-BR')}</div></div>`;
+  document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card green"><div class="kpi-label">Entradas</div><div class="kpi-value">${formatMoneyBR(entradas)}</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Saídas</div><div class="kpi-value">${formatMoneyBR(desp)}</div></div>
+    <div class="kpi-card yellow"><div class="kpi-label">Saldo</div><div class="kpi-value">${formatMoneyBR(s)}</div></div>`;
   const getSumF = (md, c) => Object.values(md[c] || {}).reduce((a,v)=>a+parseMoneyBR(v),0);
   const dR = MONTHS.map(mn => getSumF(appData[mn], 'renda') + getSumF(appData[mn], 'descontos'));
   const dG = MONTHS.map(mn => getSumF(appData[mn], 'fixas') + getSumF(appData[mn], 'temp'));
