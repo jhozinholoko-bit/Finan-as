@@ -251,7 +251,13 @@
   <div class="header-title">
     <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R4</small></h1>
     <div class="tools-row">
-      <p id="userLabel" style="font-size: 10px; color: var(--muted); font-weight: 700;"></p>
+      <div style="position:relative;">
+        <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
+        <div id="userDropdown" class="intel-dropdown" style="display:none;min-width:180px;">
+          <button type="button" class="intel-drop-item" id="userMenuBeta" onclick="toggleBetaMode()" style="border-left:3px solid var(--accent3);">Beta: —</button>
+          <button type="button" class="intel-drop-item" onclick="sairDaConta()" style="border-left:3px solid var(--accent2);">Trocar conta</button>
+        </div>
+      </div>
       <button class="btn-ui" onclick="toggleTheme()">🌓 TEMA</button>
       <button class="btn-ui" onclick="document.getElementById('helpModal').style.display='flex'">❓ AJUDA</button>
       <button class="btn-ui" id="btnSaldoReal" onclick="toggleSaldoReal()">📊 MODO SALDO REAL</button>
@@ -410,6 +416,7 @@ function getLastUser() { try { return (localStorage.getItem(LAST_USER_LS) || '')
 function setLastUser(usuario) { try { if (usuario) localStorage.setItem(LAST_USER_LS, usuario); } catch (_) {} }
 const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 let CURRENT_USER = "", activeMes = new Date().getMonth(), fullData = null, appData = null, userPassword = "", barInst, openGroups = {}, saveTimeout, modoSaldoReal = false;
+let betaDesativado = localStorage.getItem('financas_beta_off') === '1';
 
 /**
  * Beta (Victor): cada chave com valor 'beta' só aparece para TESTER_USERNAMES + UI ligada a featureVisible('mesmaChave').
@@ -426,6 +433,7 @@ const FEATURE_RELEASE = {
 };
 
 function isAppTester() {
+  if (betaDesativado) return false;
   const u = String(CURRENT_USER || '').trim().toLowerCase();
   return TESTER_USERNAMES.has(u);
 }
@@ -1343,13 +1351,42 @@ function createParcelSeriesFromCurrent(cat, oldK, pNew) {
   return true;
 }
 
+function refreshUserLabel() {
+  const ul = document.getElementById('userLabel');
+  const isTester = TESTER_USERNAMES.has((CURRENT_USER || '').toLowerCase());
+  if (ul) ul.textContent = CURRENT_USER.toUpperCase() + (isTester ? (betaDesativado ? ' · BETA OFF' : ' · BETA') : '');
+  const wrap = document.getElementById('userDropdown');
+  if (wrap) wrap.style.display = 'none';
+  const betaBtn = document.getElementById('userMenuBeta');
+  if (betaBtn) {
+    betaBtn.style.display = isTester ? 'block' : 'none';
+    betaBtn.textContent = betaDesativado ? 'Beta: desativado  →  ativar' : 'Beta: ativado  →  desativar';
+  }
+}
+function toggleUserMenu(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('userDropdown');
+  if (!dd) return;
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+function toggleBetaMode() {
+  betaDesativado = !betaDesativado;
+  localStorage.setItem('financas_beta_off', betaDesativado ? '1' : '0');
+  refreshUserLabel();
+  refreshBetaUi();
+  if (betaDesativado) intelCloseSidebar();
+}
+document.addEventListener('click', () => {
+  const dd = document.getElementById('userDropdown');
+  if (dd) dd.style.display = 'none';
+});
 function initApp() {
   const name = document.getElementById('userInput').value.trim().toLowerCase();
   if(!name) return;
   CURRENT_USER = name;
   setLastUser(CURRENT_USER);
   document.getElementById('loginOverlay').style.display = 'none';
-  document.getElementById('userLabel').innerText = `DASHBOARD: ${CURRENT_USER.toUpperCase()}`;
+  refreshUserLabel();
   if (typeof intelUpdateTesterChrome === 'function') intelUpdateTesterChrome();
   loadFromCloud();
 }
@@ -1410,7 +1447,9 @@ function sairDaConta() {
   const rm = document.getElementById('rememberMe');
   if (rm) rm.checked = false;
   const ul = document.getElementById('userLabel');
-  if (ul) ul.textContent = '';
+  if (ul) { ul.textContent = ''; }
+  const dd = document.getElementById('userDropdown');
+  if (dd) dd.style.display = 'none';
   const kpi = document.getElementById('kpiGrid');
   if (kpi) kpi.innerHTML = '';
   const nav = document.getElementById('monthNav');
@@ -1456,29 +1495,34 @@ function autoSave() {
 function deleteItem(cat, key) {
   const mes = MONTHS[activeMes];
   const p = parseParcelKey(key);
-  if (!p) {
+  const isCofrinho = key.startsWith('Cofrinho – ') || key.startsWith('Cofrinho - ');
+  if (!p && !isCofrinho) {
     if (!confirm(`Excluir "${key}"?`)) return;
     delete appData[mes][cat][key];
     if (appData[mes].paid?.[key]) delete appData[mes].paid[key];
-    render();
-    autoSave();
-    return;
+    render(); autoSave(); return;
   }
   showChoiceModal(
-    'Excluir parcelamento',
+    isCofrinho ? 'Excluir cofrinho' : 'Excluir parcelamento',
     `Remover "${key}"?`,
     `Só em ${mes}`,
-    'Todos os meses desta série'
+    isCofrinho ? 'Todos os meses deste cofrinho' : 'Todos os meses desta série'
   ).then(choice => {
     if (choice === 'cancel') return;
     if (choice === 'local') {
       delete appData[mes][cat][key];
       if (appData[mes].paid?.[key]) delete appData[mes].paid[key];
+    } else if (isCofrinho) {
+      MONTHS.forEach(mn => {
+        if (appData[mn]?.[cat]?.[key] !== undefined) {
+          delete appData[mn][cat][key];
+          if (appData[mn].paid?.[key]) delete appData[mn].paid[key];
+        }
+      });
     } else {
       deleteParcelSeriesAll(cat, p);
     }
-    render();
-    autoSave();
+    render(); autoSave();
   });
 }
 
