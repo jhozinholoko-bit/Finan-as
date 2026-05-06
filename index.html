@@ -86,6 +86,132 @@
   .choice-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
   .choice-actions .login-btn.secondary { background: var(--border); color: var(--text); }
   .choice-actions .login-btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); margin-top: 4px; }
+
+  .intel-dropdown { position: absolute; top: calc(100% + 6px); left: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; min-width: 130px; z-index: 9999; box-shadow: 0 8px 24px rgba(0,0,0,0.35); overflow: hidden; }
+  .intel-drop-item { display: block; width: 100%; background: none; border: none; color: var(--text); font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; padding: 10px 14px; cursor: pointer; text-align: left; letter-spacing: 0.5px; transition: background 0.15s; }
+  .intel-drop-item:hover { background: var(--bg); }
+  .intel-drop-item.analise { border-left: 3px solid #00e5a0; }
+  .intel-drop-item.metas   { border-left: 3px solid #ff4d6d; }
+  .intel-drop-item.saude   { border-left: 3px solid #00d9ff; }
+
+  .beta-lab-wrap { margin-bottom: 16px; }
+  .beta-lab-wrap .panel { border-left: 3px solid var(--accent3); }
+  .beta-lab-wrap .beta-lab-note { font-size: 12px; color: var(--muted); line-height: 1.45; margin-bottom: 12px; }
+  .beta-lab-wrap #betaLabContent { min-height: 0; }
+
+  /* Inteligência financeira (beta) — sidebar */
+  body.body--intel-sidebar { padding-right: 0; }
+  @media (min-width: 960px) {
+    body.body--intel-sidebar { padding-right: 60vw; }
+    .intel-sidebar { width: 60vw; }
+  }
+  #intelSidebarRoot { position: relative; z-index: 9995; pointer-events: none; }
+  #intelSidebarRoot .intel-sidebar { pointer-events: auto; }
+  .intel-sidebar {
+    position: fixed; right: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh;
+    background: var(--surface); border-left: 1px solid var(--border); z-index: 9995;
+    box-shadow: -8px 0 32px rgba(0,0,0,0.35);
+    display: flex; flex-direction: column; overflow: hidden;
+    font-family: var(--font-mono); font-size: 14px; color: var(--text);
+  }
+  .intel-sidebar-header {
+    display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .intel-sidebar-header h2 { font-family: var(--font-head); font-size: 18px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+  .intel-sidebar-mes { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .intel-tabs { display: flex; gap: 0.4rem; padding: 0.65rem 1.25rem; border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap; }
+  .intel-tab-btn {
+    flex: 0 1 auto; padding: 0.4rem 0.8rem; border: 1px solid; border-radius: 6px; cursor: pointer;
+    font-size: 11px; font-weight: 600; background: transparent; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.3px;
+    white-space: nowrap; transition: background 0.2s, color 0.2s;
+  }
+  .intel-tab-btn.analise { border-color: var(--accent); color: var(--accent); }
+  .intel-tab-btn.analise.active { background: var(--accent); color: #000; }
+  .intel-tab-btn.metas { border-color: var(--accent2); color: var(--accent2); }
+  .intel-tab-btn.metas.active { background: var(--accent2); color: #fff; }
+  .intel-tab-btn.saude { border-color: var(--accent3); color: var(--accent3); }
+  .intel-tab-btn.saude.active { background: var(--accent3); color: #000; }
+  .intel-tabs-content { flex: 1; overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; }
+  .intel-tab-content { display: none; flex-direction: column; gap: 1.25rem; }
+  .intel-tab-content.active { display: flex; }
+  /* gráfico lado a lado com legenda */
+  .intel-chart-section { width: 100%; display: flex; flex-direction: column; gap: 1.25rem; }
+  .intel-chart-wrap { width: 100%; height: 400px; position: relative; }
+  .intel-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+  .intel-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+  .intel-legend-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+  .intel-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .intel-legend-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .intel-legend-val { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .intel-metric { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+  .intel-metric-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 0.5rem; font-weight: 700; }
+  .intel-metric-val { font-family: var(--font-head); font-size: 26px; font-weight: 700; margin-bottom: 0.2rem; }
+  .intel-metric-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .intel-status { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 12px; }
+  .intel-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .intel-dot.good { background: var(--accent); }
+  .intel-dot.warn { background: var(--accent3); }
+  .intel-dot.bad { background: var(--accent2); }
+  .intel-alert { padding: 0.75rem; border-radius: 6px; font-size: 12px; line-height: 1.5; border-left: 3px solid; margin-bottom: 0.4rem; }
+  .intel-alert.info { background: color-mix(in srgb, var(--accent3) 10%, transparent); border-color: var(--accent3); color: var(--accent3); }
+  .intel-alert.warn { background: color-mix(in srgb, var(--accent3) 10%, transparent); border-color: var(--accent3); color: var(--accent3); }
+  .intel-alert.danger { background: color-mix(in srgb, var(--accent2) 10%, transparent); border-color: var(--accent2); color: var(--accent2); }
+  .intel-insight { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; font-size: 13px; line-height: 1.6; }
+  .intel-insight-title { font-weight: 700; color: var(--accent); margin-bottom: 0.5rem; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+  .intel-insight-item { padding: 0.3rem 0; display: flex; gap: 0.5rem; }
+  .intel-insight-item::before { content: "•"; color: var(--accent); flex-shrink: 0; }
+  .intel-input-group { display: flex; flex-direction: column; gap: 0.5rem; }
+  .intel-input-group label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+  .intel-input-group input {
+    padding: 0.65rem; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-family: var(--font-mono); font-size: 14px;
+  }
+  .intel-input-group input:focus { outline: none; border-color: var(--accent); }
+  .intel-calc-box { background: var(--bg); border: 1px solid var(--accent2); border-radius: 8px; padding: 1rem; margin-top: 0.75rem; }
+  .intel-calc-row { display: flex; justify-content: space-between; align-items: center; padding: 0.55rem 0; border-bottom: 1px solid var(--border); }
+  .intel-calc-row:last-child { border-bottom: none; }
+  .intel-calc-k { font-size: 12px; color: var(--muted); }
+  .intel-calc-v { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--accent2); }
+  .intel-btn-cof {
+    background: var(--bg); border: 1px solid var(--accent); color: var(--accent); padding: 0.7rem; border-radius: 6px;
+    cursor: pointer; font-weight: 700; font-family: var(--font-mono); font-size: 12px; margin-top: 0.75rem; width: 100%; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .intel-btn-cof:hover { background: var(--accent); color: #000; }
+  .intel-btn-cof.alt { border-color: var(--accent2); color: var(--accent2); }
+  .intel-btn-cof.alt:hover { background: var(--accent2); color: #fff; }
+  .intel-cat { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; margin-bottom: 0.5rem; font-size: 13px; transition: border-color 0.15s, background 0.15s; }
+  .intel-cat.drag-over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--bg)); }
+  .intel-conta { cursor: grab; }
+  .intel-conta.dragging { opacity: 0.35; }
+  .intel-cat-head { display: flex; align-items: center; gap: 4px; margin-bottom: 0.4rem; }
+  .intel-cat-name { font-weight: 700; color: var(--accent); font-size: 13px; }
+  .intel-cat-del { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 14px; }
+  .intel-cat-del:hover { color: var(--accent2); }
+  .intel-cat-rename { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 0 4px; opacity: 0.6; display: inline-flex; transform: rotate(135deg); }
+  .intel-cat-rename:hover { color: var(--accent); opacity: 1; }
+  .intel-conta { display: flex; justify-content: space-between; align-items: center; padding: 0.35rem 0; font-size: 12px; color: var(--muted); }
+  .intel-conta-mv { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 0 0.25rem; }
+  #intelModalCat, #intelModalMover {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 10002;
+    align-items: center; justify-content: center; padding: 16px;
+  }
+  #intelModalCat.active, #intelModalMover.active { display: flex; }
+  .intel-modal { background: var(--surface); border: 1px solid var(--accent); border-radius: 8px; padding: 1.25rem; width: 100%; max-width: 320px; }
+  .intel-modal h3 { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin: 0 0 1rem; color: var(--accent); }
+  .intel-modal input, .intel-modal select {
+    width: 100%; padding: 0.65rem; margin-bottom: 0.85rem; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-mono); font-size: 13px;
+  }
+  [data-theme="light"] .intel-modal input, [data-theme="light"] .intel-modal select { background: var(--bg); border-color: var(--border); color: var(--text); }
+  .intel-modal-btns { display: flex; gap: 0.45rem; }
+  .intel-modal-btns button {
+    flex: 1; padding: 0.55rem; border-radius: 6px; font-weight: 600; font-size: 11px; cursor: pointer; background: transparent;
+  }
+  .intel-modal-btns .ok { border: 1px solid #00e5a0; color: #00e5a0; }
+  .intel-modal-btns .cancel { border: 1px solid #ff4d6d; color: #ff4d6d; }
+  .intel-tabs-content::-webkit-scrollbar { width: 4px; }
+  .intel-tabs-content::-webkit-scrollbar-thumb { background: rgba(0,229,160,0.35); border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -123,19 +249,49 @@
 
 <div class="header">
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R4</small></h1>
     <div class="tools-row">
       <p id="userLabel" style="font-size: 10px; color: var(--muted); font-weight: 700;"></p>
       <button class="btn-ui" onclick="toggleTheme()">🌓 TEMA</button>
       <button class="btn-ui" onclick="document.getElementById('helpModal').style.display='flex'">❓ AJUDA</button>
       <button class="btn-ui" id="btnSaldoReal" onclick="toggleSaldoReal()">📊 MODO SALDO REAL</button>
-      <button class="btn-ui" onclick="location.reload()">🚪 SAIR</button>
+      <div class="intel-menu-wrap" id="intelMenuWrap" style="position:relative;display:none;">
+        <button type="button" class="btn-ui" id="btnInteligencia" onclick="toggleIntelMenu(event)" title="Inteligência">☰</button>
+        <div id="intelDropdown" class="intel-dropdown" style="display:none;">
+          <button type="button" class="intel-drop-item analise" onclick="openIntelTab('analise')">Análise</button>
+          <button type="button" class="intel-drop-item metas" onclick="openIntelTab('metas')">Metas</button>
+          <button type="button" class="intel-drop-item saude" onclick="openIntelTab('saude')">Saúde</button>
+        </div>
+      </div>
+      <button type="button" class="btn-ui" onclick="sairDaConta()">🚪 SAIR</button>
     </div>
   </div>
   <div class="nav-area">
-    <div class="sync-indicator" id="syncStatus">☁️ Nuvem Ativa</div>
+    <div>
+      <div class="sync-indicator" id="syncStatus">☁️ Nuvem Ativa</div>
+      <div class="sync-indicator" id="rolloutHint" style="display:none;margin-top:2px;font-size:8px;color:var(--accent3);"></div>
+    </div>
     <div class="month-nav" id="monthNav"></div>
     <button class="btn-ui" style="color:var(--accent3); margin-top: 5px;" onclick="copyPreviousMonth()">📂 Replicar Mês Anterior</button>
+  </div>
+</div>
+
+<div class="beta-lab-wrap" id="betaLabWrap" style="display:none">
+  <div class="panel">
+    <div class="panel-title">Laboratório · beta (só Victor)</div>
+    <p class="beta-lab-note">Recursos colocados aqui ou protegidos com <code style="font-size:11px;">featureVisible('…')</code> em <code style="font-size:11px;">'beta'</code> aparecem só para você. Para <strong>publicar para todos</strong>: no código, troque essa chave em <code style="font-size:11px;">FEATURE_RELEASE</code> de <code style="font-size:11px;">'beta'</code> para <code style="font-size:11px;">'public'</code> e publique o HTML.</p>
+    <div id="betaLabContent">
+      <p style="font-size:13px;color:var(--text);margin-bottom:10px;line-height:1.45;">
+        <strong>Teste de canal</strong> — Esta caixa não aparece para gabi, erika, etc. Sessão: <span id="betaLabUserTag" style="color:var(--accent);">—</span>
+      </p>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px;">
+        <button type="button" class="btn-ui" onclick="betaLabPing()">Rodar teste beta</button>
+        <span id="betaLabPingOut" style="font-size:12px;color:var(--muted);"></span>
+      </div>
+      <p id="betaLabWidgetLine" style="display:none;font-size:12px;color:var(--accent3);line-height:1.4;padding:10px;background:var(--bg);border-radius:6px;border:1px dashed var(--border);">
+        <strong>Teste granular</strong> — Este bloco só existe se <code style="font-size:10px;">betaDemoWidget</code> estiver em <code style="font-size:10px;">'beta'</code> no código (exemplo de <code style="font-size:10px;">featureVisible('betaDemoWidget')</code>).
+      </p>
+    </div>
   </div>
 </div>
 
@@ -145,6 +301,101 @@
 <div class="panel"><div class="panel-title">Despesas Fixas</div><div id="fixasSection"></div><button class="add-row-btn" onclick="addRow('fixas')">+ Nova Fixa</button></div>
 <div class="panel"><div class="panel-title">Temporárias</div><div id="tempSection"></div><button class="add-row-btn" onclick="addRow('temp')">+ Nova Temporária</button></div>
 <div class="panel"><div class="panel-title">A Receber</div><div id="descontosSection"></div><button class="add-row-btn" onclick="addRow('descontos')">+ Novo a receber</button></div>
+
+<div id="intelSidebarRoot" style="display:none" aria-hidden="true">
+  <div class="intel-sidebar" id="intelSidebar">
+    <div class="intel-sidebar-header">
+      <div>
+        <h2>Inteligência</h2>
+        <div class="intel-sidebar-mes" id="intelMesLabel"></div>
+      </div>
+      <button type="button" onclick="intelCloseSidebar()" style="background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;padding:4px 8px;line-height:1;" title="Fechar">✕</button>
+    </div>
+    <div class="intel-tabs">
+      <button type="button" class="intel-tab-btn analise active" data-intel-tab="analise">Análise</button>
+      <button type="button" class="intel-tab-btn metas" data-intel-tab="metas">Metas</button>
+      <button type="button" class="intel-tab-btn saude" data-intel-tab="saude">Saúde</button>
+    </div>
+    <div class="intel-tabs-content">
+      <div id="intelTabAnalise" class="intel-tab-content active">
+        <h3 style="font-family:var(--font-head);font-size:16px;font-weight:800;margin:0;color:var(--accent);">Gastos por categoria</h3>
+        <p style="font-size:12px;color:var(--muted);line-height:1.4;margin:0;">Fixas + temporárias do mês. Segure uma conta e arraste para recategorizar.</p>
+        <div class="intel-chart-section">
+          <div class="intel-chart-wrap"><canvas id="intelDoughnutChart"></canvas></div>
+          <div class="intel-legend" id="intelLegend"></div>
+        </div>
+        <button type="button" class="intel-btn-cof" id="intelBtnNovaCat">+ Nova categoria</button>
+        <div id="intelCategoriasList"></div>
+      </div>
+      <div id="intelTabMetas" class="intel-tab-content">
+        <h3 style="font-family:var(--font-head);font-size:16px;font-weight:800;margin:0;color:var(--accent2);">Calculadora de economia</h3>
+        <div class="intel-input-group">
+          <label>Nome da meta</label>
+          <input type="text" id="intelMetaNome" placeholder="Ex: Viagem, Reserva…" autocomplete="off">
+        </div>
+        <div class="intel-input-group">
+          <label>Quanto quer guardar?</label>
+          <input type="number" id="intelMetaValor" placeholder="Ex: 1500" min="0" step="0.01">
+        </div>
+        <div id="intelResultadoMeta"></div>
+      </div>
+      <div id="intelTabSaude" class="intel-tab-content">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
+          <h3 style="font-family:var(--font-head);font-size:16px;font-weight:800;margin:0;color:var(--accent3);">🏆 Saúde financeira</h3>
+          <div style="display:flex;gap:4px;">
+            <button type="button" class="btn-ui active" id="saudePeriodMes" onclick="intelSetSaudePeriod('mes')">Mensal</button>
+            <button type="button" class="btn-ui" id="saudePeriodSem" onclick="intelSetSaudePeriod('semestral')">Semestral</button>
+            <button type="button" class="btn-ui" id="saudePeriodAno" onclick="intelSetSaudePeriod('anual')">Anual</button>
+          </div>
+        </div>
+        <div class="intel-metric">
+          <div class="intel-metric-label">Taxa de poupança</div>
+          <div class="intel-metric-val" id="intelSavingsRate">0%</div>
+          <div class="intel-metric-desc" id="intelSavingsDesc">Saldo ÷ entradas do período</div>
+          <div class="intel-status"><div class="intel-dot good" id="intelSavingsDot"></div><span id="intelSavingsStatus">—</span></div>
+        </div>
+        <div class="intel-metric">
+          <div class="intel-metric-label">Despesas ÷ entradas</div>
+          <div class="intel-metric-val" id="intelDti">0%</div>
+          <div class="intel-metric-desc">(Fixas + temporárias) ÷ entradas</div>
+          <div class="intel-status"><div class="intel-dot" id="intelDtiDot"></div><span id="intelDtiStatus">—</span></div>
+        </div>
+        <div class="intel-metric">
+          <div class="intel-metric-label">Fundo de emergência (dias)</div>
+          <div class="intel-metric-val" id="intelEmergency">0</div>
+          <div class="intel-metric-desc">Saldo ÷ (despesas diárias do mês)</div>
+          <div class="intel-status"><div class="intel-dot" id="intelEmergencyDot"></div><span id="intelEmergencyStatus">—</span></div>
+        </div>
+        <div id="intelHealthAlerts"></div>
+        <div class="intel-insight">
+          <div class="intel-insight-title">Recomendações</div>
+          <div id="intelRecommendations"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="intelModalCat">
+  <div class="intel-modal">
+    <h3>Nova categoria</h3>
+    <input type="text" id="intelNovaCatNome" placeholder="Nome" autocomplete="off">
+    <div class="intel-modal-btns">
+      <button type="button" class="ok" id="intelModalCatOk">Criar</button>
+      <button type="button" class="cancel" id="intelModalCatCancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+<div id="intelModalMover">
+  <div class="intel-modal">
+    <h3 id="intelMoverTitle">Mover conta</h3>
+    <select id="intelMoverSelect"></select>
+    <div class="intel-modal-btns">
+      <button type="button" class="ok" id="intelModalMoverOk">Mover</button>
+      <button type="button" class="cancel" id="intelModalMoverCancel">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const SUPABASE_URL = 'https://rozwrlcgxklyhutwuklb.supabase.co';
@@ -159,6 +410,659 @@ function getLastUser() { try { return (localStorage.getItem(LAST_USER_LS) || '')
 function setLastUser(usuario) { try { if (usuario) localStorage.setItem(LAST_USER_LS, usuario); } catch (_) {} }
 const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 let CURRENT_USER = "", activeMes = new Date().getMonth(), fullData = null, appData = null, userPassword = "", barInst, openGroups = {}, saveTimeout, modoSaldoReal = false;
+
+/**
+ * Beta (Victor): cada chave com valor 'beta' só aparece para TESTER_USERNAMES + UI ligada a featureVisible('mesmaChave').
+ * Publicar: mude para 'public' (ou apague a chave) e faça deploy do index.html.
+ */
+const TESTER_USERNAMES = new Set(['victor']);
+const FEATURE_RELEASE = {
+  /** Painel “Laboratório” no topo; novos testes podem usar outras chaves neste objeto. */
+  betaLaboratorio: 'beta',
+  /** Exemplo de pedaço de UI controlado por featureVisible (publicar: troque para 'public'). */
+  betaDemoWidget: 'beta',
+  /** Sidebar Inteligência (gráfico, metas, saúde) — dados do mês ativo. */
+  betaInteligencia: 'beta',
+};
+
+function isAppTester() {
+  const u = String(CURRENT_USER || '').trim().toLowerCase();
+  return TESTER_USERNAMES.has(u);
+}
+function featureVisible(key) {
+  const tier = FEATURE_RELEASE[key];
+  if (!tier || tier === 'public') return true;
+  if (tier === 'beta') return isAppTester();
+  return true;
+}
+function hasAnyBetaFeature() {
+  return Object.values(FEATURE_RELEASE).some((v) => v === 'beta');
+}
+function refreshRolloutHint() {
+  const hint = document.getElementById('rolloutHint');
+  if (!hint) return;
+  if (hasAnyBetaFeature() && isAppTester()) {
+    hint.style.display = 'block';
+    hint.textContent = '🔬 Canal beta ativo: o que estiver em beta no código ainda não aparece para os outros.';
+  } else {
+    hint.style.display = 'none';
+    hint.textContent = '';
+  }
+}
+function betaLabPing() {
+  if (!featureVisible('betaLaboratorio')) return;
+  const out = document.getElementById('betaLabPingOut');
+  const t = new Date().toLocaleString('pt-BR');
+  if (out) out.textContent = 'OK — beta respondeu às ' + t;
+}
+function refreshBetaLabPanel() {
+  const wrap = document.getElementById('betaLabWrap');
+  if (!wrap) return;
+  const show = featureVisible('betaLaboratorio');
+  wrap.style.display = show ? 'block' : 'none';
+  const tag = document.getElementById('betaLabUserTag');
+  if (tag) tag.textContent = CURRENT_USER ? CURRENT_USER.toUpperCase() : '—';
+  const widget = document.getElementById('betaLabWidgetLine');
+  if (widget) widget.style.display = featureVisible('betaDemoWidget') ? 'block' : 'none';
+}
+function intelUpdateTesterChrome() {
+  const wrap = document.getElementById('intelMenuWrap');
+  if (!wrap) return;
+  const on = !!CURRENT_USER && featureVisible('betaInteligencia');
+  wrap.style.display = on ? 'inline-block' : 'none';
+}
+function toggleIntelMenu(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('intelDropdown');
+  if (!dd) return;
+  const open = dd.style.display !== 'none';
+  dd.style.display = open ? 'none' : 'block';
+}
+function openIntelTab(tab) {
+  document.getElementById('intelDropdown').style.display = 'none';
+  if (!CURRENT_USER || !featureVisible('betaInteligencia')) return;
+  intelOpenSidebar();
+  const btn = document.querySelector(`#intelSidebarRoot [data-intel-tab="${tab}"]`);
+  intelSwitchTab(tab, btn);
+}
+document.addEventListener('click', function() {
+  const dd = document.getElementById('intelDropdown');
+  if (dd) dd.style.display = 'none';
+});
+/** Abre o painel de inteligência (beta). */
+function intelFocusPanel() {
+  if (!CURRENT_USER || !featureVisible('betaInteligencia')) return;
+  intelOpenSidebar();
+}
+/** Atualiza faixa de nuvem + painel Laboratório após login. */
+function refreshBetaUi() {
+  refreshRolloutHint();
+  refreshBetaLabPanel();
+  intelUpdateTesterChrome();
+  intelSetSidebarVisibility();
+}
+
+const INTEL_LS_PREFIX = 'financas_intel_v1_';
+const INTEL_DEFAULT_RULES = {
+  Educacao: ['faculdade', 'fac', 'curso', 'formatura', 'unesk'],
+  Cartoes: ['neon', 'visa', 'nubank', 'bradesco', 'picpay'],
+  Saude: ['medico', 'dentista', 'farmacia'],
+  Transporte: ['uber', 'taxi', 'gasolina', 'onibus', 'carro', 'seguro'],
+  Diversao: ['cinema', 'spotify', 'netflix', 'gui'],
+  Contas: ['celular', 'internet', 'agua', 'energia'],
+  Pessoal: ['mae', 'maria', 'erika', 'gabi'],
+  Parcelamento: ['picpay', 'torra'],
+};
+let intelCatRules = {};
+let intelContaOverride = {};
+let intelDoughnutInst = null;
+let intelContaEmMover = null;
+let intelCatEmMover = null;
+let intelUiBound = false;
+
+function intelLsKey() {
+  return INTEL_LS_PREFIX + (CURRENT_USER || '_');
+}
+function intelLoadState() {
+  try {
+    const raw = localStorage.getItem(intelLsKey());
+    if (!raw) {
+      intelCatRules = JSON.parse(JSON.stringify(INTEL_DEFAULT_RULES));
+      intelContaOverride = {};
+      return;
+    }
+    const j = JSON.parse(raw);
+    intelCatRules = { ...JSON.parse(JSON.stringify(INTEL_DEFAULT_RULES)), ...(j.rules || {}) };
+    intelContaOverride = j.overrides && typeof j.overrides === 'object' ? { ...j.overrides } : {};
+  } catch (_) {
+    intelCatRules = JSON.parse(JSON.stringify(INTEL_DEFAULT_RULES));
+    intelContaOverride = {};
+  }
+}
+function intelRenameCat(oldName, newName) {
+  newName = newName.trim();
+  if (!newName || newName === oldName) { intelRenderAnalise(); return; }
+  if (intelCatRules[oldName] !== undefined) {
+    intelCatRules[newName] = intelCatRules[oldName];
+    delete intelCatRules[oldName];
+  }
+  Object.keys(intelContaOverride).forEach(k => {
+    if (intelContaOverride[k] === oldName) intelContaOverride[k] = newName;
+  });
+  intelSaveState();
+  intelRenderAnalise();
+}
+function intelSaveState() {
+  try {
+    localStorage.setItem(intelLsKey(), JSON.stringify({ rules: intelCatRules, overrides: intelContaOverride }));
+  } catch (_) {}
+}
+function intelEsc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;');
+}
+function intelCategorizarConta(nome) {
+  const key = nome.trim().toLowerCase();
+  if (intelContaOverride[key]) return intelContaOverride[key];
+  for (const [categoria, palavras] of Object.entries(intelCatRules)) {
+    if (!Array.isArray(palavras)) continue;
+    for (const palavra of palavras) {
+      if (key.includes(String(palavra).toLowerCase())) return categoria;
+    }
+  }
+  return 'Outro';
+}
+function intelSumMes(cat) {
+  const m = appData[MONTHS[activeMes]];
+  if (!m || !m[cat]) return 0;
+  return Object.entries(m[cat]).reduce((t, [key, val]) => {
+    const v = parseMoneyBR(val);
+    return modoSaldoReal ? (m.paid?.[key] ? t + v : t) : t + v;
+  }, 0);
+}
+function intelEntradasMes() {
+  return intelSumMes('renda') + intelSumMes('descontos');
+}
+function intelDespesasMes() {
+  return intelSumMes('fixas') + intelSumMes('temp');
+}
+function intelSaldoMes() {
+  return intelEntradasMes() - intelDespesasMes();
+}
+function intelAgruparGastos() {
+  const m = appData[MONTHS[activeMes]];
+  const fixas = m.fixas || {};
+  const temp = m.temp || {};
+  const agrupado = {};
+  const add = (nome, valor) => {
+    const v = parseMoneyBR(valor);
+    if (v <= 0) return;
+    const categoria = intelCategorizarConta(nome);
+    if (!agrupado[categoria]) agrupado[categoria] = { valor: 0, contas: [] };
+    agrupado[categoria].valor += v;
+    agrupado[categoria].contas.push({ nome, valor: v });
+  };
+  Object.entries(fixas).forEach(([k, v]) => add(k, v));
+  Object.entries(temp).forEach(([k, v]) => add(k, v));
+  return agrupado;
+}
+function intelSwitchTab(tab, btn) {
+  document.querySelectorAll('#intelSidebarRoot .intel-tab-content').forEach((el) => el.classList.remove('active'));
+  document.querySelectorAll('#intelSidebarRoot .intel-tab-btn').forEach((el) => el.classList.remove('active'));
+  const idMap = { analise: 'intelTabAnalise', metas: 'intelTabMetas', saude: 'intelTabSaude' };
+  const pane = document.getElementById(idMap[tab]);
+  if (pane) pane.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+function intelRenderAnalise() {
+  if (!featureVisible('betaInteligencia') || !appData) return;
+  const agrupado = intelAgruparGastos();
+  const labels = Object.keys(agrupado);
+  const valores = labels.map((l) => agrupado[l].valor);
+  const cores = ['#00e5a0', '#ff4d6d', '#00d9ff', '#ffd166', '#ff6b6b', '#4ecdc4', '#95e1d3', '#f38181', '#a29bfe', '#fd79a8'];
+
+  const canvas = document.getElementById('intelDoughnutChart');
+  if (canvas && typeof Chart !== 'undefined') {
+    const ctx = canvas.getContext('2d');
+    if (intelDoughnutInst) intelDoughnutInst.destroy();
+    if (labels.length === 0) {
+      intelDoughnutInst = null;
+    } else {
+      const surfaceColor = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim() || '#111318';
+      intelDoughnutInst = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: valores,
+            backgroundColor: cores.slice(0, labels.length),
+            borderColor: surfaceColor,
+            borderWidth: 3,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '60%',
+          layout: { padding: 70 },
+          plugins: { legend: { display: false } },
+        },
+        plugins: [{
+          id: 'intelTickLabels',
+          afterDraw(chart) {
+            const { ctx } = chart;
+            const ds = chart.data.datasets[0];
+            const meta = chart.getDatasetMeta(0);
+            const total = ds.data.reduce((a, b) => a + b, 0);
+            if (!total) return;
+
+            const items = meta.data.map((arc, i) => {
+              const pct = (ds.data[i] / total) * 100;
+              const midAngle = (arc.startAngle + arc.endAngle) / 2;
+              const outerR = arc.outerRadius;
+              return {
+                i, pct, midAngle, color: ds.backgroundColor[i],
+                cx: arc.x, cy: arc.y, outerR,
+                isRight: Math.cos(midAngle) >= 0,
+                ty: arc.y + Math.sin(midAngle) * (outerR + 32),
+              };
+            });
+
+            const push = (arr) => {
+              const gap = 15;
+              for (let pass = 0; pass < 30; pass++)
+                for (let k = 1; k < arr.length; k++)
+                  if (arr[k].ty - arr[k-1].ty < gap) {
+                    const mid = (arr[k].ty + arr[k-1].ty) / 2;
+                    arr[k-1].ty = mid - gap / 2;
+                    arr[k].ty   = mid + gap / 2;
+                  }
+            };
+            push(items.filter(it =>  it.isRight).sort((a,b) => a.ty - b.ty));
+            push(items.filter(it => !it.isRight).sort((a,b) => a.ty - b.ty));
+
+            ctx.save();
+            items.forEach(({ i, pct, midAngle, color, cx, cy, outerR, isRight, ty }) => {
+              const x1 = cx + Math.cos(midAngle) * (outerR + 2);
+              const y1 = cy + Math.sin(midAngle) * (outerR + 2);
+              const x2 = cx + Math.cos(midAngle) * (outerR + 18);
+              const y2 = cy + Math.sin(midAngle) * (outerR + 18);
+              ctx.strokeStyle = color;
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(x1, y1);
+              ctx.lineTo(x2, y2);
+              ctx.lineTo(isRight ? cx + outerR + 40 : cx - outerR - 40, ty);
+              ctx.stroke();
+              ctx.textAlign = isRight ? 'left' : 'right';
+              ctx.textBaseline = 'middle';
+              ctx.font = 'bold 12px "DM Mono", monospace';
+              ctx.fillStyle = color;
+              ctx.fillText(`${pct.toFixed(0)}%`, isRight ? cx + outerR + 44 : cx - outerR - 44, ty);
+            });
+            ctx.restore();
+          }
+        }],
+      });
+    }
+  }
+
+  const legendDiv = document.getElementById('intelLegend');
+  if (legendDiv) {
+    legendDiv.innerHTML = labels.length
+      ? labels.map((label, i) => `
+          <div class="intel-legend-item">
+            <span class="intel-legend-dot" style="background:${cores[i % cores.length]}"></span>
+            <span class="intel-legend-name">${intelEsc(label)}</span>
+            <span class="intel-legend-val">${formatMoneyBR(agrupado[label].valor)}</span>
+          </div>`).join('')
+      : `<div style="font-size:13px;color:var(--muted);">Sem gastos fixos/temporários neste mês.</div>`;
+  }
+
+  const categoriasDiv = document.getElementById('intelCategoriasList');
+  if (categoriasDiv) {
+    categoriasDiv.innerHTML = labels.map((categoria) => {
+      const contas = agrupado[categoria].contas;
+      const encCat = encodeURIComponent(categoria);
+      const isDefaultCat = Object.prototype.hasOwnProperty.call(INTEL_DEFAULT_RULES, categoria);
+      const delBtn = isDefaultCat
+        ? ''
+        : `<button type="button" class="intel-cat-del" data-intel-del-cat="${encCat}">✕</button>`;
+      return `
+        <div class="intel-cat">
+          <div class="intel-cat-head">
+            <div class="intel-cat-name" data-intel-cat-nome="${encCat}">${intelEsc(categoria)}</div>
+            <button type="button" class="intel-cat-rename" data-intel-rename-cat="${encCat}" title="Renomear categoria">✏</button>
+            <span style="flex:1"></span>
+            ${delBtn}
+          </div>
+          <div>
+            ${contas.map((c) => {
+              const encNome = encodeURIComponent(c.nome);
+              return `<div class="intel-conta" draggable="true" data-intel-drag-nome="${encNome}" data-intel-drag-from="${encCat}" title="Arraste para outra categoria">
+                <span>⠿ ${intelEsc(c.nome)}: ${formatMoneyBR(c.valor)}</span>
+                <button type="button" class="intel-conta-mv" data-intel-mover="${encNome}" data-intel-from="${encCat}">→</button>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }).join('');
+  }
+}
+function intelCalcMeta() {
+  const metaEl = document.getElementById('intelMetaValor');
+  const resultDiv = document.getElementById('intelResultadoMeta');
+  if (!metaEl || !resultDiv) return;
+  const metaValor = parseFloat(metaEl.value) || 0;
+  if (metaValor <= 0) {
+    resultDiv.innerHTML = '';
+    return;
+  }
+  const mesesPadrao = 6;
+  const saldoAtual = intelSaldoMes();
+  const falta = Math.max(0, metaValor - saldoAtual);
+  const mensalNecessario = falta / mesesPadrao;
+  const quinzenalNecessario = falta / (mesesPadrao * 2);
+  resultDiv.innerHTML = `
+    <div class="intel-calc-box">
+      <div class="intel-calc-row"><span class="intel-calc-k">Meta</span><span class="intel-calc-v">${formatMoneyBR(metaValor)}</span></div>
+      <div class="intel-calc-row"><span class="intel-calc-k">Saldo mês (estim.)</span><span class="intel-calc-v">${formatMoneyBR(saldoAtual)}</span></div>
+      <div class="intel-calc-row"><span class="intel-calc-k">Falta p/ meta</span><span class="intel-calc-v">${formatMoneyBR(falta)}</span></div>
+      <div class="intel-input-group" style="margin-top:0.65rem;">
+        <label>Em quantos meses?</label>
+        <input type="number" id="intelMesesInput" value="6" min="1" max="60" step="1">
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:0.65rem;padding-top:0.65rem;">
+        <div class="intel-calc-row"><span class="intel-calc-k">Guardar / mês</span><span class="intel-calc-v" id="intelMensalRes">${formatMoneyBR(mensalNecessario)}</span></div>
+        <div class="intel-calc-row"><span class="intel-calc-k">Guardar / quinzena</span><span class="intel-calc-v" id="intelSemanalRes">${formatMoneyBR(quinzenalNecessario)}</span></div>
+      </div>
+    </div>
+    <button type="button" class="intel-btn-cof alt" id="intelBtnCofrinho">+ Criar cofrinho em Temporárias</button>`;
+  const mesesIn = document.getElementById('intelMesesInput');
+  const upd = () => {
+    const m = parseInt(document.getElementById('intelMesesInput')?.value, 10) || 1;
+    const mensal = falta / m;
+    const quinzenal = falta / (m * 2);
+    const mr = document.getElementById('intelMensalRes');
+    const sr = document.getElementById('intelSemanalRes');
+    if (mr) mr.textContent = formatMoneyBR(mensal);
+    if (sr) sr.textContent = formatMoneyBR(quinzenal);
+  };
+  mesesIn?.addEventListener('input', upd);
+  document.getElementById('intelBtnCofrinho')?.addEventListener('click', () => {
+    const nomeMeta = (document.getElementById('intelMetaNome')?.value || '').trim() || 'Cofrinho';
+    const meses = parseInt(document.getElementById('intelMesesInput')?.value, 10) || 1;
+    const mensal = falta / meses;
+    if (mensal <= 0) return;
+    normalizeAppData();
+    for (let i = 0; i < meses; i++) {
+      const mIdx = (activeMes + i) % 12;
+      appData[MONTHS[mIdx]]['temp'][`Cofrinho – ${nomeMeta}`] = formatMoneyBR(mensal);
+    }
+    render();
+    autoSave();
+    const btn = document.getElementById('intelBtnCofrinho');
+    if (btn) { btn.textContent = '✓ Adicionado em Temporárias!'; btn.disabled = true; setTimeout(() => { btn.textContent = '+ Criar cofrinho em Temporárias'; btn.disabled = false; }, 3000); }
+  });
+}
+let intelSaudePeriod = 'mes';
+function intelSetSaudePeriod(p) {
+  intelSaudePeriod = p;
+  ['mes','semestral','anual'].forEach(k => {
+    const el = document.getElementById('saudePeriod' + (k === 'mes' ? 'Mes' : k === 'semestral' ? 'Sem' : 'Ano'));
+    if (el) el.classList.toggle('active', k === p);
+  });
+  intelRenderSaude();
+}
+function intelSumPeriod(cat, meses) {
+  return meses.reduce((total, mIdx) => {
+    const m = appData[MONTHS[mIdx]];
+    if (!m || !m[cat]) return total;
+    return total + Object.entries(m[cat]).reduce((t, [key, val]) => t + parseMoneyBR(val), 0);
+  }, 0);
+}
+function intelRenderSaude() {
+  if (!featureVisible('betaInteligencia') || !appData) return;
+  const p = intelSaudePeriod;
+  let meses = [activeMes];
+  let periodoLabel = 'mês atual';
+  if (p === 'semestral') {
+    meses = Array.from({length: 6}, (_, i) => (activeMes - 5 + i + 12) % 12);
+    periodoLabel = 'últimos 6 meses (média)';
+  } else if (p === 'anual') {
+    meses = Array.from({length: 12}, (_, i) => i);
+    periodoLabel = 'ano inteiro (média)';
+  }
+  const divisor = p === 'mes' ? 1 : meses.length;
+  const entradaTotal = (intelSumPeriod('renda', meses) + intelSumPeriod('descontos', meses)) / divisor;
+  const despesasTotal = (intelSumPeriod('fixas', meses) + intelSumPeriod('temp', meses)) / divisor;
+  const saldo = entradaTotal - despesasTotal;
+  const setDesc = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setDesc('intelSavingsDesc', `Saldo ÷ entradas · ${periodoLabel}`);
+  const savingsRate = entradaTotal > 0 ? ((saldo / entradaTotal) * 100).toFixed(1) : '0.0';
+  const dtiRate = entradaTotal > 0 ? ((despesasTotal / entradaTotal) * 100).toFixed(1) : '0.0';
+  const dailyDesp = despesasTotal / 30;
+  const emergencyDays = dailyDesp > 0 ? (saldo / dailyDesp).toFixed(1) : (saldo > 0 ? '999' : '0');
+
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setTxt('intelSavingsRate', `${savingsRate}%`);
+  setTxt('intelDti', `${dtiRate}%`);
+  setTxt('intelEmergency', emergencyDays);
+
+  const sr = parseFloat(savingsRate);
+  const sd = document.getElementById('intelSavingsDot');
+  if (sd) {
+    sd.className = 'intel-dot ' + (sr >= 20 ? 'good' : sr >= 10 ? 'warn' : 'bad');
+    setTxt('intelSavingsStatus', sr >= 20 ? 'Ótimo (20%+)' : sr >= 10 ? 'Bom (10–20%)' : 'Baixo (<10%)');
+  }
+  const dti = parseFloat(dtiRate);
+  const dd = document.getElementById('intelDtiDot');
+  if (dd) {
+    dd.className = 'intel-dot ' + (dti <= 30 ? 'good' : dti <= 50 ? 'warn' : 'bad');
+    setTxt('intelDtiStatus', dti <= 30 ? 'Saudável (≤30%)' : dti <= 50 ? 'Atenção (30–50%)' : 'Crítico (>50%)');
+  }
+  const em = parseFloat(emergencyDays);
+  const ed = document.getElementById('intelEmergencyDot');
+  if (ed) {
+    if (em >= 180) { ed.className = 'intel-dot good'; setTxt('intelEmergencyStatus', 'Ótimo (~6m+)'); }
+    else if (em >= 90) { ed.className = 'intel-dot warn'; setTxt('intelEmergencyStatus', 'Razoável (~3m)'); }
+    else if (em >= 30) { ed.className = 'intel-dot warn'; setTxt('intelEmergencyStatus', 'Mínimo (~1m)'); }
+    else { ed.className = 'intel-dot bad'; setTxt('intelEmergencyStatus', 'Crítico'); }
+  }
+
+  let alertsHTML = '';
+  if (dti > 50) alertsHTML += '<div class="intel-alert danger">Despesas muito altas em relação às entradas.</div>';
+  else if (dti > 30) alertsHTML += '<div class="intel-alert warn">Despesas acima do ideal.</div>';
+  if (sr < 10 && entradaTotal > 0) alertsHTML += '<div class="intel-alert warn">Taxa de poupança baixa neste mês.</div>';
+  if (em < 30 && despesasTotal > 0) alertsHTML += '<div class="intel-alert danger">Poucos dias de despesa cobertos pelo saldo.</div>';
+  const ha = document.getElementById('intelHealthAlerts');
+  if (ha) ha.innerHTML = alertsHTML;
+
+  let recs = '<div class="intel-insight-item">Acompanhe fixas e temporárias no mês.</div>';
+  if (dti > 40) recs += '<div class="intel-insight-item">Rever maior categoria no gráfico.</div>';
+  if (sr < 15 && entradaTotal > 0) recs += '<div class="intel-insight-item">Buscar margem positiva maior.</div>';
+  const rc = document.getElementById('intelRecommendations');
+  if (rc) rc.innerHTML = recs;
+}
+function intelRefreshAll() {
+  if (!featureVisible('betaInteligencia') || !CURRENT_USER || !appData) return;
+  intelLoadState();
+  const ml = document.getElementById('intelMesLabel');
+  if (ml) ml.textContent = 'Mês: ' + MONTHS[activeMes];
+  intelRenderAnalise();
+  intelRenderSaude();
+  intelCalcMeta();
+}
+function intelSetSidebarVisibility() {
+  const hasAccess = !!CURRENT_USER && featureVisible('betaInteligencia');
+  intelUpdateTesterChrome();
+  if (hasAccess) {
+    intelLoadState();
+    intelBindUiOnce();
+    intelRefreshAll();
+  } else {
+    intelCloseSidebar();
+    if (intelDoughnutInst) { intelDoughnutInst.destroy(); intelDoughnutInst = null; }
+  }
+}
+function intelOpenSidebar() {
+  const root = document.getElementById('intelSidebarRoot');
+  if (!root) return;
+  root.style.display = 'block';
+  root.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('body--intel-sidebar');
+  const side = document.getElementById('intelSidebar');
+  if (side) {
+    side.style.boxShadow = '-12px 0 48px rgba(0,229,160,0.35)';
+    setTimeout(() => { side.style.boxShadow = '-12px 0 40px rgba(0,0,0,0.45)'; }, 700);
+  }
+}
+function intelCloseSidebar() {
+  const root = document.getElementById('intelSidebarRoot');
+  if (root) { root.style.display = 'none'; root.setAttribute('aria-hidden', 'true'); }
+  document.body.classList.remove('body--intel-sidebar');
+}
+function intelBindUiOnce() {
+  if (intelUiBound) return;
+  intelUiBound = true;
+  document.querySelector('#intelSidebarRoot .intel-tabs')?.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-intel-tab]');
+    if (!b) return;
+    intelSwitchTab(b.getAttribute('data-intel-tab'), b);
+  });
+
+  const catsList = document.getElementById('intelCategoriasList');
+  catsList?.addEventListener('dragstart', (e) => {
+    const conta = e.target.closest('[data-intel-drag-nome]');
+    if (!conta) return;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', JSON.stringify({
+      nome: decodeURIComponent(conta.dataset.intelDragNome),
+      from: decodeURIComponent(conta.dataset.intelDragFrom),
+    }));
+    conta.classList.add('dragging');
+  });
+  catsList?.addEventListener('dragend', () => {
+    catsList.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+    catsList.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  });
+  catsList?.addEventListener('dragover', (e) => {
+    const cat = e.target.closest('.intel-cat');
+    if (!cat) return;
+    e.preventDefault();
+    catsList.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    cat.classList.add('drag-over');
+  });
+  catsList?.addEventListener('dragleave', (e) => {
+    const cat = e.target.closest('.intel-cat');
+    if (cat && !cat.contains(e.relatedTarget)) cat.classList.remove('drag-over');
+  });
+  catsList?.addEventListener('drop', (e) => {
+    e.preventDefault();
+    catsList.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    const cat = e.target.closest('.intel-cat');
+    if (!cat) return;
+    const destino = cat.querySelector('.intel-cat-name')?.textContent?.trim();
+    if (!destino) return;
+    let data;
+    try { data = JSON.parse(e.dataTransfer.getData('text/plain')); } catch { return; }
+    if (!data.nome || data.from === encodeURIComponent(destino)) return;
+    intelContaOverride[data.nome.toLowerCase()] = destino;
+    intelSaveState();
+    intelRenderAnalise();
+  });
+  document.getElementById('intelBtnNovaCat')?.addEventListener('click', () => {
+    document.getElementById('intelNovaCatNome').value = '';
+    document.getElementById('intelModalCat')?.classList.add('active');
+  });
+  document.getElementById('intelModalCatCancel')?.addEventListener('click', () => document.getElementById('intelModalCat')?.classList.remove('active'));
+  document.getElementById('intelModalCatOk')?.addEventListener('click', () => {
+    const nome = document.getElementById('intelNovaCatNome')?.value.trim();
+    if (!nome) { alert('Digite um nome.'); return; }
+    if (!intelCatRules[nome]) intelCatRules[nome] = [];
+    intelSaveState();
+    document.getElementById('intelModalCat')?.classList.remove('active');
+    intelRenderAnalise();
+  });
+  document.getElementById('intelModalMoverCancel')?.addEventListener('click', () => document.getElementById('intelModalMover')?.classList.remove('active'));
+  document.getElementById('intelModalMoverOk')?.addEventListener('click', () => {
+    if (!intelContaEmMover) return;
+    const sel = document.getElementById('intelMoverSelect');
+    const raw = sel?.value;
+    if (raw == null || raw === '') return;
+    const nova = decodeURIComponent(raw);
+    intelContaOverride[intelContaEmMover.toLowerCase()] = nova;
+    intelSaveState();
+    intelContaEmMover = null;
+    intelCatEmMover = null;
+    document.getElementById('intelModalMover')?.classList.remove('active');
+    intelRenderAnalise();
+  });
+  document.getElementById('intelCategoriasList')?.addEventListener('click', (e) => {
+    const del = e.target.closest('[data-intel-del-cat]');
+    if (del) {
+      let categoria;
+      try {
+        categoria = decodeURIComponent(del.getAttribute('data-intel-del-cat') || '');
+      } catch (_) {
+        categoria = del.getAttribute('data-intel-del-cat') || '';
+      }
+      if (!categoria || !confirm(`Remover categoria "${categoria}"? Contas voltam às regras automáticas.`)) return;
+      delete intelCatRules[categoria];
+      Object.keys(intelContaOverride).forEach((k) => {
+        if (intelContaOverride[k] === categoria) delete intelContaOverride[k];
+      });
+      intelSaveState();
+      intelRenderAnalise();
+      return;
+    }
+    const ren = e.target.closest('[data-intel-rename-cat]');
+    if (ren) {
+      const oldName = decodeURIComponent(ren.dataset.intelRenameCat || '');
+      const head = ren.closest('.intel-cat-head');
+      const nameEl = head?.querySelector('.intel-cat-name');
+      if (!nameEl) return;
+      const inp = document.createElement('input');
+      inp.value = oldName;
+      inp.style.cssText = 'flex:1;background:var(--bg);border:1px solid var(--accent);border-radius:4px;color:var(--text);font-family:var(--font-mono);font-size:13px;font-weight:700;padding:2px 8px;min-width:0;outline:none;';
+      nameEl.replaceWith(inp);
+      inp.focus(); inp.select();
+      let committed = false;
+      const commit = () => {
+        if (committed) return;
+        committed = true;
+        intelRenameCat(oldName, inp.value);
+      };
+      inp.addEventListener('blur', commit);
+      inp.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') { ev.preventDefault(); inp.blur(); }
+        if (ev.key === 'Escape') { committed = true; inp.removeEventListener('blur', commit); intelRenderAnalise(); }
+      });
+      return;
+    }
+    const mv = e.target.closest('[data-intel-mover]');
+    if (!mv) return;
+    intelContaEmMover = decodeURIComponent(mv.getAttribute('data-intel-mover'));
+    intelCatEmMover = decodeURIComponent(mv.getAttribute('data-intel-from'));
+    const agrupado = intelAgruparGastos();
+    const categorias = Object.keys(agrupado).sort();
+    Object.keys(intelCatRules).forEach((c) => { if (!categorias.includes(c)) categorias.push(c); });
+    if (!categorias.includes('Outro')) categorias.push('Outro');
+    const sel = document.getElementById('intelMoverSelect');
+    if (sel) {
+      sel.innerHTML = categorias.map((cat) => {
+        const enc = encodeURIComponent(cat);
+        return `<option value="${enc}" ${cat === intelCatEmMover ? 'selected' : ''}>${intelEsc(cat)}</option>`;
+      }).join('');
+    }
+    const ht = document.getElementById('intelMoverTitle');
+    if (ht) ht.textContent = 'Mover: ' + intelContaEmMover;
+    document.getElementById('intelModalMover')?.classList.add('active');
+  });
+  document.getElementById('intelMetaValor')?.addEventListener('input', () => intelCalcMeta());
+}
 
 /** Entende valores digitados no padrão BR (1.234,56) ou com ponto decimal (12.34). Armazena número JS. */
 function parseMoneyBR(raw) {
@@ -446,6 +1350,7 @@ function initApp() {
   setLastUser(CURRENT_USER);
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('userLabel').innerText = `DASHBOARD: ${CURRENT_USER.toUpperCase()}`;
+  if (typeof intelUpdateTesterChrome === 'function') intelUpdateTesterChrome();
   loadFromCloud();
 }
 
@@ -478,6 +1383,45 @@ async function loadFromCloud() {
   if (!appData["JAN"]) appData = createEmptyYear();
   normalizeAppData();
   render();
+  refreshBetaUi();
+}
+
+/** Encerra a sessão sem recarregar (evita auto-login com “Lembrar de mim”). */
+function sairDaConta() {
+  clearTimeout(saveTimeout);
+  clearRemembered();
+  CURRENT_USER = '';
+  userPassword = '';
+  fullData = null;
+  appData = null;
+  openGroups = {};
+  if (barInst) {
+    try { barInst.destroy(); } catch (_) {}
+    barInst = null;
+  }
+  if (intelDoughnutInst) {
+    try { intelDoughnutInst.destroy(); } catch (_) {}
+    intelDoughnutInst = null;
+  }
+  const ov = document.getElementById('loginOverlay');
+  if (ov) ov.style.display = 'flex';
+  const inp = document.getElementById('userInput');
+  if (inp) inp.value = getLastUser() || '';
+  const rm = document.getElementById('rememberMe');
+  if (rm) rm.checked = false;
+  const ul = document.getElementById('userLabel');
+  if (ul) ul.textContent = '';
+  const kpi = document.getElementById('kpiGrid');
+  if (kpi) kpi.innerHTML = '';
+  const nav = document.getElementById('monthNav');
+  if (nav) nav.innerHTML = '';
+  ['rendaSection', 'fixasSection', 'tempSection', 'descontosSection'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+  const st = document.getElementById('syncStatus');
+  if (st) { st.textContent = '☁️ Nuvem Ativa'; st.className = 'sync-indicator'; }
+  refreshBetaUi();
 }
 
 (function prefillLoginUser() {
@@ -669,6 +1613,9 @@ function render() {
   };
   build('rendaSection','renda'); build('fixasSection','fixas'); build('tempSection','temp'); build('descontosSection','descontos');
   updateKPIsOnly();
+  if (featureVisible('betaInteligencia') && CURRENT_USER && appData) {
+    try { intelRefreshAll(); } catch (_) {}
+  }
 }
 
 function createGroupRow(cat, k, v, container) {
