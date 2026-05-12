@@ -1233,15 +1233,37 @@ function replicateItemToNextMonths(cat, key, monthsAhead) {
   alert(`Conta replicada para ${copied} mês(es).`);
 }
 
+function fixarEmTodosMeses(cat, key) {
+  normalizeAppData();
+  const currVal = appData[MONTHS[activeMes]][cat][key];
+  let added = 0;
+  MONTHS.forEach(mn => {
+    if (appData[mn][cat][key] === undefined) {
+      appData[mn][cat][key] = currVal;
+      added++;
+    }
+  });
+  render();
+  autoSave();
+  const s = document.getElementById('syncStatus');
+  s.textContent = added > 0 ? `✔ Fixado em ${added + 1} meses` : '✔ Já existia em todos os meses';
+  s.className = 'sync-indicator saved';
+}
+
 function askReplicateCommonItem(cat, key) {
   if (parseParcelKey(key)) return; // fluxo de parcelamento já existe
   showChoiceModal(
-    'Adicionar aos próximos meses',
-    `Deseja adicionar "${key}" aos próximos meses?`,
-    'Não',
-    'Sim'
+    'Replicar item',
+    `O que deseja fazer com "${key}"?`,
+    'Próximos meses…',
+    '📌 Fixar em todos os meses'
   ).then(choice => {
-    if (choice !== 'all') return;
+    if (choice === 'cancel') return;
+    if (choice === 'all') {
+      fixarEmTodosMeses(cat, key);
+      return;
+    }
+    // local = próximos meses
     const qtd = prompt('Quantos meses à frente? (1 a 11)', '1');
     if (qtd == null) return;
     replicateItemToNextMonths(cat, key, qtd);
