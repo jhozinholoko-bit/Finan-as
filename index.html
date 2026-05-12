@@ -65,7 +65,8 @@
   .edit-row.paid { opacity: 0.4; }
   .check-circle { width: 20px; height: 20px; border: 1px solid var(--muted); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
   .check-circle.checked { background: var(--accent); border-color: var(--accent); color: #000; }
-  .edit-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; outline: none; cursor: text; padding: 2px 0; }
+  .edit-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; outline: none; cursor: text; padding: 2px 0; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  .edit-name:focus { -webkit-user-select: text; user-select: text; }
   .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 14px; font-weight: 500; text-align: right; flex: 0 0 auto; min-width: 17ch; width: 17ch; max-width: 42%; white-space: nowrap; font-variant-numeric: tabular-nums; }
   
   .group-header { font-size: 14px; font-weight: 500; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -1605,7 +1606,10 @@ function renderRow(cat, k, v) {
     let pressTimer = null;
     name.addEventListener('touchstart', () => {
       clearTimeout(pressTimer);
-      pressTimer = setTimeout(() => askReplicateCommonItem(cat, k), 600);
+      pressTimer = setTimeout(() => {
+        window.getSelection()?.removeAllRanges();
+        askReplicateCommonItem(cat, k);
+      }, 600);
     }, { passive: true });
     const clearPress = () => { if (pressTimer) clearTimeout(pressTimer); pressTimer = null; };
     name.addEventListener('touchend', clearPress, { passive: true });
