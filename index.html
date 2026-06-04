@@ -1483,8 +1483,8 @@ async function loadFromCloud() {
 }
 
 function migrarParcelamentosMultiAno() {
-  // Coleta todas as parcelas de todos os anos, calcula onde cada uma DEVERIA estar
-  // (baseado na posição da parcela [1/t]) e move as que estão no lugar errado.
+  // Para cada série: coleta TUDO (incluindo duplicatas), remove tudo e recoloca
+  // cada parcela no mês/ano correto calculado a partir da menor parcela encontrada.
   const cats = ['renda', 'fixas', 'temp', 'descontos'];
   const series = {};
 
@@ -1497,60 +1497,69 @@ function migrarParcelamentosMultiAno() {
         Object.entries(bucket).forEach(([k, val]) => {
           const p = parseParcelKey(k);
           if (!p) return;
-          const key = `${cat}|${p.base}|${p.t}`;
-          if (!series[key]) series[key] = { base: p.base, total: p.t, cat, parcelas: [] };
-          series[key].parcelas.push({ yr: parseInt(yr), mn, n: p.n, val });
+          const sKey = `${cat}|${p.base}|${p.t}`;
+          if (!series[sKey]) series[sKey] = { base: p.base, total: p.t, cat, entries: [] };
+          series[sKey].entries.push({ yr: parseInt(yr), mn, n: p.n, val, paid: !!yd[mn].paid?.[k] });
         });
       });
     });
   });
 
-  let movidas = 0, criadas = 0;
+  let alteradas = 0;
 
   Object.values(series).forEach(s => {
-    // Usa a parcela de menor número como âncora (não exige [1/t] — funciona mesmo
-    // quando a série começou em anos anteriores ao que está carregado no app).
-    const sorted = s.parcelas.slice().sort((a, b) => a.n - b.n);
+    const sorted = s.entries.slice().sort((a, b) => a.n - b.n);
     const anchor = sorted[0];
     if (!anchor) return;
 
-    // Mês absoluto da âncora (yr*12 + mesIdx)
     const anchorAbsMonth = anchor.yr * 12 + MONTHS.indexOf(anchor.mn);
 
-    for (let n = 1; n <= s.total; n++) {
-      const absMonth = anchorAbsMonth + (n - anchor.n);
-      if (absMonth < 0) continue; // parcela anterior ao início dos dados, ignora
-      const expectedYr = Math.floor(absMonth / 12);
-      const expectedMn = MONTHS[absMonth % 12];
-      const key = `${s.base} [${n}/${s.total}]`;
-      const existing = s.parcelas.find(p => p.n === n);
-
-      if (!existing) {
-        // Parcela faltando — só cria se for parcela futura (>=âncora)
-        if (n < anchor.n) continue;
-        const nearby = sorted.filter(p => p.n < n).slice(-1)[0] || anchor;
-        ensureYear(expectedYr)[expectedMn][s.cat][key] = nearby.val;
-        criadas++;
-      } else if (existing.yr !== expectedYr || existing.mn !== expectedMn) {
-        // Parcela no lugar errado — move para o ano/mês correto
-        const wrongYd = fullData[String(existing.yr)];
-        if (wrongYd?.[existing.mn]) {
-          const wasPaid = !!wrongYd[existing.mn].paid?.[key];
-          delete wrongYd[existing.mn][s.cat][key];
-          if (wasPaid) delete wrongYd[existing.mn].paid[key];
-          const destMn = ensureYear(expectedYr)[expectedMn];
-          destMn[s.cat][key] = existing.val;
-          if (wasPaid) { if (!destMn.paid) destMn.paid = {}; destMn.paid[key] = true; }
-        }
-        movidas++;
-      }
+    // Calcula posição esperada para cada n da série
+    const expected = {};
+    for (let n = anchor.n; n <= s.total; n++) {
+      const abs = anchorAbsMonth + (n - anchor.n);
+      expected[n] = { yr: Math.floor(abs / 12), mn: MONTHS[abs % 12] };
     }
+
+    // Verifica se já está tudo certo e sem duplicatas
+    const ns = s.entries.map(e => e.n);
+    const hasDupes = ns.length !== new Set(ns).size;
+    const allOk = !hasDupes && s.entries.every(e => {
+      const exp = expected[e.n];
+      return exp && e.yr === exp.yr && e.mn === exp.mn;
+    });
+    if (allOk) return;
+
+    // Remove TODOS os lançamentos atuais da série
+    s.entries.forEach(e => {
+      const yd = fullData[String(e.yr)];
+      if (!yd?.[e.mn]) return;
+      const k = `${s.base} [${e.n}/${s.total}]`;
+      delete yd[e.mn][s.cat][k];
+      if (yd[e.mn].paid?.[k]) delete yd[e.mn].paid[k];
+    });
+
+    // Monta mapa n → melhor entrada (prioriza a que está paga)
+    const best = {};
+    s.entries.forEach(e => { if (!best[e.n] || e.paid) best[e.n] = e; });
+
+    // Recoloca cada parcela na posição correta
+    for (let n = anchor.n; n <= s.total; n++) {
+      const pos = expected[n];
+      if (!pos) continue;
+      const k = `${s.base} [${n}/${s.total}]`;
+      const ref = best[n] || sorted.slice().reverse().find(e => e.n <= n) || anchor;
+      const dest = ensureYear(pos.yr)[pos.mn];
+      dest[s.cat][k] = ref.val;
+      if (ref.paid && n === ref.n) { if (!dest.paid) dest.paid = {}; dest.paid[k] = true; }
+    }
+    alteradas++;
   });
 
-  if (movidas + criadas > 0) {
+  if (alteradas > 0) {
     appData = fullData[String(currentYear)];
     autoSave();
-    console.log(`[migração] ${movidas} movida(s), ${criadas} criada(s).`);
+    console.log(`[migração] ${alteradas} série(s) reconstruída(s).`);
   }
 }
 
