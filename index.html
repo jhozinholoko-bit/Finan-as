@@ -282,7 +282,11 @@
       <div class="sync-indicator" id="rolloutHint" style="display:none;margin-top:2px;font-size:8px;color:var(--accent3);"></div>
     </div>
     <div class="year-nav"><button class="btn-ui" onclick="changeYear(-1)">◀</button><span class="year-label" id="yearLabel">2026</span><button class="btn-ui" onclick="changeYear(1)">▶</button></div>
-    <div class="month-nav" id="monthNav"></div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;width:100%;">
+      <button class="btn-ui" onclick="navigateMonth(-1)" title="Mês anterior">‹</button>
+      <div class="month-nav" id="monthNav" style="flex:1;"></div>
+      <button class="btn-ui" onclick="navigateMonth(1)" title="Próximo mês">›</button>
+    </div>
     <button class="btn-ui" style="color:var(--accent3); margin-top: 5px;" onclick="copyPreviousMonth()">📂 Replicar Mês Anterior</button>
   </div>
 </div>
@@ -1473,8 +1477,61 @@ async function loadFromCloud() {
   ensureYear(currentYear);
   appData = fullData[String(currentYear)];
   normalizeAppData();
+  migrarParcelamentosMultiAno();
   render();
   refreshBetaUi();
+}
+
+function migrarParcelamentosMultiAno() {
+  // Encontra séries de parcelamento incompletas (parcelas faltando) e as cria nos anos corretos.
+  const cats = ['renda', 'fixas', 'temp', 'descontos'];
+  const series = {};
+
+  Object.entries(fullData).forEach(([yr, yd]) => {
+    if (!yd || typeof yd !== 'object') return;
+    MONTHS.forEach(mn => {
+      cats.forEach(cat => {
+        const bucket = yd[mn]?.[cat];
+        if (!bucket) return;
+        Object.entries(bucket).forEach(([k, val]) => {
+          const p = parseParcelKey(k);
+          if (!p) return;
+          const key = `${cat}|${p.base}|${p.t}`;
+          if (!series[key]) series[key] = { base: p.base, total: p.t, cat, parcelas: [] };
+          series[key].parcelas.push({ yr: parseInt(yr), mn, n: p.n, val });
+        });
+      });
+    });
+  });
+
+  let criadas = 0;
+
+  Object.values(series).forEach(s => {
+    if (s.parcelas.length >= s.total) return; // série completa, nada a fazer
+    const anchor = s.parcelas.find(p => p.n === 1);
+    if (!anchor) return; // sem parcela [1/t] não dá pra calcular posição
+    const startMnIdx = MONTHS.indexOf(anchor.mn);
+    const existing = new Set(s.parcelas.map(p => p.n));
+    // Valor padrão: usa o da última parcela conhecida
+    const lastVal = s.parcelas.sort((a, b) => a.n - b.n).slice(-1)[0].val;
+
+    for (let n = 1; n <= s.total; n++) {
+      if (existing.has(n)) continue;
+      const offset = n - 1;
+      const totalIdx = startMnIdx + offset;
+      const yr = anchor.yr + Math.floor(totalIdx / 12);
+      const mn = MONTHS[totalIdx % 12];
+      const newKey = `${s.base} [${n}/${s.total}]`;
+      ensureYear(yr)[mn][s.cat][newKey] = lastVal;
+      criadas++;
+    }
+  });
+
+  if (criadas > 0) {
+    appData = fullData[String(currentYear)];
+    autoSave();
+    console.log(`[migração] ${criadas} parcela(s) criada(s) nos anos corretos.`);
+  }
 }
 
 /** Encerra a sessão sem recarregar (evita auto-login com “Lembrar de mim”). */
@@ -1736,6 +1793,22 @@ function ensureYear(yr) {
 }
 function changeYear(delta) {
   currentYear += delta;
+  ensureYear(currentYear);
+  appData = fullData[String(currentYear)];
+  normalizeAppData();
+  render();
+}
+function navigateMonth(delta) {
+  const next = activeMes + delta;
+  if (next < 0) {
+    currentYear -= 1;
+    activeMes = 11;
+  } else if (next > 11) {
+    currentYear += 1;
+    activeMes = 0;
+  } else {
+    activeMes = next;
+  }
   ensureYear(currentYear);
   appData = fullData[String(currentYear)];
   normalizeAppData();
