@@ -47,6 +47,8 @@
   @media (min-width: 600px) { .month-nav { display: flex; flex-wrap: wrap; justify-content: flex-end; } }
   .month-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 6px 10px; cursor: pointer; text-transform: uppercase; border-radius: 4px; }
   .month-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 700; }
+  .year-nav { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+  .year-label { font-family: var(--font-head); font-size: 13px; font-weight: 700; color: var(--accent); min-width: 36px; text-align: center; }
 
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
   .kpi-card { background: var(--surface); border: 1px solid var(--border); padding: 15px; position: relative; border-radius: 8px; }
@@ -279,6 +281,7 @@
       <div class="sync-indicator" id="syncStatus">☁️ Nuvem Ativa</div>
       <div class="sync-indicator" id="rolloutHint" style="display:none;margin-top:2px;font-size:8px;color:var(--accent3);"></div>
     </div>
+    <div class="year-nav"><button class="btn-ui" onclick="changeYear(-1)">◀</button><span class="year-label" id="yearLabel">2026</span><button class="btn-ui" onclick="changeYear(1)">▶</button></div>
     <div class="month-nav" id="monthNav"></div>
     <button class="btn-ui" style="color:var(--accent3); margin-top: 5px;" onclick="copyPreviousMonth()">📂 Replicar Mês Anterior</button>
   </div>
@@ -417,7 +420,7 @@ function clearRemembered() { localStorage.removeItem(REMEMBER_LS); }
 function getLastUser() { try { return (localStorage.getItem(LAST_USER_LS) || '').trim(); } catch (_) { return ''; } }
 function setLastUser(usuario) { try { if (usuario) localStorage.setItem(LAST_USER_LS, usuario); } catch (_) {} }
 const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
-let CURRENT_USER = "", activeMes = new Date().getMonth(), fullData = null, appData = null, userPassword = "", barInst, openGroups = {}, saveTimeout, modoSaldoReal = false;
+let CURRENT_USER = "", activeMes = new Date().getMonth(), currentYear = new Date().getFullYear(), fullData = null, appData = null, userPassword = "", barInst, openGroups = {}, saveTimeout, modoSaldoReal = false;
 let betaDesativado = localStorage.getItem('financas_beta_off') === '1';
 
 /**
@@ -1134,13 +1137,17 @@ function parseParcelKey(key) {
 }
 
 function collectParcelSeries(cat, pSeries) {
-  normalizeAppData();
   const out = [];
-  MONTHS.forEach(mn => {
-    Object.keys(appData[mn][cat] || {}).forEach(k => {
-      const p = parseParcelKey(k);
-      if (p && p.base === pSeries.base && p.t === pSeries.t)
-        out.push({ mn, k, n: p.n, val: appData[mn][cat][k], paid: !!appData[mn].paid?.[k] });
+  Object.entries(fullData).forEach(([yr, yd]) => {
+    if (!yd || typeof yd !== 'object') return;
+    MONTHS.forEach(mn => {
+      const bucket = yd[mn]?.[cat];
+      if (!bucket) return;
+      Object.keys(bucket).forEach(k => {
+        const p = parseParcelKey(k);
+        if (p && p.base === pSeries.base && p.t === pSeries.t)
+          out.push({ yr: parseInt(yr), mn, k, n: p.n, val: bucket[k], paid: !!yd[mn].paid?.[k] });
+      });
     });
   });
   return out;
@@ -1159,9 +1166,12 @@ function propagateParcelValueAll(cat, key, num) {
   normalizeAppData();
   const esc = p.base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const re = new RegExp(`^${esc}\\s*\\[\\d+\\/${p.t}\\]\\s*$`);
-  MONTHS.forEach(mn => {
-    Object.keys(appData[mn][cat]).forEach(k2 => {
-      if (re.test(k2)) appData[mn][cat][k2] = num;
+  Object.values(fullData).forEach(yd => {
+    if (!yd || typeof yd !== 'object') return;
+    MONTHS.forEach(mn => {
+      const bucket = yd[mn]?.[cat];
+      if (!bucket) return;
+      Object.keys(bucket).forEach(k2 => { if (re.test(k2)) bucket[k2] = num; });
     });
   });
 }
@@ -1181,11 +1191,11 @@ function applyParcelRenameAll(cat, oldK, newK, pOld) {
   for (const it of items) {
     const nn = it.n + deltaA;
     if (nn < 1 || nn > newT) continue;
-    planned.push({ mn: it.mn, oldKey: it.k, newKey: `${newBase} [${nn}/${newT}]`, val: it.val, paid: it.paid });
+    planned.push({ yr: it.yr, mn: it.mn, oldKey: it.k, newKey: `${newBase} [${nn}/${newT}]`, val: it.val, paid: it.paid });
   }
   const seen = new Set();
   for (const p of planned) {
-    const id = p.mn + '\0' + p.newKey;
+    const id = p.yr + '\0' + p.mn + '\0' + p.newKey;
     if (seen.has(id)) {
       alert('Conflito: duas parcelas gerariam o mesmo nome no mesmo mês. Operação cancelada.');
       render();
@@ -1194,14 +1204,18 @@ function applyParcelRenameAll(cat, oldK, newK, pOld) {
     seen.add(id);
   }
   for (const it of items) {
-    delete appData[it.mn][cat][it.k];
-    if (appData[it.mn].paid?.[it.k]) delete appData[it.mn].paid[it.k];
+    const yd = fullData[String(it.yr)];
+    if (!yd || !yd[it.mn]) continue;
+    delete yd[it.mn][cat][it.k];
+    if (yd[it.mn].paid?.[it.k]) delete yd[it.mn].paid[it.k];
   }
   for (const p of planned) {
-    appData[p.mn][cat][p.newKey] = p.val;
+    const yd = fullData[String(p.yr)];
+    if (!yd || !yd[p.mn]) continue;
+    yd[p.mn][cat][p.newKey] = p.val;
     if (p.paid) {
-      if (!appData[p.mn].paid) appData[p.mn].paid = {};
-      appData[p.mn].paid[p.newKey] = true;
+      if (!yd[p.mn].paid) yd[p.mn].paid = {};
+      yd[p.mn].paid[p.newKey] = true;
     }
   }
   render();
@@ -1210,8 +1224,10 @@ function applyParcelRenameAll(cat, oldK, newK, pOld) {
 
 function deleteParcelSeriesAll(cat, pSeries) {
   collectParcelSeries(cat, pSeries).forEach(it => {
-    delete appData[it.mn][cat][it.k];
-    if (appData[it.mn].paid?.[it.k]) delete appData[it.mn].paid[it.k];
+    const yd = fullData[String(it.yr)];
+    if (!yd || !yd[it.mn]) return;
+    delete yd[it.mn][cat][it.k];
+    if (yd[it.mn].paid?.[it.k]) delete yd[it.mn].paid[it.k];
   });
 }
 
@@ -1224,10 +1240,13 @@ function replicateItemToNextMonths(cat, key, monthsAhead) {
 
   let copied = 0;
   for (let i = 1; i <= n; i++) {
-    const mn = MONTHS[(activeMes + i) % 12];
+    const totalIdx = activeMes + i;
+    const yr = currentYear + Math.floor(totalIdx / 12);
+    const mn = MONTHS[totalIdx % 12];
+    const yd = ensureYear(yr);
     // Não sobrescreve automaticamente se já existir item com mesmo nome
-    if (appData[mn][cat][key] !== undefined) continue;
-    appData[mn][cat][key] = val;
+    if (yd[mn][cat][key] !== undefined) continue;
+    yd[mn][cat][key] = val;
     copied++;
   }
   render();
@@ -1240,6 +1259,7 @@ function fixarEmTodosMeses(cat, key) {
   const currVal = appData[MONTHS[activeMes]][cat][key];
   let added = 0;
   MONTHS.forEach(mn => {
+    // Só fixa no ano atual
     if (appData[mn][cat][key] === undefined) {
       appData[mn][cat][key] = currVal;
       added++;
@@ -1330,37 +1350,43 @@ function createParcelSeriesFromCurrent(cat, oldK, pNew) {
   if (!currBucket || !(oldK in currBucket)) return false;
 
   const baseVal = currBucket[oldK];
+  const totalParcelas = pNew.t - pNew.a + 1;
   const planned = [];
-  for (let i = 0; i <= (pNew.t - pNew.a) && i < 12; i++) {
-    const idx = (startIdx + i) % 12;
-    const mn = MONTHS[idx];
+  for (let i = 0; i < totalParcelas; i++) {
+    const totalIdx = startIdx + i;
+    const yr = currentYear + Math.floor(totalIdx / 12);
+    const mn = MONTHS[totalIdx % 12];
     const newKey = `${pNew.base.trim()} [${pNew.a + i}/${pNew.t}]`;
-    planned.push({ mn, newKey });
+    planned.push({ yr, mn, newKey });
   }
 
   // Valida conflitos antes de mexer em qualquer coisa
   for (const p of planned) {
-    const bucket = appData[p.mn][cat];
-    if (bucket[p.newKey] !== undefined && !(p.mn === startMonth && p.newKey === oldK)) {
-      alert(`Já existe um item "${p.newKey}" em ${p.mn}. Operação cancelada para evitar conflito.`);
+    const yd = ensureYear(p.yr);
+    const bucket = yd[p.mn][cat];
+    if (bucket[p.newKey] !== undefined && !(p.yr === currentYear && p.mn === startMonth && p.newKey === oldK)) {
+      alert(`Já existe um item "${p.newKey}" em ${p.mn}/${p.yr}. Operação cancelada para evitar conflito.`);
       render();
       return false;
     }
   }
 
   // Remove o item antigo onde existir dentro do range (pra não duplicar)
-  for (let i = 0; i < 12; i++) {
-    const mn = MONTHS[(startIdx + i) % 12];
-    const bucket = appData[mn][cat];
-    if (bucket && (oldK in bucket)) {
-      delete bucket[oldK];
-      if (appData[mn].paid?.[oldK]) delete appData[mn].paid[oldK];
+  for (let i = 0; i < totalParcelas; i++) {
+    const totalIdx = startIdx + i;
+    const yr = currentYear + Math.floor(totalIdx / 12);
+    const mn = MONTHS[totalIdx % 12];
+    const yd = fullData[String(yr)];
+    if (!yd || !yd[mn]) continue;
+    if (oldK in yd[mn][cat]) {
+      delete yd[mn][cat][oldK];
+      if (yd[mn].paid?.[oldK]) delete yd[mn].paid[oldK];
     }
   }
 
   // Cria a série com o mesmo valor
   planned.forEach(p => {
-    appData[p.mn][cat][p.newKey] = baseVal;
+    ensureYear(p.yr)[p.mn][cat][p.newKey] = baseVal;
   });
 
   // Mantém "pago" apenas no mês atual (se estava pago no item antigo)
@@ -1440,8 +1466,12 @@ async function loadFromCloud() {
     if (wantRemember() && userPassword) setRemembered(CURRENT_USER, userPassword);
   }
   fullData = data ? data.dados : {};
-  appData = fullData["2026"] || fullData;
-  if (!appData["JAN"]) appData = createEmptyYear();
+  // Migra formato antigo (fullData era direto o ano, sem wrapper)
+  if (fullData && fullData['JAN']) fullData = { '2026': fullData };
+  if (!fullData || typeof fullData !== 'object') fullData = {};
+  currentYear = new Date().getFullYear();
+  ensureYear(currentYear);
+  appData = fullData[String(currentYear)];
   normalizeAppData();
   render();
   refreshBetaUi();
@@ -1510,7 +1540,7 @@ function autoSave() {
   const st = document.getElementById('syncStatus');
   st.innerText = "⏳ Sincronizando..."; st.className = "sync-indicator saving";
   saveTimeout = setTimeout(async () => {
-    fullData["2026"] = appData;
+    fullData[String(currentYear)] = appData;
     await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: fullData, senha: userPassword }, { onConflict: 'usuario' });
     st.innerText = "☁️ Sincronizado"; st.className = "sync-indicator saved";
   }, 400);
@@ -1650,6 +1680,7 @@ function renderRow(cat, k, v) {
 function render() {
   normalizeAppData();
   const m = MONTHS[activeMes], d = appData[m];
+  const yl = document.getElementById('yearLabel'); if (yl) yl.textContent = currentYear;
   const nav = document.getElementById('monthNav'); nav.innerHTML = '';
   MONTHS.forEach((mn,i) => {
     const b = document.createElement('button'); b.className = 'month-btn'+(i===activeMes?' active':'');
@@ -1696,6 +1727,20 @@ function createGroupRow(cat, k, v, container) {
 }
 
 function createEmptyYear() { const d = {}; MONTHS.forEach(m => d[m] = { renda: {}, fixas: {}, temp: {}, descontos: {}, paid: {} }); return d; }
+function ensureYear(yr) {
+  const key = String(yr);
+  if (!fullData[key] || !fullData[key]['JAN']) fullData[key] = createEmptyYear();
+  const cats = ['renda','fixas','temp','descontos','paid'];
+  MONTHS.forEach(mn => { if (!fullData[key][mn]) fullData[key][mn] = {}; cats.forEach(c => { if (!fullData[key][mn][c]) fullData[key][mn][c] = {}; }); });
+  return fullData[key];
+}
+function changeYear(delta) {
+  currentYear += delta;
+  ensureYear(currentYear);
+  appData = fullData[String(currentYear)];
+  normalizeAppData();
+  render();
+}
 function normalizeAppData() {
   const keys = ['renda', 'fixas', 'temp', 'descontos', 'paid'];
   MONTHS.forEach(mn => {
@@ -1720,8 +1765,10 @@ function addRow(cat) {
     if (a < 1 || t < 1 || a > t) { alert("Parcela inválida: use [atual/total], ex. [1/12], com 1 ≤ atual ≤ total."); return; }
     const base = n.replace(/\[\d+\/\d+\]/, "").trim();
     for (let i = 0; i <= (t - a); i++) {
-      const mIdx = (activeMes + i) % 12;
-      appData[MONTHS[mIdx]][cat][`${base} [${a + i}/${t}]`] = val;
+      const totalIdx = activeMes + i;
+      const yr = currentYear + Math.floor(totalIdx / 12);
+      const mn = MONTHS[totalIdx % 12];
+      ensureYear(yr)[mn][cat][`${base} [${a + i}/${t}]`] = val;
     }
   } else appData[MONTHS[activeMes]][cat][n] = val;
   render(); autoSave();
@@ -1829,17 +1876,24 @@ function updateValue(cat, key, val) {
 }
 
 function copyPreviousMonth() {
-  if (activeMes === 0) return;
-  const prev = MONTHS[activeMes - 1], curr = MONTHS[activeMes];
+  const prevMesIdx = activeMes - 1;
+  const prevYr = prevMesIdx < 0 ? currentYear - 1 : currentYear;
+  const prevMn = MONTHS[prevMesIdx < 0 ? 11 : prevMesIdx];
+  const curr = MONTHS[activeMes];
+  const prevYearData = fullData[String(prevYr)];
+  if (!prevYearData || !prevYearData[prevMn]) {
+    alert(`Não há dados de ${prevMn}/${prevYr} para replicar.`);
+    return;
+  }
   showChoiceModal(
     'Replicar mês anterior',
-    `Trazer de ${prev} para ${curr} a mesma lista de itens (parcelas seguem para o próximo número). Escolha se os valores vêm iguais ou zerados para você preencher.`,
+    `Trazer de ${prevMn}${prevYr !== currentYear ? '/' + prevYr : ''} para ${curr} a mesma lista de itens (parcelas seguem para o próximo número). Escolha se os valores vêm iguais ou zerados para você preencher.`,
     'Com valores',
     'Sem valores (zerar)'
   ).then(choice => {
     if (choice === 'cancel') return;
     const zerar = choice === 'all';
-    const newData = JSON.parse(JSON.stringify(appData[prev]));
+    const newData = JSON.parse(JSON.stringify(prevYearData[prevMn]));
     newData.paid = {};
     ['renda', 'fixas', 'temp', 'descontos'].forEach(cat => {
       const ent = Object.entries(newData[cat]);
