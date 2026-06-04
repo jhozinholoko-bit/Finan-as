@@ -1508,21 +1508,27 @@ function migrarParcelamentosMultiAno() {
   let movidas = 0, criadas = 0;
 
   Object.values(series).forEach(s => {
-    const anchor = s.parcelas.find(p => p.n === 1);
-    if (!anchor) return; // sem [1/t] não dá pra calcular posição base
+    // Usa a parcela de menor número como âncora (não exige [1/t] — funciona mesmo
+    // quando a série começou em anos anteriores ao que está carregado no app).
+    const sorted = s.parcelas.slice().sort((a, b) => a.n - b.n);
+    const anchor = sorted[0];
+    if (!anchor) return;
 
-    const startMnIdx = MONTHS.indexOf(anchor.mn);
+    // Mês absoluto da âncora (yr*12 + mesIdx)
+    const anchorAbsMonth = anchor.yr * 12 + MONTHS.indexOf(anchor.mn);
 
     for (let n = 1; n <= s.total; n++) {
-      const totalIdx = startMnIdx + (n - 1);
-      const expectedYr = anchor.yr + Math.floor(totalIdx / 12);
-      const expectedMn = MONTHS[totalIdx % 12];
+      const absMonth = anchorAbsMonth + (n - anchor.n);
+      if (absMonth < 0) continue; // parcela anterior ao início dos dados, ignora
+      const expectedYr = Math.floor(absMonth / 12);
+      const expectedMn = MONTHS[absMonth % 12];
       const key = `${s.base} [${n}/${s.total}]`;
       const existing = s.parcelas.find(p => p.n === n);
 
       if (!existing) {
-        // Parcela faltando — cria no lugar certo com valor da mais próxima
-        const nearby = s.parcelas.filter(p => p.n < n).sort((a, b) => b.n - a.n)[0] || s.parcelas[0];
+        // Parcela faltando — só cria se for parcela futura (>=âncora)
+        if (n < anchor.n) continue;
+        const nearby = sorted.filter(p => p.n < n).slice(-1)[0] || anchor;
         ensureYear(expectedYr)[expectedMn][s.cat][key] = nearby.val;
         criadas++;
       } else if (existing.yr !== expectedYr || existing.mn !== expectedMn) {
@@ -1532,9 +1538,9 @@ function migrarParcelamentosMultiAno() {
           const wasPaid = !!wrongYd[existing.mn].paid?.[key];
           delete wrongYd[existing.mn][s.cat][key];
           if (wasPaid) delete wrongYd[existing.mn].paid[key];
-          const destYd = ensureYear(expectedYr)[expectedMn];
-          destYd[s.cat][key] = existing.val;
-          if (wasPaid) { if (!destYd.paid) destYd.paid = {}; destYd.paid[key] = true; }
+          const destMn = ensureYear(expectedYr)[expectedMn];
+          destMn[s.cat][key] = existing.val;
+          if (wasPaid) { if (!destMn.paid) destMn.paid = {}; destMn.paid[key] = true; }
         }
         movidas++;
       }
