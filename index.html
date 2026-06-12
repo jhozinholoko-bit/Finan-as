@@ -216,6 +216,16 @@
   .intel-modal-btns .cancel { border: 1px solid #ff4d6d; color: #ff4d6d; }
   .intel-tabs-content::-webkit-scrollbar { width: 4px; }
   .intel-tabs-content::-webkit-scrollbar-thumb { background: rgba(0,229,160,0.35); border-radius: 4px; }
+
+  /* Seletor de paleta */
+  .palette-wrap { position: relative; }
+  .palette-dropdown { position: absolute; top: calc(100% + 6px); right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px; z-index: 9999; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: none; flex-direction: column; gap: 8px; min-width: 140px; }
+  .palette-dropdown.open { display: flex; }
+  .palette-option { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 5px 6px; border-radius: 6px; transition: background 0.15s; border: 1px solid transparent; }
+  .palette-option:hover { background: var(--bg); }
+  .palette-option.active { border-color: var(--accent); }
+  .palette-swatch { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,0.1); }
+  .palette-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text); }
 </style>
 </head>
 <body>
@@ -263,6 +273,10 @@
         </div>
       </div>
       <button class="btn-ui" onclick="toggleTheme()">🌓 TEMA</button>
+      <div class="palette-wrap" id="paletteWrap">
+        <button class="btn-ui" onclick="togglePaletteMenu(event)">🎨 PALETA</button>
+        <div class="palette-dropdown" id="paletteDropdown"></div>
+      </div>
       <button class="btn-ui" onclick="document.getElementById('helpModal').style.display='flex'">❓ AJUDA</button>
       <button class="btn-ui" id="btnSaldoReal" onclick="toggleSaldoReal()">📊 MODO SALDO REAL</button>
       <div class="intel-menu-wrap" id="intelMenuWrap" style="position:relative;display:none;">
@@ -1853,6 +1867,57 @@ function normalizeAppData() {
   });
 }
 function toggleTheme() { const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; document.body.setAttribute('data-theme', t); localStorage.setItem('theme', t); }
+
+const PALETTES = [
+  { id: 'esmeralda', label: 'Esmeralda', accent: '#00e5a0', accent2: '#ff4d6d', accent3: '#ffd166', bg: '#0a0c10', surface: '#111318', border: '#1e2330', muted: '#5a6070', text: '#e8eaf0' },
+  { id: 'oceano',    label: 'Oceano',    accent: '#00c8ff', accent2: '#ff6b6b', accent3: '#ffd166', bg: '#080d14', surface: '#0e1520', border: '#162030', muted: '#4a6070', text: '#d8eaf8' },
+  { id: 'violeta',   label: 'Violeta',   accent: '#a78bfa', accent2: '#f87171', accent3: '#fbbf24', bg: '#0c0a14', surface: '#131020', border: '#201830', muted: '#6050a0', text: '#e0dcf8' },
+  { id: 'ambar',     label: 'Âmbar',     accent: '#f59e0b', accent2: '#ef4444', accent3: '#34d399', bg: '#0f0c08', surface: '#1a1510', border: '#2a2015', muted: '#706040', text: '#f4ede0' },
+  { id: 'cereja',    label: 'Cereja',    accent: '#fb7185', accent2: '#fb923c', accent3: '#a78bfa', bg: '#100a0c', surface: '#1e1015', border: '#301820', muted: '#704050', text: '#f8d8e0' },
+];
+let activePalette = localStorage.getItem('financas_palette') || 'esmeralda';
+
+function applyPalette(id) {
+  const p = PALETTES.find(x => x.id === id) || PALETTES[0];
+  activePalette = p.id;
+  localStorage.setItem('financas_palette', p.id);
+  const r = document.documentElement.style;
+  r.setProperty('--accent',  p.accent);
+  r.setProperty('--accent2', p.accent2);
+  r.setProperty('--accent3', p.accent3);
+  r.setProperty('--bg',      p.bg);
+  r.setProperty('--surface', p.surface);
+  r.setProperty('--border',  p.border);
+  r.setProperty('--muted',   p.muted);
+  r.setProperty('--text',    p.text);
+  renderPaletteDropdown();
+}
+
+function renderPaletteDropdown() {
+  const dd = document.getElementById('paletteDropdown');
+  if (!dd) return;
+  dd.innerHTML = '';
+  PALETTES.forEach(p => {
+    const opt = document.createElement('div');
+    opt.className = 'palette-option' + (p.id === activePalette ? ' active' : '');
+    opt.innerHTML = `<span class="palette-swatch" style="background:${p.accent}"></span><span class="palette-label">${p.label}</span>`;
+    opt.onclick = () => { applyPalette(p.id); dd.classList.remove('open'); };
+    dd.appendChild(opt);
+  });
+}
+
+function togglePaletteMenu(e) {
+  e.stopPropagation();
+  renderPaletteDropdown();
+  document.getElementById('paletteDropdown').classList.toggle('open');
+}
+
+document.addEventListener('click', () => {
+  document.getElementById('paletteDropdown')?.classList.remove('open');
+});
+
+// Aplica paleta salva ao carregar
+applyPalette(activePalette);
 if(localStorage.getItem('theme') === 'light') document.body.setAttribute('data-theme', 'light');
 function toggleSaldoReal() { modoSaldoReal = !modoSaldoReal; document.getElementById('btnSaldoReal').classList.toggle('active', modoSaldoReal); render(); }
 function togglePaid(k) { const m = appData[MONTHS[activeMes]]; if(!m.paid) m.paid = {}; m.paid[k] = !m.paid[k]; render(); autoSave(); }
