@@ -1866,14 +1866,29 @@ function normalizeAppData() {
     });
   });
 }
-function toggleTheme() { const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; document.body.setAttribute('data-theme', t); localStorage.setItem('theme', t); }
+function toggleTheme() { const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; document.body.setAttribute('data-theme', t); localStorage.setItem('theme', t); applyPalette(activePalette); }
 
 const PALETTES = [
-  { id: 'esmeralda', label: 'Esmeralda', accent: '#00e5a0', accent2: '#ff4d6d', accent3: '#ffd166', bg: '#0a0c10', surface: '#111318', border: '#1e2330', muted: '#5a6070', text: '#e8eaf0' },
-  { id: 'oceano',    label: 'Oceano',    accent: '#00c8ff', accent2: '#ff6b6b', accent3: '#ffd166', bg: '#080d14', surface: '#0e1520', border: '#162030', muted: '#4a6070', text: '#d8eaf8' },
-  { id: 'violeta',   label: 'Violeta',   accent: '#a78bfa', accent2: '#f87171', accent3: '#fbbf24', bg: '#0c0a14', surface: '#131020', border: '#201830', muted: '#6050a0', text: '#e0dcf8' },
-  { id: 'ambar',     label: 'Âmbar',     accent: '#f59e0b', accent2: '#ef4444', accent3: '#34d399', bg: '#0f0c08', surface: '#1a1510', border: '#2a2015', muted: '#706040', text: '#f4ede0' },
-  { id: 'cereja',    label: 'Cereja',    accent: '#fb7185', accent2: '#fb923c', accent3: '#a78bfa', bg: '#100a0c', surface: '#1e1015', border: '#301820', muted: '#704050', text: '#f8d8e0' },
+  { id: 'esmeralda', label: 'Esmeralda',
+    accent: '#00e5a0', accent2: '#ff4d6d', accent3: '#ffd166',
+    bg: '#060e0a', surface: '#0c1a10', border: '#0e3320', muted: '#3a6e52', text: '#d4f5e4',
+    lacent: '#00936a', lacent2: '#e63946', lacent3: '#c47f00' },
+  { id: 'oceano',    label: 'Oceano',
+    accent: '#00d4ff', accent2: '#ff6b9d', accent3: '#ffe066',
+    bg: '#020c14', surface: '#061828', border: '#0a2e48', muted: '#2a5878', text: '#cceeff',
+    lacent: '#006fa3', lacent2: '#c2185b', lacent3: '#b07d00' },
+  { id: 'violeta',   label: 'Violeta',
+    accent: '#c084fc', accent2: '#f87171', accent3: '#fbbf24',
+    bg: '#07020f', surface: '#110820', border: '#220a40', muted: '#6040a0', text: '#eddcff',
+    lacent: '#7c3aed', lacent2: '#dc2626', lacent3: '#a16207' },
+  { id: 'ambar',     label: 'Âmbar',
+    accent: '#ffb300', accent2: '#ff5252', accent3: '#40e0b0',
+    bg: '#100900', surface: '#201400', border: '#3a2400', muted: '#7a5a20', text: '#fff3cc',
+    lacent: '#b45309', lacent2: '#c62828', lacent3: '#00796b' },
+  { id: 'cereja',    label: 'Cereja',
+    accent: '#ff3366', accent2: '#ff8c42', accent3: '#b57bff',
+    bg: '#0f0208', surface: '#200510', border: '#400820', muted: '#7a2040', text: '#ffe0ec',
+    lacent: '#be123c', lacent2: '#c2410c', lacent3: '#6d28d9' },
 ];
 let activePalette = localStorage.getItem('financas_palette') || 'esmeralda';
 
@@ -1882,14 +1897,19 @@ function applyPalette(id) {
   activePalette = p.id;
   localStorage.setItem('financas_palette', p.id);
   const r = document.documentElement.style;
-  r.setProperty('--accent',  p.accent);
-  r.setProperty('--accent2', p.accent2);
-  r.setProperty('--accent3', p.accent3);
-  r.setProperty('--bg',      p.bg);
-  r.setProperty('--surface', p.surface);
-  r.setProperty('--border',  p.border);
-  r.setProperty('--muted',   p.muted);
-  r.setProperty('--text',    p.text);
+  const isLight = document.body.getAttribute('data-theme') === 'light';
+  r.setProperty('--accent',  isLight ? p.lacent  : p.accent);
+  r.setProperty('--accent2', isLight ? p.lacent2 : p.accent2);
+  r.setProperty('--accent3', isLight ? p.lacent3 : p.accent3);
+  if (!isLight) {
+    r.setProperty('--bg',      p.bg);
+    r.setProperty('--surface', p.surface);
+    r.setProperty('--border',  p.border);
+    r.setProperty('--muted',   p.muted);
+    r.setProperty('--text',    p.text);
+  } else {
+    ['--bg','--surface','--border','--muted','--text'].forEach(v => r.removeProperty(v));
+  }
   renderPaletteDropdown();
 }
 
