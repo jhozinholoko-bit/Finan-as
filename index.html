@@ -217,6 +217,34 @@
   .intel-tabs-content::-webkit-scrollbar { width: 4px; }
   .intel-tabs-content::-webkit-scrollbar-thumb { background: rgba(0,229,160,0.35); border-radius: 4px; }
 
+  /* ── Shared Expenses ── */
+  .bell-wrap { position: relative; display: inline-block; }
+  .bell-badge { position: absolute; top: -6px; right: -6px; background: var(--accent2); color: #fff; font-size: 9px; font-weight: 700; border-radius: 10px; padding: 1px 5px; min-width: 16px; text-align: center; pointer-events: none; display: none; }
+  #notifPanel { position: fixed; inset: 0; z-index: 10002; display: none; }
+  #notifPanel.open { display: flex; align-items: flex-start; justify-content: flex-end; padding: 60px 15px 0; }
+  .notif-backdrop { position: absolute; inset: 0; }
+  .notif-card { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 360px; max-height: 75vh; overflow-y: auto; z-index: 1; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  .notif-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+  .notif-header h3 { font-family: var(--font-head); font-size: 16px; font-weight: 800; margin: 0; }
+  .notif-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .notif-item { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-sender { font-size: 10px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .notif-title-text { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .notif-desc { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .notif-amount { font-family: var(--font-head); font-size: 20px; color: var(--accent); margin-bottom: 10px; }
+  .notif-btns { display: flex; gap: 8px; }
+  .notif-btn { flex: 1; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; text-transform: uppercase; letter-spacing: 0.5px; font-family: var(--font-mono); }
+  .notif-btn.accept { background: var(--accent); color: #000; }
+  .notif-btn.reject { background: transparent; border: 1px solid var(--accent2); color: var(--accent2); }
+  .notif-empty { padding: 32px 16px; text-align: center; color: var(--muted); font-size: 13px; }
+  .shared-badge { font-size: 9px; background: color-mix(in srgb, var(--accent3) 15%, transparent); color: var(--accent3); border: 1px solid color-mix(in srgb, var(--accent3) 30%, transparent); border-radius: 4px; padding: 1px 5px; margin-left: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; vertical-align: middle; white-space: nowrap; }
+  .shared-badge.waiting { background: color-mix(in srgb, var(--muted) 15%, transparent); color: var(--muted); border-color: color-mix(in srgb, var(--muted) 30%, transparent); }
+  .shared-badge.paid { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+  .shared-badge.rejected { background: color-mix(in srgb, var(--accent2) 15%, transparent); color: var(--accent2); border-color: color-mix(in srgb, var(--accent2) 30%, transparent); }
+  .shared-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .shared-pay-btn { background: var(--accent); border: none; color: #000; font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-family: var(--font-mono); flex-shrink: 0; }
+
 </style>
 </head>
 <body>
@@ -273,6 +301,10 @@
           <button type="button" class="intel-drop-item metas" onclick="openIntelTab('metas')">Metas</button>
           <button type="button" class="intel-drop-item saude" onclick="openIntelTab('saude')">Saúde</button>
         </div>
+      </div>
+      <div class="bell-wrap">
+        <button type="button" class="btn-ui" onclick="toggleNotifPanel()" id="bellBtn">🔔</button>
+        <span class="bell-badge" id="bellBadge"></span>
       </div>
       <button type="button" class="btn-ui" onclick="sairDaConta()">🚪 SAIR</button>
     </div>
@@ -427,6 +459,166 @@ function setLastUser(usuario) { try { if (usuario) localStorage.setItem(LAST_USE
 const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 let CURRENT_USER = "", activeMes = new Date().getMonth(), currentYear = new Date().getFullYear(), fullData = null, appData = null, userPassword = "", barInst, openGroups = {}, saveTimeout, modoSaldoReal = false;
 let betaDesativado = localStorage.getItem('financas_beta_off') === '1';
+
+// ── Despesas Compartilhadas ─────────────────────────────────
+let sharedTransactions = [];
+let sharedNotifications = [];
+
+function parseAtMention(text) {
+  const match = text.match(/@([a-zA-Z0-9_]+)/);
+  if (!match) return null;
+  return { cleanTitle: text.replace(/@[a-zA-Z0-9_]+/, '').replace(/\s+/g, ' ').trim(), mentionedUser: match[1].toLowerCase() };
+}
+
+async function createSharedExpense(title, amount, cat, mentionedUser, month, year) {
+  const { data, error } = await _supabase.from('shared_transactions').insert({
+    creator_user_id: CURRENT_USER, mentioned_user_id: mentionedUser,
+    amount, title, status: 'waiting_acceptance', cat, month, year
+  }).select().single();
+  if (error) { console.error('Shared expense error:', error); alert('Erro ao criar despesa compartilhada. Verifique se as tabelas foram criadas no Supabase.'); return null; }
+  await _supabase.from('notifications').insert({
+    user_id: mentionedUser, sender_user_id: CURRENT_USER,
+    type: 'shared_expense', shared_transaction_id: data.id,
+    title: `${CURRENT_USER} adicionou uma despesa para você`,
+    message: `${title} — ${formatMoneyBR(amount)}`, status: 'unread'
+  });
+  return data;
+}
+
+async function loadSharedData() {
+  if (!CURRENT_USER) return;
+  const { data: txs } = await _supabase.from('shared_transactions')
+    .select('*')
+    .or(`creator_user_id.eq.${CURRENT_USER},mentioned_user_id.eq.${CURRENT_USER}`)
+    .neq('status', 'rejected');
+  sharedTransactions = txs || [];
+  const { data: notifs } = await _supabase.from('notifications')
+    .select('*').eq('user_id', CURRENT_USER)
+    .order('created_at', { ascending: false }).limit(50);
+  sharedNotifications = notifs || [];
+  renderBellBadge();
+  render();
+}
+
+function renderBellBadge() {
+  const badge = document.getElementById('bellBadge');
+  if (!badge) return;
+  const unread = sharedNotifications.filter(n => n.status === 'unread').length;
+  badge.textContent = unread;
+  badge.style.display = unread > 0 ? 'block' : 'none';
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  if (!panel) return;
+  if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
+  renderNotifList();
+  panel.classList.add('open');
+  markNotificationsRead();
+}
+
+function renderNotifList() {
+  const list = document.getElementById('notifList');
+  if (!list) return;
+  if (!sharedNotifications.length) { list.innerHTML = '<div class="notif-empty">Nenhuma notificação</div>'; return; }
+  list.innerHTML = '';
+  sharedNotifications.forEach(n => {
+    const tx = sharedTransactions.find(t => t.id === n.shared_transaction_id);
+    const div = document.createElement('div');
+    div.className = 'notif-item';
+    const canAccept = n.type === 'shared_expense' && tx && tx.status === 'waiting_acceptance';
+    div.innerHTML = `
+      <div class="notif-sender">${n.sender_user_id} · ${new Date(n.created_at).toLocaleDateString('pt-BR')}</div>
+      <div class="notif-title-text">${n.title}</div>
+      ${tx ? `<div class="notif-amount">${formatMoneyBR(tx.amount)}</div>` : ''}
+      <div class="notif-desc">${n.message}</div>
+      ${canAccept ? `
+        <div class="notif-btns">
+          <button class="notif-btn accept" onclick="acceptSharedExpense('${tx.id}','${n.id}')">Aceitar</button>
+          <button class="notif-btn reject" onclick="rejectSharedExpense('${tx.id}','${n.id}')">Recusar</button>
+        </div>` : ''}
+    `;
+    list.appendChild(div);
+  });
+}
+
+async function markNotificationsRead() {
+  const ids = sharedNotifications.filter(n => n.status === 'unread').map(n => n.id);
+  if (!ids.length) return;
+  await _supabase.from('notifications').update({ status: 'read', read_at: new Date().toISOString() }).in('id', ids);
+  sharedNotifications.forEach(n => { if (ids.includes(n.id)) n.status = 'read'; });
+  renderBellBadge();
+}
+
+async function acceptSharedExpense(txId, notifId) {
+  const tx = sharedTransactions.find(t => t.id === txId);
+  if (!tx) return;
+  await _supabase.from('shared_transactions').update({ status: 'pending', accepted_at: new Date().toISOString() }).eq('id', txId);
+  await _supabase.from('notifications').update({ status: 'actioned' }).eq('id', notifId);
+  await _supabase.from('notifications').insert({
+    user_id: tx.creator_user_id, sender_user_id: CURRENT_USER,
+    type: 'expense_accepted', shared_transaction_id: txId,
+    title: `${CURRENT_USER} aceitou a despesa`,
+    message: `${tx.title} — ${formatMoneyBR(tx.amount)}`, status: 'unread'
+  });
+  document.getElementById('notifPanel').classList.remove('open');
+  await loadSharedData();
+}
+
+async function rejectSharedExpense(txId, notifId) {
+  const tx = sharedTransactions.find(t => t.id === txId);
+  if (!tx) return;
+  await _supabase.from('shared_transactions').update({ status: 'rejected', rejected_at: new Date().toISOString() }).eq('id', txId);
+  await _supabase.from('notifications').update({ status: 'actioned' }).eq('id', notifId);
+  await _supabase.from('notifications').insert({
+    user_id: tx.creator_user_id, sender_user_id: CURRENT_USER,
+    type: 'expense_rejected', shared_transaction_id: txId,
+    title: `${CURRENT_USER} recusou a despesa`,
+    message: `${tx.title} — ${formatMoneyBR(tx.amount)}`, status: 'unread'
+  });
+  document.getElementById('notifPanel').classList.remove('open');
+  await loadSharedData();
+}
+
+async function markSharedPaid(txId) {
+  const tx = sharedTransactions.find(t => t.id === txId);
+  if (!tx) return;
+  await _supabase.from('shared_transactions').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', txId);
+  await _supabase.from('notifications').insert({
+    user_id: tx.creator_user_id, sender_user_id: CURRENT_USER,
+    type: 'payment_received', shared_transaction_id: txId,
+    title: `${CURRENT_USER} marcou como pago`,
+    message: `${tx.title} — ${formatMoneyBR(tx.amount)}`, status: 'unread'
+  });
+  await loadSharedData();
+}
+
+function renderSharedRows(cat, mn, yr, container) {
+  const relevant = sharedTransactions.filter(tx => {
+    if (tx.month !== mn || tx.year !== yr) return false;
+    if (tx.creator_user_id === CURRENT_USER && cat === 'descontos') return true;
+    if (tx.mentioned_user_id === CURRENT_USER && cat === 'temp' && tx.status === 'pending') return true;
+    return false;
+  });
+  relevant.forEach(tx => {
+    const isCreator = tx.creator_user_id === CURRENT_USER;
+    const statusMap = { waiting_acceptance: ['waiting', 'aguardando'], pending: ['pending', 'pendente'], paid: ['paid', 'pago'] };
+    const [cls, label] = statusMap[tx.status] || ['waiting', tx.status];
+    const who = isCreator ? `→ ${tx.mentioned_user_id}` : `← ${tx.creator_user_id}`;
+    const row = document.createElement('div');
+    row.className = 'shared-row';
+    row.style.opacity = tx.status === 'waiting_acceptance' ? '0.65' : '1';
+    row.innerHTML = `
+      <div style="flex:1;min-width:0;font-size:14px;font-weight:500;">
+        ${tx.title}<span class="shared-badge ${cls}">${who} · ${label}</span>
+      </div>
+      <span style="font-family:var(--font-mono);font-size:14px;font-variant-numeric:tabular-nums;flex-shrink:0;">${formatMoneyBR(tx.amount)}</span>
+      ${(!isCreator && tx.status === 'pending') ? `<button class="shared-pay-btn" onclick="markSharedPaid('${tx.id}')">Pagar</button>` : ''}
+    `;
+    container.appendChild(row);
+  });
+}
+// ───────────────────────────────────────────────────────────
 
 /**
  * Beta (Victor): cada chave com valor 'beta' só aparece para TESTER_USERNAMES + UI ligada a featureVisible('mesmaChave').
@@ -1481,6 +1673,7 @@ async function loadFromCloud() {
   migrarParcelamentosMultiAno();
   render();
   refreshBetaUi();
+  loadSharedData();
 }
 
 function migrarParcelamentosMultiAno() {
@@ -1801,6 +1994,8 @@ function render() {
     });
   };
   build('rendaSection','renda'); build('fixasSection','fixas'); build('tempSection','temp'); build('descontosSection','descontos');
+  renderSharedRows('temp', m, currentYear, document.getElementById('tempSection'));
+  renderSharedRows('descontos', m, currentYear, document.getElementById('descontosSection'));
   updateKPIsOnly();
   if (featureVisible('betaInteligencia') && CURRENT_USER && appData) {
     try { intelRefreshAll(); } catch (_) {}
@@ -1862,6 +2057,15 @@ function addRow(cat) {
   const n = prompt("Nome:"); if(!n) return;
   const val = parseMoneyBR(prompt("Valor:"));
   normalizeAppData();
+
+  const mention = parseAtMention(n);
+  if (mention) {
+    if (!mention.cleanTitle) { alert("Adicione um nome além do @usuário."); return; }
+    createSharedExpense(mention.cleanTitle, val, cat, mention.mentionedUser, MONTHS[activeMes], currentYear)
+      .then(tx => { if (tx) loadSharedData(); });
+    return;
+  }
+
   const match = n.match(/\[(\d+)\/(\d+)\]/);
   if (match) {
     const a = parseInt(match[1], 10), t = parseInt(match[2], 10);
@@ -2021,8 +2225,17 @@ function updateKPIsOnly() {
   const sum = (mesData, c) => Object.entries(mesData[c] || {}).reduce((t, [key, val]) => {
     const v = parseMoneyBR(val); return modoSaldoReal ? (mesData.paid?.[key] ? t + v : t) : t + v;
   }, 0);
-  const r = sum(d, 'renda'), f = sum(d, 'fixas'), t = sum(d, 'temp'), aReceber = sum(d, 'descontos'), desp = f + t;
-  const entradas = r + aReceber;
+  const r = sum(d, 'renda'), f = sum(d, 'fixas'), t = sum(d, 'temp'), aReceber = sum(d, 'descontos');
+  const sharedAReceber = sharedTransactions.filter(tx =>
+    tx.creator_user_id === CURRENT_USER && tx.month === m && tx.year === currentYear &&
+    (modoSaldoReal ? tx.status === 'paid' : ['waiting_acceptance','pending'].includes(tx.status))
+  ).reduce((s, tx) => s + tx.amount, 0);
+  const sharedTemp = sharedTransactions.filter(tx =>
+    tx.mentioned_user_id === CURRENT_USER && tx.month === m && tx.year === currentYear &&
+    (modoSaldoReal ? tx.status === 'paid' : tx.status === 'pending')
+  ).reduce((s, tx) => s + tx.amount, 0);
+  const desp = f + t + sharedTemp;
+  const entradas = r + aReceber + sharedAReceber;
   const s = entradas - desp;
   document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card green"><div class="kpi-label">Entradas</div><div class="kpi-value">${formatMoneyBR(entradas)}</div></div>
     <div class="kpi-card red"><div class="kpi-label">Saídas</div><div class="kpi-value">${formatMoneyBR(desp)}</div></div>
@@ -2037,5 +2250,16 @@ function updateKPIsOnly() {
   });
 }
 </script>
+
+<div id="notifPanel">
+  <div class="notif-backdrop" onclick="toggleNotifPanel()"></div>
+  <div class="notif-card">
+    <div class="notif-header">
+      <h3>Notificações</h3>
+      <button class="notif-close" onclick="toggleNotifPanel()">✕</button>
+    </div>
+    <div id="notifList"></div>
+  </div>
+</div>
 </body>
 </html>
