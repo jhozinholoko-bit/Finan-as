@@ -576,7 +576,7 @@ async function acceptSharedExpense(txId, notifId) {
     const yr = String(t.year);
     if (!ud[yr]) { const ey = {}; MONTHS.forEach(mn => { ey[mn] = { renda:{}, fixas:{}, temp:{}, descontos:{}, paid:{} }; }); ud[yr] = ey; }
     if (!ud[yr][t.month]) ud[yr][t.month] = { renda:{}, fixas:{}, temp:{}, descontos:{}, paid:{} };
-    const c = t.cat || 'temp';
+    const c = mirrorCat(t.cat);
     if (!ud[yr][t.month][c]) ud[yr][t.month][c] = {};
     ud[yr][t.month][c][t.title] = t.amount;
   });
@@ -655,11 +655,17 @@ async function cancelSharedBySeries(tx) {
   await loadSharedData();
 }
 
-// Renders creator's shared items in "A Receber" — identical layout to renderRow
+// descontos↔temp espelho: criador em descontos → mencionado em temp (e vice-versa)
+function mirrorCat(cat) {
+  if (cat === 'descontos') return 'temp';
+  if (cat === 'temp' || cat === 'fixas') return 'descontos';
+  return 'temp';
+}
+
+// Renders creator's shared items in their section — identical layout to renderRow
 function renderSharedRows(cat, mn, yr, container) {
-  if (cat !== 'descontos') return;
   sharedTransactions.filter(tx =>
-    tx.creator_user_id === CURRENT_USER && tx.month === mn && tx.year === yr
+    tx.creator_user_id === CURRENT_USER && tx.month === mn && tx.year === yr && tx.cat === cat
   ).forEach(tx => {
     const isPaid = tx.status === 'paid';
     const statusMap = { waiting_acceptance: ['waiting','aguardando'], pending: ['pending','pendente'], paid: ['paid','pago'] };
@@ -2065,7 +2071,7 @@ function render() {
     });
   };
   build('rendaSection','renda'); build('fixasSection','fixas'); build('tempSection','temp'); build('descontosSection','descontos');
-  renderSharedRows('descontos', m, currentYear, document.getElementById('descontosSection'));
+  ['fixas','temp','descontos'].forEach(c => renderSharedRows(c, m, currentYear, document.getElementById(c+'Section')));
   updateKPIsOnly();
   if (featureVisible('betaInteligencia') && CURRENT_USER && appData) {
     try { intelRefreshAll(); } catch (_) {}
@@ -2312,13 +2318,15 @@ function updateKPIsOnly() {
     const v = parseMoneyBR(val); return modoSaldoReal ? (mesData.paid?.[key] ? t + v : t) : t + v;
   }, 0);
   const r = sum(d, 'renda'), f = sum(d, 'fixas'), t = sum(d, 'temp'), aReceber = sum(d, 'descontos');
-  // Shared items accepted by mentioned user are already in their appData (counted in t/aReceber above).
-  // Only need to add creator's shared items (stored in shared_transactions, not appData).
-  const sharedAReceber = sharedTransactions.filter(tx =>
+  // Creator's shared items live in shared_transactions (not appData) — add to totals manually.
+  // descontos = creator receives (income); temp/fixas = creator pays (expense).
+  const sharedOwn = sharedTransactions.filter(tx =>
     tx.creator_user_id === CURRENT_USER && tx.month === m && tx.year === currentYear &&
     (modoSaldoReal ? tx.status === 'paid' : ['waiting_acceptance','pending'].includes(tx.status))
-  ).reduce((s, tx) => s + tx.amount, 0);
-  const desp = f + t;
+  );
+  const sharedAReceber = sharedOwn.filter(tx => tx.cat === 'descontos').reduce((s, tx) => s + tx.amount, 0);
+  const sharedDesp     = sharedOwn.filter(tx => tx.cat !== 'descontos').reduce((s, tx) => s + tx.amount, 0);
+  const desp = f + t + sharedDesp;
   const entradas = r + aReceber + sharedAReceber;
   const s = entradas - desp;
   document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card green"><div class="kpi-label">Entradas</div><div class="kpi-value">${formatMoneyBR(entradas)}</div></div>
