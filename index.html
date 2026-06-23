@@ -2061,8 +2061,23 @@ function addRow(cat) {
   const mention = parseAtMention(n);
   if (mention) {
     if (!mention.cleanTitle) { alert("Adicione um nome além do @usuário."); return; }
-    createSharedExpense(mention.cleanTitle, val, cat, mention.mentionedUser, MONTHS[activeMes], currentYear)
-      .then(tx => { if (tx) loadSharedData(); });
+    const parcelMatch = mention.cleanTitle.match(/\[(\d+)\/(\d+)\]/);
+    if (parcelMatch) {
+      const a = parseInt(parcelMatch[1], 10), t = parseInt(parcelMatch[2], 10);
+      if (a < 1 || t < 1 || a > t) { alert("Parcela inválida: use [atual/total], ex. [1/12]."); return; }
+      const base = mention.cleanTitle.replace(/\[\d+\/\d+\]/, '').trim();
+      const promises = [];
+      for (let i = 0; i <= (t - a); i++) {
+        const totalIdx = activeMes + i;
+        const yr = currentYear + Math.floor(totalIdx / 12);
+        const mn = MONTHS[totalIdx % 12];
+        promises.push(createSharedExpense(`${base} [${a + i}/${t}]`, val, cat, mention.mentionedUser, mn, yr));
+      }
+      Promise.all(promises).then(() => loadSharedData());
+    } else {
+      createSharedExpense(mention.cleanTitle, val, cat, mention.mentionedUser, MONTHS[activeMes], currentYear)
+        .then(tx => { if (tx) loadSharedData(); });
+    }
     return;
   }
 
@@ -2071,15 +2086,12 @@ function addRow(cat) {
     const a = parseInt(match[1], 10), t = parseInt(match[2], 10);
     if (a < 1 || t < 1 || a > t) { alert("Parcela inválida: use [atual/total], ex. [1/12], com 1 ≤ atual ≤ total."); return; }
     const base = n.replace(/\[\d+\/\d+\]/, "").trim();
-    console.log('[addRow] parcela detectada:', base, a, '/', t, '| mês inicial:', MONTHS[activeMes], currentYear);
     for (let i = 0; i <= (t - a); i++) {
       const totalIdx = activeMes + i;
       const yr = currentYear + Math.floor(totalIdx / 12);
       const mn = MONTHS[totalIdx % 12];
       ensureYear(yr)[mn][cat][`${base} [${a + i}/${t}]`] = val;
-      console.log('[addRow] criada:', `${base} [${a+i}/${t}]`, 'em', mn, yr, '| valor:', val);
     }
-    console.log('[addRow] fullData JUL após loop:', JSON.stringify(fullData[String(currentYear)]?.['JUL']?.[cat]));
   } else appData[MONTHS[activeMes]][cat][n] = val;
   render(); autoSave();
 }
