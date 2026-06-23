@@ -470,18 +470,23 @@ function parseAtMention(text) {
   return { cleanTitle: text.replace(/@[a-zA-Z0-9_]+/, '').replace(/\s+/g, ' ').trim(), mentionedUser: match[1].toLowerCase() };
 }
 
-async function createSharedExpense(title, amount, cat, mentionedUser, month, year) {
+async function createSharedExpense(title, amount, cat, mentionedUser, month, year, seriesKey = null, sendNotif = true) {
   const { data, error } = await _supabase.from('shared_transactions').insert({
     creator_user_id: CURRENT_USER, mentioned_user_id: mentionedUser,
-    amount, title, status: 'waiting_acceptance', cat, month, year
+    amount, title, status: 'waiting_acceptance', cat, month, year, series_key: seriesKey
   }).select().single();
-  if (error) { console.error('Shared expense error:', error); alert('Erro ao criar despesa compartilhada. Verifique se as tabelas foram criadas no Supabase.'); return null; }
-  await _supabase.from('notifications').insert({
-    user_id: mentionedUser, sender_user_id: CURRENT_USER,
-    type: 'shared_expense', shared_transaction_id: data.id,
-    title: `${CURRENT_USER} adicionou uma despesa para você`,
-    message: `${title} — ${formatMoneyBR(amount)}`, status: 'unread'
-  });
+  if (error) { console.error('Shared expense error:', error); alert('Erro ao criar despesa. Verifique se as tabelas foram criadas no Supabase.'); return null; }
+  if (sendNotif) {
+    const baseTitle = title.replace(/\s*\[\d+\/\d+\]/, '');
+    const isParcel = seriesKey !== null;
+    await _supabase.from('notifications').insert({
+      user_id: mentionedUser, sender_user_id: CURRENT_USER,
+      type: 'shared_expense', shared_transaction_id: data.id,
+      title: `${CURRENT_USER} adicionou uma ${isParcel ? 'conta parcelada' : 'conta'} para você`,
+      message: isParcel ? `${baseTitle} — ${formatMoneyBR(amount)}/mês` : `${title} — ${formatMoneyBR(amount)}`,
+      status: 'unread'
+    });
+  }
   return data;
 }
 
@@ -490,7 +495,7 @@ async function loadSharedData() {
   const { data: txs } = await _supabase.from('shared_transactions')
     .select('*')
     .or(`creator_user_id.eq.${CURRENT_USER},mentioned_user_id.eq.${CURRENT_USER}`)
-    .neq('status', 'rejected');
+    .not('status', 'in', '("rejected","cancelled")');
   sharedTransactions = txs || [];
   const { data: notifs } = await _supabase.from('notifications')
     .select('*').eq('user_id', CURRENT_USER)
@@ -527,14 +532,15 @@ function renderNotifList() {
     const div = document.createElement('div');
     div.className = 'notif-item';
     const canAccept = n.type === 'shared_expense' && tx && tx.status === 'waiting_acceptance';
+    const seriesCount = tx?.series_key ? sharedTransactions.filter(t => t.series_key === tx.series_key).length : 1;
     div.innerHTML = `
       <div class="notif-sender">${n.sender_user_id} · ${new Date(n.created_at).toLocaleDateString('pt-BR')}</div>
       <div class="notif-title-text">${n.title}</div>
-      ${tx ? `<div class="notif-amount">${formatMoneyBR(tx.amount)}</div>` : ''}
+      ${tx ? `<div class="notif-amount">${formatMoneyBR(tx.amount)}${seriesCount > 1 ? `/mês · ${seriesCount}x` : ''}</div>` : ''}
       <div class="notif-desc">${n.message}</div>
       ${canAccept ? `
         <div class="notif-btns">
-          <button class="notif-btn accept" onclick="acceptSharedExpense('${tx.id}','${n.id}')">Aceitar</button>
+          <button class="notif-btn accept" onclick="acceptSharedExpense('${tx.id}','${n.id}')">Aceitar${seriesCount > 1 ? ' série' : ''}</button>
           <button class="notif-btn reject" onclick="rejectSharedExpense('${tx.id}','${n.id}')">Recusar</button>
         </div>` : ''}
     `;
@@ -553,14 +559,48 @@ async function markNotificationsRead() {
 async function acceptSharedExpense(txId, notifId) {
   const tx = sharedTransactions.find(t => t.id === txId);
   if (!tx) return;
-  await _supabase.from('shared_transactions').update({ status: 'pending', accepted_at: new Date().toISOString() }).eq('id', txId);
-  await _supabase.from('notifications').update({ status: 'actioned' }).eq('id', notifId);
+
+  // Accept entire series if parcel, or just this one
+  const toAccept = tx.series_key
+    ? sharedTransactions.filter(t => t.series_key === tx.series_key && t.status === 'waiting_acceptance')
+    : [tx];
+  const ids = toAccept.map(t => t.id);
+
+  await _supabase.from('shared_transactions').update({ status: 'pending', accepted_at: new Date().toISOString() }).in('id', ids);
+  if (notifId) await _supabase.from('notifications').update({ status: 'actioned' }).eq('id', notifId);
+
+  // Write entries into this user's appData in Supabase
+  const { data: userData } = await _supabase.from('registros').select('dados').eq('usuario', CURRENT_USER).maybeSingle();
+  const ud = (userData?.dados && typeof userData.dados === 'object') ? userData.dados : {};
+  toAccept.forEach(t => {
+    const yr = String(t.year);
+    if (!ud[yr]) { const ey = {}; MONTHS.forEach(mn => { ey[mn] = { renda:{}, fixas:{}, temp:{}, descontos:{}, paid:{} }; }); ud[yr] = ey; }
+    if (!ud[yr][t.month]) ud[yr][t.month] = { renda:{}, fixas:{}, temp:{}, descontos:{}, paid:{} };
+    const c = t.cat || 'temp';
+    if (!ud[yr][t.month][c]) ud[yr][t.month][c] = {};
+    ud[yr][t.month][c][t.title] = t.amount;
+  });
+  await _supabase.from('registros').update({ dados: ud }).eq('usuario', CURRENT_USER);
+
+  // Reflect immediately in local appData if year matches
+  toAccept.forEach(t => {
+    if (t.year === currentYear && appData[t.month]) {
+      const c = t.cat || 'temp';
+      if (!appData[t.month][c]) appData[t.month][c] = {};
+      appData[t.month][c][t.title] = t.amount;
+    }
+  });
+
+  const seriesCount = toAccept.length;
+  const baseTitle = tx.title.replace(/\s*\[\d+\/\d+\]/, '');
   await _supabase.from('notifications').insert({
     user_id: tx.creator_user_id, sender_user_id: CURRENT_USER,
-    type: 'expense_accepted', shared_transaction_id: txId,
+    type: 'expense_accepted', shared_transaction_id: tx.id,
     title: `${CURRENT_USER} aceitou a despesa`,
-    message: `${tx.title} — ${formatMoneyBR(tx.amount)}`, status: 'unread'
+    message: seriesCount > 1 ? `${baseTitle} (${seriesCount}x) — ${formatMoneyBR(tx.amount)}/mês` : `${tx.title} — ${formatMoneyBR(tx.amount)}`,
+    status: 'unread'
   });
+
   document.getElementById('notifPanel').classList.remove('open');
   await loadSharedData();
 }
@@ -568,54 +608,85 @@ async function acceptSharedExpense(txId, notifId) {
 async function rejectSharedExpense(txId, notifId) {
   const tx = sharedTransactions.find(t => t.id === txId);
   if (!tx) return;
-  await _supabase.from('shared_transactions').update({ status: 'rejected', rejected_at: new Date().toISOString() }).eq('id', txId);
-  await _supabase.from('notifications').update({ status: 'actioned' }).eq('id', notifId);
+  const toReject = tx.series_key
+    ? sharedTransactions.filter(t => t.series_key === tx.series_key && t.status === 'waiting_acceptance')
+    : [tx];
+  await _supabase.from('shared_transactions').update({ status: 'rejected', rejected_at: new Date().toISOString() }).in('id', toReject.map(t => t.id));
+  if (notifId) await _supabase.from('notifications').update({ status: 'actioned' }).eq('id', notifId);
   await _supabase.from('notifications').insert({
     user_id: tx.creator_user_id, sender_user_id: CURRENT_USER,
-    type: 'expense_rejected', shared_transaction_id: txId,
+    type: 'expense_rejected', shared_transaction_id: tx.id,
     title: `${CURRENT_USER} recusou a despesa`,
-    message: `${tx.title} — ${formatMoneyBR(tx.amount)}`, status: 'unread'
+    message: `${tx.title.replace(/\s*\[\d+\/\d+\]/, '')} — ${formatMoneyBR(tx.amount)}`, status: 'unread'
   });
   document.getElementById('notifPanel').classList.remove('open');
   await loadSharedData();
 }
 
-async function markSharedPaid(txId) {
-  const tx = sharedTransactions.find(t => t.id === txId);
-  if (!tx) return;
-  await _supabase.from('shared_transactions').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', txId);
+async function cancelSharedBySeries(tx) {
+  if (!confirm(`Excluir despesa compartilhada com ${tx.mentioned_user_id}?`)) return;
+  const toCancel = tx.series_key
+    ? sharedTransactions.filter(t => t.series_key === tx.series_key)
+    : [tx];
+  await _supabase.from('shared_transactions').update({ status: 'cancelled' }).in('id', toCancel.map(t => t.id));
+
+  // Remove from mentioned user's appData if they had accepted
+  const accepted = toCancel.filter(t => ['pending', 'paid'].includes(t.status));
+  if (accepted.length > 0) {
+    const { data: userData } = await _supabase.from('registros').select('dados').eq('usuario', tx.mentioned_user_id).maybeSingle();
+    if (userData?.dados) {
+      const ud = userData.dados;
+      accepted.forEach(t => {
+        const yr = String(t.year); const c = t.cat || 'temp';
+        if (ud[yr]?.[t.month]?.[c]?.[t.title] !== undefined) {
+          delete ud[yr][t.month][c][t.title];
+          if (ud[yr][t.month].paid?.[t.title]) delete ud[yr][t.month].paid[t.title];
+        }
+      });
+      await _supabase.from('registros').update({ dados: ud }).eq('usuario', tx.mentioned_user_id);
+    }
+  }
   await _supabase.from('notifications').insert({
-    user_id: tx.creator_user_id, sender_user_id: CURRENT_USER,
-    type: 'payment_received', shared_transaction_id: txId,
-    title: `${CURRENT_USER} marcou como pago`,
-    message: `${tx.title} — ${formatMoneyBR(tx.amount)}`, status: 'unread'
+    user_id: tx.mentioned_user_id, sender_user_id: CURRENT_USER,
+    type: 'expense_cancelled', shared_transaction_id: tx.id,
+    title: `${CURRENT_USER} cancelou a despesa`,
+    message: `${tx.title.replace(/\s*\[\d+\/\d+\]/, '')} — ${formatMoneyBR(tx.amount)}`, status: 'unread'
   });
   await loadSharedData();
 }
 
+// Renders creator's shared items in "A Receber" — identical layout to renderRow
 function renderSharedRows(cat, mn, yr, container) {
-  const relevant = sharedTransactions.filter(tx => {
-    if (tx.month !== mn || tx.year !== yr) return false;
-    if (tx.creator_user_id === CURRENT_USER && cat === 'descontos') return true;
-    if (tx.mentioned_user_id === CURRENT_USER && cat === 'temp' && tx.status === 'pending') return true;
-    return false;
-  });
-  relevant.forEach(tx => {
-    const isCreator = tx.creator_user_id === CURRENT_USER;
-    const statusMap = { waiting_acceptance: ['waiting', 'aguardando'], pending: ['pending', 'pendente'], paid: ['paid', 'pago'] };
+  if (cat !== 'descontos') return;
+  sharedTransactions.filter(tx =>
+    tx.creator_user_id === CURRENT_USER && tx.month === mn && tx.year === yr
+  ).forEach(tx => {
+    const isPaid = tx.status === 'paid';
+    const statusMap = { waiting_acceptance: ['waiting','aguardando'], pending: ['pending','pendente'], paid: ['paid','pago'] };
     const [cls, label] = statusMap[tx.status] || ['waiting', tx.status];
-    const who = isCreator ? `→ ${tx.mentioned_user_id}` : `← ${tx.creator_user_id}`;
-    const row = document.createElement('div');
-    row.className = 'shared-row';
-    row.style.opacity = tx.status === 'waiting_acceptance' ? '0.65' : '1';
-    row.innerHTML = `
-      <div style="flex:1;min-width:0;font-size:14px;font-weight:500;">
-        ${tx.title}<span class="shared-badge ${cls}">${who} · ${label}</span>
-      </div>
-      <span style="font-family:var(--font-mono);font-size:14px;font-variant-numeric:tabular-nums;flex-shrink:0;">${formatMoneyBR(tx.amount)}</span>
-      ${(!isCreator && tx.status === 'pending') ? `<button class="shared-pay-btn" onclick="markSharedPaid('${tx.id}')">Pagar</button>` : ''}
-    `;
-    container.appendChild(row);
+
+    const r = document.createElement('div');
+    r.className = `edit-row${isPaid ? ' paid' : ''}`;
+
+    const check = document.createElement('div');
+    check.className = `check-circle${isPaid ? ' checked' : ''}`;
+    check.innerHTML = isPaid ? '✓' : '';
+
+    const name = document.createElement('div');
+    name.className = 'edit-name';
+    name.style.pointerEvents = 'none';
+    name.innerHTML = `${tx.title} <span class="shared-badge ${cls}">→ ${tx.mentioned_user_id} · ${label}</span>`;
+
+    const inp = document.createElement('input');
+    inp.className = 'edit-input'; inp.type = 'text';
+    inp.value = formatMoneyBR(tx.amount); inp.readOnly = true; inp.tabIndex = -1;
+
+    const del = document.createElement('span');
+    del.className = 'del-btn'; del.innerHTML = '✕';
+    del.onclick = () => cancelSharedBySeries(tx);
+
+    r.appendChild(check); r.appendChild(name); r.appendChild(inp); r.appendChild(del);
+    container.appendChild(r);
   });
 }
 // ───────────────────────────────────────────────────────────
@@ -1994,7 +2065,6 @@ function render() {
     });
   };
   build('rendaSection','renda'); build('fixasSection','fixas'); build('tempSection','temp'); build('descontosSection','descontos');
-  renderSharedRows('temp', m, currentYear, document.getElementById('tempSection'));
   renderSharedRows('descontos', m, currentYear, document.getElementById('descontosSection'));
   updateKPIsOnly();
   if (featureVisible('betaInteligencia') && CURRENT_USER && appData) {
@@ -2066,17 +2136,18 @@ function addRow(cat) {
       const a = parseInt(parcelMatch[1], 10), t = parseInt(parcelMatch[2], 10);
       if (a < 1 || t < 1 || a > t) { alert("Parcela inválida: use [atual/total], ex. [1/12]."); return; }
       const base = mention.cleanTitle.replace(/\[\d+\/\d+\]/, '').trim();
+      const seriesKey = `${base}|${CURRENT_USER}|${mention.mentionedUser}|${t}|${currentYear}${activeMes}`;
       const promises = [];
       for (let i = 0; i <= (t - a); i++) {
         const totalIdx = activeMes + i;
         const yr = currentYear + Math.floor(totalIdx / 12);
         const mn = MONTHS[totalIdx % 12];
-        promises.push(createSharedExpense(`${base} [${a + i}/${t}]`, val, cat, mention.mentionedUser, mn, yr));
+        promises.push(createSharedExpense(`${base} [${a + i}/${t}]`, val, cat, mention.mentionedUser, mn, yr, seriesKey, i === 0));
       }
       Promise.all(promises).then(() => loadSharedData());
     } else {
-      createSharedExpense(mention.cleanTitle, val, cat, mention.mentionedUser, MONTHS[activeMes], currentYear)
-        .then(tx => { if (tx) loadSharedData(); });
+      createSharedExpense(mention.cleanTitle, val, cat, mention.mentionedUser, MONTHS[activeMes], currentYear, null, true)
+        .then(() => loadSharedData());
     }
     return;
   }
@@ -2241,15 +2312,13 @@ function updateKPIsOnly() {
     const v = parseMoneyBR(val); return modoSaldoReal ? (mesData.paid?.[key] ? t + v : t) : t + v;
   }, 0);
   const r = sum(d, 'renda'), f = sum(d, 'fixas'), t = sum(d, 'temp'), aReceber = sum(d, 'descontos');
+  // Shared items accepted by mentioned user are already in their appData (counted in t/aReceber above).
+  // Only need to add creator's shared items (stored in shared_transactions, not appData).
   const sharedAReceber = sharedTransactions.filter(tx =>
     tx.creator_user_id === CURRENT_USER && tx.month === m && tx.year === currentYear &&
     (modoSaldoReal ? tx.status === 'paid' : ['waiting_acceptance','pending'].includes(tx.status))
   ).reduce((s, tx) => s + tx.amount, 0);
-  const sharedTemp = sharedTransactions.filter(tx =>
-    tx.mentioned_user_id === CURRENT_USER && tx.month === m && tx.year === currentYear &&
-    (modoSaldoReal ? tx.status === 'paid' : tx.status === 'pending')
-  ).reduce((s, tx) => s + tx.amount, 0);
-  const desp = f + t + sharedTemp;
+  const desp = f + t;
   const entradas = r + aReceber + sharedAReceber;
   const s = entradas - desp;
   document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card green"><div class="kpi-label">Entradas</div><div class="kpi-value">${formatMoneyBR(entradas)}</div></div>
