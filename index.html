@@ -217,6 +217,24 @@
   .intel-tabs-content::-webkit-scrollbar { width: 4px; }
   .intel-tabs-content::-webkit-scrollbar-thumb { background: rgba(0,229,160,0.35); border-radius: 4px; }
 
+  /* ── Pull to Refresh ── */
+  #ptr-indicator {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20000;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    height: 0; overflow: hidden;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    color: var(--muted); transition: height 0.15s ease;
+    will-change: height;
+  }
+  #ptr-indicator.ready { color: var(--accent); }
+  #ptr-spinner {
+    width: 16px; height: 16px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+  }
+  #ptr-indicator.reloading #ptr-spinner { animation: ptr-spin 0.6s linear infinite; }
+  @keyframes ptr-spin { to { transform: rotate(360deg); } }
+
   /* ── Shared Expenses ── */
   .bell-wrap { position: relative; display: inline-block; }
   .bell-badge { position: absolute; top: -6px; right: -6px; background: var(--accent2); color: #fff; font-size: 9px; font-weight: 700; border-radius: 10px; padding: 1px 5px; min-width: 16px; text-align: center; pointer-events: none; display: none; }
@@ -248,6 +266,8 @@
 </style>
 </head>
 <body>
+
+<div id="ptr-indicator"><div id="ptr-spinner"></div><span id="ptr-label">Solte para atualizar</span></div>
 
 <div id="choiceModal" onclick="if(event.target===this)closeChoiceModal('cancel')">
   <div class="help-card" onclick="event.stopPropagation()">
@@ -2341,6 +2361,51 @@ function updateKPIsOnly() {
     options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#1e2330' }, ticks: { color: '#5a6070', font: { size: 9 } } }, x: { ticks: { color: '#5a6070', font: { size: 10 } }, grid: { display: false } } } }
   });
 }
+
+// ── Pull to Refresh ─────────────────────────────────────────
+(function () {
+  const THRESHOLD = 80, MAX_PULL = 120;
+  let startY = 0, pulling = false, currentY = 0;
+  const ind = document.getElementById('ptr-indicator');
+  const lbl = document.getElementById('ptr-label');
+
+  document.addEventListener('touchstart', e => {
+    if (window.scrollY > 0) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    if (window.scrollY > 0) { pulling = false; ind.style.height = '0'; return; }
+    const delta = Math.min(e.touches[0].clientY - startY, MAX_PULL);
+    if (delta <= 0) return;
+    currentY = delta;
+    const h = Math.round(delta * 0.5);
+    ind.style.height = h + 'px';
+    ind.style.transition = 'none';
+    const ready = delta >= THRESHOLD;
+    ind.classList.toggle('ready', ready);
+    lbl.textContent = ready ? 'Solte para atualizar' : 'Puxe para atualizar';
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+    if (currentY >= THRESHOLD) {
+      ind.style.transition = '';
+      ind.style.height = '48px';
+      ind.classList.add('reloading');
+      lbl.textContent = 'Atualizando...';
+      setTimeout(() => location.reload(), 500);
+    } else {
+      ind.style.transition = 'height 0.2s ease';
+      ind.style.height = '0';
+    }
+    currentY = 0;
+  }, { passive: true });
+})();
+// ────────────────────────────────────────────────────────────
 </script>
 
 <div id="notifPanel">
