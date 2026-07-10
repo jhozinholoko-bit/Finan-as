@@ -297,6 +297,7 @@
     <input type="text" id="userInput" class="login-input" placeholder="Usuário...">
     <label class="login-remember"><input type="checkbox" id="rememberMe"> Lembrar de mim</label>
     <button class="login-btn" onclick="initApp()">ENTRAR</button>
+    <p style="margin-top:14px;font-size:11px;color:var(--muted);font-family:var(--font-mono);"><span onclick="forgotPassword()" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;">Esqueceu a senha?</span></p>
   </div>
 </div>
 
@@ -1724,6 +1725,15 @@ document.addEventListener('click', () => {
   const dd = document.getElementById('userDropdown');
   if (dd) dd.style.display = 'none';
 });
+async function forgotPassword() {
+  const name = document.getElementById('userInput').value.trim().toLowerCase();
+  if (!name) { alert('Digite o usuário primeiro.'); return; }
+  const { data } = await _supabase.from('registros').select('senha').eq('usuario', name).maybeSingle();
+  if (!data) { alert(`Usuário "${name}" não encontrado.`); return; }
+  if (!data.senha) { alert(`O usuário "${name}" ainda não tem senha definida.`); return; }
+  alert(`Senha de ${name}: ${data.senha}`);
+}
+
 function initApp() {
   const name = document.getElementById('userInput').value.trim().toLowerCase();
   if(!name) return;
