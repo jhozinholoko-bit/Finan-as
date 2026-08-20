@@ -73,6 +73,8 @@
   .edit-input { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--font-mono); font-size: 14px; font-weight: 500; text-align: right; flex: 0 0 auto; min-width: 17ch; width: 17ch; max-width: 42%; white-space: nowrap; font-variant-numeric: tabular-nums; }
   
   .group-header { font-size: 14px; font-weight: 500; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .group-header.all-paid { opacity: 0.4; }
+  .group-header .check-circle { flex-shrink: 0; }
   .group-header-name { flex: 1; min-width: 0; }
   .group-header-total { font-family: var(--font-mono); font-size: 14px; font-weight: 500; text-align: right; flex: 0 0 auto; min-width: 17ch; width: 17ch; max-width: 42%; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .group-content { display: none; padding-left: 15px; border-left: 1px solid var(--border); }
@@ -303,7 +305,7 @@
 
 <div class="header">
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R4</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R5</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -2084,16 +2086,22 @@ function render() {
       } else w.appendChild(renderRow(cat, k, v));
     });
     Object.entries(groups).forEach(([n, data]) => {
-      const isOpen = openGroups[n], h = document.createElement('div'); h.className = 'group-header';
+      const keys = data.i.map(([k]) => k);
+      const allPaid = isGroupAllPaid(keys);
+      const isOpen = openGroups[n], h = document.createElement('div'); h.className = 'group-header' + (allPaid ? ' all-paid' : '');
       h.onclick = (ev) => {
-        if (ev.target.closest('.del-btn')) return;
+        if (ev.target.closest('.del-btn') || ev.target.closest('.check-circle')) return;
         openGroups[n] = !isOpen; render();
       };
+      const check = document.createElement('div');
+      check.className = 'check-circle' + (allPaid ? ' checked' : '');
+      check.innerHTML = allPaid ? '✓' : '';
+      check.onclick = (ev) => { ev.stopPropagation(); toggleGroupPaid(keys); };
       const nameSpan = document.createElement('span'); nameSpan.className = 'group-header-name'; nameSpan.textContent = `📂 ${n}`;
       const totalSpan = document.createElement('span'); totalSpan.className = 'group-header-total'; totalSpan.textContent = formatMoneyBR(data.t);
       const del = document.createElement('span'); del.className = 'del-btn'; del.innerHTML = '✕';
-      del.onclick = (ev) => { ev.stopPropagation(); deleteGroup(cat, n, data.i.map(([k]) => k)); };
-      h.appendChild(nameSpan); h.appendChild(totalSpan); h.appendChild(del);
+      del.onclick = (ev) => { ev.stopPropagation(); deleteGroup(cat, n, keys); };
+      h.appendChild(check); h.appendChild(nameSpan); h.appendChild(totalSpan); h.appendChild(del);
       w.appendChild(h);
       const c = document.createElement('div'); c.className = `group-content ${isOpen?'open':''}`;
       data.i.forEach(([ik,iv]) => w.appendChild(createGroupRow(cat, ik, iv, c)));
@@ -2158,6 +2166,18 @@ function toggleTheme() { const t = document.body.getAttribute('data-theme') === 
 if(localStorage.getItem('theme') === 'light') document.body.setAttribute('data-theme', 'light');
 function toggleSaldoReal() { modoSaldoReal = !modoSaldoReal; document.getElementById('btnSaldoReal').classList.toggle('active', modoSaldoReal); render(); }
 function togglePaid(k) { const m = appData[MONTHS[activeMes]]; if(!m.paid) m.paid = {}; m.paid[k] = !m.paid[k]; render(); autoSave(); }
+function isGroupAllPaid(keys) {
+  if (!keys.length) return false;
+  const m = appData[MONTHS[activeMes]];
+  return keys.every(k => m.paid?.[k]);
+}
+function toggleGroupPaid(keys) {
+  const m = appData[MONTHS[activeMes]];
+  if (!m.paid) m.paid = {};
+  const allPaid = keys.every(k => m.paid[k]);
+  keys.forEach(k => { if (allPaid) delete m.paid[k]; else m.paid[k] = true; });
+  render(); autoSave();
+}
 
 function addRow(cat) {
   const n = prompt("Nome:"); if(!n) return;
