@@ -2433,7 +2433,7 @@ function updateKPIsOnly() {
   // descontos = creator receives (income); temp/fixas = creator pays (expense).
   const sharedOwn = sharedTransactions.filter(tx =>
     tx.creator_user_id === CURRENT_USER && tx.month === m && tx.year === currentYear &&
-    (modoSaldoReal ? tx.status === 'paid' : ['waiting_acceptance','pending'].includes(tx.status))
+    (modoSaldoReal ? tx.status === 'paid' : ['waiting_acceptance','pending','paid'].includes(tx.status))
   );
   const sharedAReceber = sharedOwn.filter(tx => tx.cat === 'descontos').reduce((s, tx) => s + tx.amount, 0);
   const sharedDesp     = sharedOwn.filter(tx => tx.cat !== 'descontos').reduce((s, tx) => s + tx.amount, 0);
