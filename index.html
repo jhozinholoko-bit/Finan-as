@@ -592,27 +592,16 @@ async function acceptSharedExpense(txId, notifId) {
   await _supabase.from('shared_transactions').update({ status: 'pending', accepted_at: new Date().toISOString() }).in('id', ids);
   if (notifId) await _supabase.from('notifications').update({ status: 'actioned' }).eq('id', notifId);
 
-  // Write entries into this user's appData in Supabase
-  const { data: userData } = await _supabase.from('registros').select('dados').eq('usuario', CURRENT_USER).maybeSingle();
-  const ud = (userData?.dados && typeof userData.dados === 'object') ? userData.dados : {};
+  // Write entries into this user's data (categoria espelhada)
   toAccept.forEach(t => {
-    const yr = String(t.year);
-    if (!ud[yr]) { const ey = {}; MONTHS.forEach(mn => { ey[mn] = { renda:{}, fixas:{}, temp:{}, descontos:{}, paid:{} }; }); ud[yr] = ey; }
-    if (!ud[yr][t.month]) ud[yr][t.month] = { renda:{}, fixas:{}, temp:{}, descontos:{}, paid:{} };
+    const yr = parseInt(t.year, 10);
     const c = mirrorCat(t.cat);
-    if (!ud[yr][t.month][c]) ud[yr][t.month][c] = {};
-    ud[yr][t.month][c][t.title] = t.amount;
+    const dest = ensureYear(yr)[t.month];
+    if (!dest[c]) dest[c] = {};
+    dest[c][t.title] = t.amount;
   });
-  await _supabase.from('registros').update({ dados: ud }).eq('usuario', CURRENT_USER);
-
-  // Reflect immediately in local appData if year matches
-  toAccept.forEach(t => {
-    if (t.year === currentYear && appData[t.month]) {
-      const c = t.cat || 'temp';
-      if (!appData[t.month][c]) appData[t.month][c] = {};
-      appData[t.month][c][t.title] = t.amount;
-    }
-  });
+  fullData[String(currentYear)] = appData;
+  await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: fullData, senha: userPassword }, { onConflict: 'usuario' });
 
   const seriesCount = toAccept.length;
   const baseTitle = tx.title.replace(/\s*\[\d+\/\d+\]/, '');
@@ -660,7 +649,7 @@ async function cancelSharedBySeries(tx) {
     if (userData?.dados) {
       const ud = userData.dados;
       accepted.forEach(t => {
-        const yr = String(t.year); const c = t.cat || 'temp';
+        const yr = String(t.year); const c = mirrorCat(t.cat);
         if (ud[yr]?.[t.month]?.[c]?.[t.title] !== undefined) {
           delete ud[yr][t.month][c][t.title];
           if (ud[yr][t.month].paid?.[t.title]) delete ud[yr][t.month].paid[t.title];
@@ -1108,8 +1097,10 @@ function intelCalcMeta() {
     if (mensal <= 0) return;
     normalizeAppData();
     for (let i = 0; i < meses; i++) {
-      const mIdx = (activeMes + i) % 12;
-      appData[MONTHS[mIdx]]['temp'][`Cofrinho – ${nomeMeta}`] = formatMoneyBR(mensal);
+      const totalIdx = activeMes + i;
+      const yr = currentYear + Math.floor(totalIdx / 12);
+      const mn = MONTHS[totalIdx % 12];
+      ensureYear(yr)[mn]['temp'][`Cofrinho – ${nomeMeta}`] = mensal;
     }
     render();
     autoSave();
@@ -1423,14 +1414,23 @@ function closeChoiceModal(result) {
 }
 
 function parseParcelKey(key) {
-  const m = String(key).trim().match(/^(.*)\s\[(\d+)\/(\d+)\]\s*$/);
+  const m = String(key).trim().match(/^(.*?)\s*\[\s*(\d+)\s*\/\s*(\d+)\s*\]\s*$/);
   if (!m) return null;
   const base = m[1].trim();
   const a = parseInt(m[2], 10);
   const t = parseInt(m[3], 10);
-  if (a < 1 || t < 1 || a > t) return null;
-  // n representa o número da parcela dentro da série
+  if (!base || a < 1 || t < 1 || a > t) return null;
   return { base, a, t, n: a };
+}
+
+function formatParcelKey(base, a, t) {
+  return `${String(base).trim()} [${a}/${t}]`;
+}
+
+function monthFromAbs(abs) {
+  const y = Math.floor(abs / 12);
+  const i = ((abs % 12) + 12) % 12;
+  return { yr: y, mn: MONTHS[i] };
 }
 
 function collectParcelSeries(cat, pSeries) {
@@ -1481,6 +1481,10 @@ function applyParcelRenameAll(cat, oldK, newK, pOld) {
     return;
   }
   const items = collectParcelSeries(cat, pOld);
+  if (!items.length) {
+    render();
+    return;
+  }
   const deltaA = pNew.a - pOld.a;
   const newT = pNew.t;
   const newBase = pNew.base.trim();
@@ -1488,8 +1492,37 @@ function applyParcelRenameAll(cat, oldK, newK, pOld) {
   for (const it of items) {
     const nn = it.n + deltaA;
     if (nn < 1 || nn > newT) continue;
-    planned.push({ yr: it.yr, mn: it.mn, oldKey: it.k, newKey: `${newBase} [${nn}/${newT}]`, val: it.val, paid: it.paid });
+    planned.push({
+      yr: it.yr,
+      mn: it.mn,
+      n: nn,
+      newKey: formatParcelKey(newBase, nn, newT),
+      val: it.val,
+      paid: it.paid
+    });
   }
+
+  // Se o total aumentou, cria as parcelas que faltam nos meses seguintes à última existente.
+  if (planned.length) {
+    planned.sort((a, b) => a.n - b.n || a.yr - b.yr || MONTHS.indexOf(a.mn) - MONTHS.indexOf(b.mn));
+    const last = planned[planned.length - 1];
+    const edited = items.find(it => it.k === oldK);
+    const fillVal = edited != null ? edited.val : last.val;
+    let lastAbs = last.yr * 12 + MONTHS.indexOf(last.mn);
+    for (let n = last.n + 1; n <= newT; n++) {
+      lastAbs += 1;
+      const pos = monthFromAbs(lastAbs);
+      planned.push({
+        yr: pos.yr,
+        mn: pos.mn,
+        n,
+        newKey: formatParcelKey(newBase, n, newT),
+        val: fillVal,
+        paid: false
+      });
+    }
+  }
+
   const seen = new Set();
   for (const p of planned) {
     const id = p.yr + '\0' + p.mn + '\0' + p.newKey;
@@ -1500,6 +1533,18 @@ function applyParcelRenameAll(cat, oldK, newK, pOld) {
     }
     seen.add(id);
   }
+
+  const oldKeys = new Set(items.map(it => `${it.yr}\0${it.mn}\0${it.k}`));
+  for (const p of planned) {
+    const bucket = ensureYear(p.yr)[p.mn]?.[cat];
+    if (!bucket) continue;
+    if (bucket[p.newKey] === undefined) continue;
+    if (oldKeys.has(`${p.yr}\0${p.mn}\0${p.newKey}`)) continue;
+    alert(`Já existe um item "${p.newKey}" em ${p.mn}/${p.yr}. Operação cancelada para evitar conflito.`);
+    render();
+    return;
+  }
+
   for (const it of items) {
     const yd = fullData[String(it.yr)];
     if (!yd || !yd[it.mn]) continue;
@@ -1507,12 +1552,11 @@ function applyParcelRenameAll(cat, oldK, newK, pOld) {
     if (yd[it.mn].paid?.[it.k]) delete yd[it.mn].paid[it.k];
   }
   for (const p of planned) {
-    const yd = fullData[String(p.yr)];
-    if (!yd || !yd[p.mn]) continue;
-    yd[p.mn][cat][p.newKey] = p.val;
+    const dest = ensureYear(p.yr)[p.mn];
+    dest[cat][p.newKey] = p.val;
     if (p.paid) {
-      if (!yd[p.mn].paid) yd[p.mn].paid = {};
-      yd[p.mn].paid[p.newKey] = true;
+      if (!dest.paid) dest.paid = {};
+      dest.paid[p.newKey] = true;
     }
   }
   render();
@@ -1603,7 +1647,7 @@ function convertBaseItemToParcelSeries(cat, oldK, pNew) {
     const bucket = appData[mn][cat];
     if (!bucket || !(oldK in bucket)) continue;
 
-    const newKey = `${pNew.base.trim()} [${currentN}/${pNew.t}]`;
+    const newKey = formatParcelKey(pNew.base, currentN, pNew.t);
     // Se já existe outro item com o mesmo nome de parcela no mesmo mês, aborta tudo
     if (newKey !== oldK && bucket[newKey] !== undefined) {
       alert(`Já existe um item "${newKey}" em ${mn}. Operação cancelada para evitar conflito.`);
@@ -1653,7 +1697,7 @@ function createParcelSeriesFromCurrent(cat, oldK, pNew) {
     const totalIdx = startIdx + i;
     const yr = currentYear + Math.floor(totalIdx / 12);
     const mn = MONTHS[totalIdx % 12];
-    const newKey = `${pNew.base.trim()} [${pNew.a + i}/${pNew.t}]`;
+    const newKey = formatParcelKey(pNew.base, pNew.a + i, pNew.t);
     planned.push({ yr, mn, newKey });
   }
 
@@ -1689,7 +1733,7 @@ function createParcelSeriesFromCurrent(cat, oldK, pNew) {
   // Mantém "pago" apenas no mês atual (se estava pago no item antigo)
   if (appData[startMonth].paid?.[oldK]) {
     if (!appData[startMonth].paid) appData[startMonth].paid = {};
-    appData[startMonth].paid[`${pNew.base.trim()} [${pNew.a}/${pNew.t}]`] = true;
+    appData[startMonth].paid[formatParcelKey(pNew.base, pNew.a, pNew.t)] = true;
     delete appData[startMonth].paid[oldK];
   }
 
@@ -1802,7 +1846,7 @@ function migrarParcelamentosMultiAno() {
           if (!p) return;
           const sKey = `${cat}|${p.base}|${p.t}`;
           if (!series[sKey]) series[sKey] = { base: p.base, total: p.t, cat, entries: [] };
-          series[sKey].entries.push({ yr: parseInt(yr), mn, n: p.n, val, paid: !!yd[mn].paid?.[k] });
+          series[sKey].entries.push({ yr: parseInt(yr), mn, n: p.n, k, val, paid: !!yd[mn].paid?.[k] });
         });
       });
     });
@@ -1837,7 +1881,7 @@ function migrarParcelamentosMultiAno() {
     s.entries.forEach(e => {
       const yd = fullData[String(e.yr)];
       if (!yd?.[e.mn]) return;
-      const k = `${s.base} [${e.n}/${s.total}]`;
+      const k = e.k || formatParcelKey(s.base, e.n, s.total);
       delete yd[e.mn][s.cat][k];
       if (yd[e.mn].paid?.[k]) delete yd[e.mn].paid[k];
     });
@@ -1846,16 +1890,16 @@ function migrarParcelamentosMultiAno() {
     const best = {};
     s.entries.forEach(e => { if (!best[e.n] || e.paid) best[e.n] = e; });
 
-    // Recoloca cada parcela na posição correta
-    for (let n = anchor.n; n <= s.total; n++) {
+    // Recoloca só as parcelas que já existiam — não inventa números faltantes
+    Object.keys(best).map(Number).sort((a, b) => a - b).forEach(n => {
       const pos = expected[n];
-      if (!pos) continue;
-      const k = `${s.base} [${n}/${s.total}]`;
-      const ref = best[n] || sorted.slice().reverse().find(e => e.n <= n) || anchor;
+      if (!pos) return;
+      const k = formatParcelKey(s.base, n, s.total);
+      const ref = best[n];
       const dest = ensureYear(pos.yr)[pos.mn];
       dest[s.cat][k] = ref.val;
-      if (ref.paid && n === ref.n) { if (!dest.paid) dest.paid = {}; dest.paid[k] = true; }
-    }
+      if (ref.paid) { if (!dest.paid) dest.paid = {}; dest.paid[k] = true; }
+    });
     alteradas++;
   });
 
@@ -1927,12 +1971,23 @@ function sairDaConta() {
 function autoSave() {
   clearTimeout(saveTimeout);
   const st = document.getElementById('syncStatus');
-  st.innerText = "⏳ Sincronizando..."; st.className = "sync-indicator saving";
-  saveTimeout = setTimeout(async () => {
+  if (st) { st.innerText = "⏳ Sincronizando..."; st.className = "sync-indicator saving"; }
+  saveTimeout = setTimeout(() => persistCloud(), 400);
+}
+
+async function persistCloud() {
+  clearTimeout(saveTimeout);
+  const st = document.getElementById('syncStatus');
+  if (!CURRENT_USER || !fullData || !appData) return;
+  try {
     fullData[String(currentYear)] = appData;
-    await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: fullData, senha: userPassword }, { onConflict: 'usuario' });
-    st.innerText = "☁️ Sincronizado"; st.className = "sync-indicator saved";
-  }, 400);
+    const { error } = await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: fullData, senha: userPassword }, { onConflict: 'usuario' });
+    if (error) throw error;
+    if (st) { st.innerText = "☁️ Sincronizado"; st.className = "sync-indicator saved"; }
+  } catch (e) {
+    console.error('Falha ao salvar:', e);
+    if (st) { st.innerText = "⚠️ Falha ao salvar — tente de novo"; st.className = "sync-indicator"; }
+  }
 }
 
 function deleteItem(cat, key) {
@@ -1956,11 +2011,14 @@ function deleteItem(cat, key) {
       delete appData[mes][cat][key];
       if (appData[mes].paid?.[key]) delete appData[mes].paid[key];
     } else if (isCofrinho) {
-      MONTHS.forEach(mn => {
-        if (appData[mn]?.[cat]?.[key] !== undefined) {
-          delete appData[mn][cat][key];
-          if (appData[mn].paid?.[key]) delete appData[mn].paid[key];
-        }
+      Object.values(fullData).forEach(yd => {
+        if (!yd || typeof yd !== 'object') return;
+        MONTHS.forEach(mn => {
+          if (yd[mn]?.[cat]?.[key] !== undefined) {
+            delete yd[mn][cat][key];
+            if (yd[mn].paid?.[key]) delete yd[mn].paid[key];
+          }
+        });
       });
     } else {
       deleteParcelSeriesAll(cat, p);
@@ -2187,18 +2245,15 @@ function addRow(cat) {
   const mention = parseAtMention(n);
   if (mention) {
     if (!mention.cleanTitle) { alert("Adicione um nome além do @usuário."); return; }
-    const parcelMatch = mention.cleanTitle.match(/\[(\d+)\/(\d+)\]/);
-    if (parcelMatch) {
-      const a = parseInt(parcelMatch[1], 10), t = parseInt(parcelMatch[2], 10);
-      if (a < 1 || t < 1 || a > t) { alert("Parcela inválida: use [atual/total], ex. [1/12]."); return; }
-      const base = mention.cleanTitle.replace(/\[\d+\/\d+\]/, '').trim();
-      const seriesKey = `${base}|${CURRENT_USER}|${mention.mentionedUser}|${t}|${currentYear}${activeMes}`;
+    const pShare = parseParcelKey(mention.cleanTitle);
+    if (pShare) {
+      const seriesKey = `${pShare.base}|${CURRENT_USER}|${mention.mentionedUser}|${pShare.t}|${currentYear}${activeMes}`;
       const promises = [];
-      for (let i = 0; i <= (t - a); i++) {
+      for (let i = 0; i <= (pShare.t - pShare.a); i++) {
         const totalIdx = activeMes + i;
         const yr = currentYear + Math.floor(totalIdx / 12);
         const mn = MONTHS[totalIdx % 12];
-        promises.push(createSharedExpense(`${base} [${a + i}/${t}]`, val, cat, mention.mentionedUser, mn, yr, seriesKey, i === 0));
+        promises.push(createSharedExpense(formatParcelKey(pShare.base, pShare.a + i, pShare.t), val, cat, mention.mentionedUser, mn, yr, seriesKey, i === 0));
       }
       Promise.all(promises).then(() => loadSharedData());
     } else {
@@ -2208,23 +2263,25 @@ function addRow(cat) {
     return;
   }
 
-  const match = n.match(/\[(\d+)\/(\d+)\]/);
-  if (match) {
-    const a = parseInt(match[1], 10), t = parseInt(match[2], 10);
-    if (a < 1 || t < 1 || a > t) { alert("Parcela inválida: use [atual/total], ex. [1/12], com 1 ≤ atual ≤ total."); return; }
-    const base = n.replace(/\[\d+\/\d+\]/, "").trim();
-    for (let i = 0; i <= (t - a); i++) {
+  const pAdd = parseParcelKey(n);
+  if (pAdd) {
+    for (let i = 0; i <= (pAdd.t - pAdd.a); i++) {
       const totalIdx = activeMes + i;
       const yr = currentYear + Math.floor(totalIdx / 12);
       const mn = MONTHS[totalIdx % 12];
-      ensureYear(yr)[mn][cat][`${base} [${a + i}/${t}]`] = val;
+      ensureYear(yr)[mn][cat][formatParcelKey(pAdd.base, pAdd.a + i, pAdd.t)] = val;
     }
   } else appData[MONTHS[activeMes]][cat][n] = val;
   render(); autoSave();
 }
 
+function canonicalItemKey(key) {
+  const p = parseParcelKey(key);
+  return p ? formatParcelKey(p.base, p.a, p.t) : String(key).trim();
+}
+
 function updateName(cat, oldK, newK) {
-  newK = newK.trim();
+  newK = canonicalItemKey(newK);
   if (!newK || oldK === newK) return;
   const mes = MONTHS[activeMes];
   const pOld = parseParcelKey(oldK);
@@ -2278,7 +2335,7 @@ function updateName(cat, oldK, newK) {
 
   showChoiceModal(
     'Editar parcelamento',
-    'Aplicar só neste mês ou em toda a série? Se escolher todas e mudar o número da parcela (ex. [2/12] → [3/12]), o mesmo deslocamento vale nos outros meses. Se mudar só o total (ex. /12 → /6), parcelas acima do novo total somem. O nome base também pode ser alterado para todos.',
+    'Aplicar só neste mês ou em toda a série? Se escolher todas: mudar o número (ex. [2/12] → [3/12]) desloca as demais; aumentar o total (ex. /6 → /12) cria as parcelas que faltam nos meses seguintes; diminuir o total remove as que passarem do novo limite. O nome base vale para todos.',
     `Só em ${mes}`,
     'Todas as parcelas'
   ).then(choice => {
@@ -2342,21 +2399,25 @@ function copyPreviousMonth() {
   ).then(choice => {
     if (choice === 'cancel') return;
     const zerar = choice === 'all';
-    const newData = JSON.parse(JSON.stringify(prevYearData[prevMn]));
-    newData.paid = {};
+        normalizeAppData();
     ['renda', 'fixas', 'temp', 'descontos'].forEach(cat => {
-      const ent = Object.entries(newData[cat]);
-      newData[cat] = {};
+      const ent = Object.entries(prevYearData[prevMn][cat] || {});
       ent.forEach(([k, v]) => {
         const valOut = zerar ? 0 : v;
-        const match = k.match(/\[(\d+)\/(\d+)\]/);
-        if (match) {
-          const a = parseInt(match[1], 10), t = parseInt(match[2], 10);
-          if (a < t) newData[cat][k.replace(`[${a}/${t}]`, `[${a + 1}/${t}]`)] = valOut;
-        } else newData[cat][k] = valOut;
+        const p = parseParcelKey(k);
+        let newKey = k;
+        
+        if (p) {
+          if (p.a >= p.t) return; // Não copia parcelas que já acabaram
+          newKey = formatParcelKey(p.base, p.a + 1, p.t);
+        }
+        
+        // Só copia se ainda não existir no mês atual, para não apagar o que já está lá
+        if (appData[curr][cat][newKey] === undefined) {
+          appData[curr][cat][newKey] = valOut;
+        }
       });
     });
-    appData[curr] = newData;
     render();
     autoSave();
   });
