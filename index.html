@@ -216,7 +216,7 @@
     --hero-a: #0f3b2c; --hero-b: #072019; --hero-text: #eef6f2; --hero-muted: rgba(238,246,242,0.62);
     --font-head: 'Plus Jakarta Sans', sans-serif; --font-mono: 'Plus Jakarta Sans', sans-serif;
     --radius: 22px; --shadow: 0 10px 30px rgba(0,0,0,0.28);
-    font-family: var(--font-mono); font-weight: 500; padding: 14px 14px 120px; max-width: 760px; margin: 0 auto;
+    font-family: var(--font-mono); font-weight: 500; padding: 14px 14px 60px; max-width: 760px; margin: 0 auto;
     font-variant-numeric: tabular-nums; letter-spacing: -0.1px;
   }
   body.nv[data-theme="light"] {
@@ -331,6 +331,7 @@
   .nv-seg button.on { background: var(--accent); color: #04241a; }
   @media (min-width: 900px) { body.nv { padding-top: 28px; } }
   body.nv .edit-input { min-width: 0 !important; width: 10.5ch !important; max-width: 34%; padding-left: 0; padding-right: 0; }
+  body.nv .group-header > .card-total-input { width: 10.5ch !important; max-width: 10.5ch !important; }
   .card-total-input { font-weight: 800 !important; border-bottom: 1px dashed var(--border) !important; color: var(--text) !important; }
   body.nv .group-header-total { min-width: 0 !important; width: auto !important; max-width: none !important; }
   body.nv .edit-name, body.nv .group-header-name { word-break: normal !important; overflow-wrap: break-word !important; line-height: 1.3; }
@@ -339,6 +340,21 @@
   body.nv .group-content .check-circle { width: 34px; height: 34px; border-radius: 12px; font-size: 15px; }
   body.nv .group-content .edit-name { font-size: 13px; }
   body.nv .card-mini { padding-left: 52px; }
+  .menu-item.nv-only { display: none; } body.nv .menu-item.nv-only { display: block; }
+  .nv-q-add i { background: var(--accent) !important; color: #04241a; font-weight: 800; }
+  body.nv .edit-row, body.nv .group-header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-rows: auto auto; column-gap: 12px; row-gap: 3px; align-items: center; }
+  body.nv .edit-row > .check-circle, body.nv .group-header > .check-circle { grid-column: 1; grid-row: 1 / span 2; }
+  body.nv .edit-row > .edit-name, body.nv .group-header > .group-header-name { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  body.nv .edit-row:has(> .due-chip) > .edit-name, body.nv .group-header:has(> .due-chip) > .group-header-name { grid-row: 1; align-self: end; }
+  body.nv .edit-row > .due-chip, body.nv .group-header > .due-chip { grid-column: 2; grid-row: 2; justify-self: start; align-self: start; }
+  body.nv .edit-row > .edit-input, body.nv .group-header > .group-header-total { grid-column: 3; grid-row: 1 / span 2; width: auto !important; min-width: 7ch !important; max-width: 13ch; }
+  body.nv .edit-row > .del-btn, body.nv .group-header > .del-btn { grid-column: 4; grid-row: 1 / span 2; }
+  body.nv .edit-name, body.nv .group-header-name { font-size: clamp(13px, 3.7vw, 15px); word-break: normal !important; overflow-wrap: normal !important; line-height: 1.25; }
+  body.nv .edit-name { text-transform: none; }
+  body.nv .due-chip.empty { opacity: 0.4; padding: 0 7px; line-height: 15px; font-size: 10px; }
+  body.nv .detail-chip { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); opacity: 1; }
+  body.nv .more-chip { padding: 0 8px; font-size: 13px; line-height: 16px; }
+  .detail-chip { color: var(--accent); border-color: var(--accent); }
   body.nv .due-chip.empty { opacity: 0.3; }
 </style>
 </head>
@@ -386,7 +402,7 @@
     <button type="button" class="nv-round" onclick="toggleNotifPanel()" title="Notificações">🔔<span class="bell-badge" id="nvBellBadge" style="display:none"></span></button>
   </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R8</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R9</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -396,6 +412,7 @@
             <button type="button" class="menu-item" onclick="exportCSV()" style="border-left:3px solid var(--accent);">⬇ Exportar CSV do ano</button>
             <button type="button" class="menu-item" onclick="pickImportFile()" style="border-left:3px solid var(--accent);">⬆ Importar CSV / OFX</button>
           </div>
+          <button type="button" class="menu-item nv-only" onclick="toggleTheme()" style="border-left:3px solid var(--muted);">🌓 Tema claro / escuro</button>
           <button type="button" class="menu-item" onclick="document.getElementById('helpModal').style.display='flex'" style="border-left:3px solid var(--muted);">❓ Ajuda</button>
           <button type="button" class="menu-item" onclick="sairDaConta()" style="border-left:3px solid var(--accent2);">Trocar conta</button>
         </div>
@@ -431,7 +448,7 @@
   <button type="button" class="nv-q" onclick="copyPreviousMonth()"><i>📂</i>Replicar mês</button>
   <button type="button" class="nv-q" id="nvQSaldo" onclick="toggleSaldoReal()"><i>✅</i>Saldo real</button>
   <button type="button" class="nv-q" id="nvQHide" onclick="toggleHideValues()"><i>🙈</i>Ocultar</button>
-  <button type="button" class="nv-q" onclick="toggleTheme()"><i>🌓</i>Tema</button>
+  <button type="button" class="nv-q nv-q-add" onclick="nvQuickAdd()"><i>＋</i>Nova conta</button>
 </div>
 <div id="dueAlerts" style="display:none"></div>
 <div id="cardsPanel" style="display:none"></div>
@@ -1449,8 +1466,14 @@ function renderRow(cat, k, v) {
     const name = document.createElement('div');
     name.className = 'edit-name';
     name.contentEditable = true;
-    name.innerText = k;
-    name.onblur = (e) => updateName(cat, k, e.target.innerText);
+    const nvLeaf = nvOn() && groupOf(k) ? groupOf(k) : null;
+    name.innerText = nvLeaf ? leafOf(k) : k;
+    name.onblur = (e) => {
+      let t = e.target.innerText.trim();
+      if (nvLeaf && t && !t.includes(':')) t = `${String(k).split(':')[0].trim()}: ${t}`;
+      if (nvLeaf && t === k) return;
+      updateName(cat, k, t);
+    };
     name.ondblclick = (e) => { e.preventDefault(); askReplicateCommonItem(cat, k); };
     let pressTimer = null;
     name.addEventListener('touchstart', () => {
@@ -1832,17 +1855,7 @@ function updateKPIsOnly() {
     type:'bar', data: { labels: MONTHS, datasets: [{ label: 'Renda', data: dR, backgroundColor: '#00e5a0' }, { label: 'Gastos', data: dG, backgroundColor: '#ff4d6d' }]},
     options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#1e2330' }, ticks: { color: '#5a6070', font: { size: 9 } } }, x: { ticks: { color: '#5a6070', font: { size: 10 } }, grid: { display: false } } } }
   });
-  if (nvOn()) {
-    const light = document.body.getAttribute('data-theme') === 'light';
-    const ds = barInst.data.datasets;
-    ds[0].backgroundColor = light ? '#00b97a' : '#2fe6a7'; ds[1].backgroundColor = light ? '#f0506a' : '#ff6b7d';
-    ds.forEach(d => { d.borderRadius = 6; d.borderSkipped = false; d.barPercentage = 0.75; d.categoryPercentage = 0.7; });
-    const sc = barInst.options.scales; const grid = light ? 'rgba(6,40,28,0.07)' : 'rgba(255,255,255,0.06)'; const tick = light ? '#6f8a80' : '#7d948b';
-    sc.y.grid.color = grid; sc.y.border = { display: false }; sc.x.border = { display: false };
-    sc.y.ticks.color = tick; sc.x.ticks.color = tick;
-    sc.y.ticks.font = { family: 'Plus Jakarta Sans', size: 10 }; sc.x.ticks.font = { family: 'Plus Jakarta Sans', size: 11, weight: '600' };
-    barInst.update('none');
-  }
+  if (nvOn()) { barInst.destroy(); barInst = nvBuildChart(dR, dG); }
 }
 
 // ── BETA-R7: Cartões, Vencimentos, CSV/OFX, Ocultar valores ─────────────
@@ -1902,7 +1915,22 @@ function vencOn() { return featureVisible('betaVencimentos') || featureVisible('
 
 // ── Chips nas linhas e pastas ──
 function makeDueChipItem(cat, k) {
-  if (!featureVisible('betaVencimentos') || !DUE_CATS.includes(cat) || groupOf(k)) return null;
+  if (!DUE_CATS.includes(cat)) return null;
+  const g = groupOf(k);
+  if (g && isCardGroup(g) && findOutros({ [k]: 1 }, g) === k) {
+    const d = document.createElement('span'); d.className = 'due-chip detail-chip'; d.textContent = '＋ detalhar';
+    d.title = 'Separar uma compra que está dentro de Outros';
+    d.onclick = (e) => { e.stopPropagation(); askDetalhar(cat, g); };
+    return d;
+  }
+  if (g) {
+    if (!featureVisible('betaCartoes')) return null;
+    const m = document.createElement('span'); m.className = 'due-chip empty more-chip'; m.textContent = '⋯';
+    m.title = 'Mover para outro cartão/pasta';
+    m.onclick = (e) => { e.stopPropagation(); askMoveItem(cat, k); };
+    return m;
+  }
+  if (!featureVisible('betaVencimentos')) return null;
   const day = getDueItem(cat, k);
   const paid = !!appData[MONTHS[activeMes]].paid?.[k];
   const chip = document.createElement('span');
@@ -1949,6 +1977,7 @@ function askDueItem(cat, k) {
     ${cardsOn ? `<label class="r7-check"><input type="checkbox" id="r7IsCard" ${card ? 'checked' : ''}> É cartão de crédito (vira pasta; o valor fica em "Outros")</label>` : ''}
     <label class="r7-lbl">Vence dia (1 a 31)</label>
     <input class="login-input r7-in" id="r7DueDay" type="number" inputmode="numeric" min="1" max="31" value="${cur || ''}" placeholder="Ex: 10">
+    ${cardsOn && folderTargets(cat).length ? `<button type="button" class="login-btn secondary" style="margin-top:14px" onclick="closeR7Modal(); askMoveItem('${cat}', ${JSON.stringify(k).replace(/"/g, '&quot;')})">↪ Mover para cartão / pasta</button>` : ''}
     <div id="r7CardFields" style="display:${card ? 'block' : 'none'}">
       <div class="r7-row">
         <div><label class="r7-lbl">Limite total</label><input class="login-input r7-in" id="r7Lim" inputmode="decimal" value="${card?.limite ? formatMoneyBR(card.limite) : ''}" placeholder="Ex: 5.000,00"></div>
@@ -2094,7 +2123,6 @@ function addCardPurchase(g) {
           while (bucket[key] !== undefined) key = n > 1 ? formatParcelKey(`${base} ${sfx++}`, i + 1, n) : `${base} ${sfx++}`;
           const v = i === n - 1 ? Math.round((total - parc * (n - 1)) * 100) / 100 : parc;
           bucket[key] = v;
-          consumeOutros(bucket, g, v);
         }
         appData = fullData[String(currentYear)];
         openGroups[g] = true;
@@ -2104,7 +2132,7 @@ function addCardPurchase(g) {
 }
 function renderCardsPanel() {
   const el = document.getElementById('cardsPanel'); if (!el) return;
-  if (!featureVisible('betaCartoes') || !CURRENT_USER || !fullData) { el.innerHTML = ''; el.style.display = 'none'; return; }
+  if (true) { el.innerHTML = ''; el.style.display = 'none'; return; }
   const cards = appCfg().cards;
   const names = Object.keys(cards);
   el.style.display = 'block';
@@ -2231,31 +2259,100 @@ function migrateLooseCards() {
   Object.entries(cards).forEach(([g, c]) => { if (c.loose) { convertLooseToCardFolder(g); delete c.loose; changed = true; } });
   if (changed) { appData = fullData[String(currentYear)]; autoSave(); }
 }
-const _ocAddItemCore = addItemCore;
-addItemCore = function (cat, n, val) {
-  const g = groupOf(n);
-  if (!isCardGroup(g) || parseAtMention(n) || !DUE_CATS.includes(cat)) return _ocAddItemCore(cat, n, val);
-  const p = parseParcelKey(n);
-  const months = [];
-  for (let i = 0; i <= (p ? p.t - p.a : 0); i++) { const t = activeMes + i; months.push({ yr: currentYear + Math.floor(t / 12), mn: MONTHS[t % 12] }); }
-  const before = months.map(m => ({ ...m, outros: findOutros(fullData[String(m.yr)]?.[m.mn]?.[cat], g) }));
-  _ocAddItemCore(cat, n, val);
-  let touched = false;
-  before.forEach(m => { if (m.outros) { consumeOutros(fullData[String(m.yr)][m.mn][cat], g, parseMoneyBR(val)); touched = true; } });
-  if (touched) { autoSave(); render(); }
-};
-const _ocUpdateValue = updateValue;
-updateValue = function (cat, key, val) {
-  const g = groupOf(key);
-  const bucket = appData?.[MONTHS[activeMes]]?.[cat];
-  const ok = bucket && isCardGroup(g) ? findOutros(bucket, g) : null;
-  if (!ok || ok === key) return _ocUpdateValue(cat, key, val);
-  const prev = parseMoneyBR(bucket[key]); const num = typeof val === 'number' ? val : parseMoneyBR(val);
-  const r = _ocUpdateValue(cat, key, val);
-  const apply = () => { if (Math.abs(parseMoneyBR(bucket[key]) - prev) < 1e-9) return; consumeOutros(bucket, g, num - prev); autoSave(); render(); };
-  if (r && typeof r.then === 'function') r.then(apply); else setTimeout(apply, 0);
-  return r;
-};
+function leafOf(k) { const s2 = String(k); const i = s2.indexOf(':'); return (i >= 0 ? s2.slice(i + 1) : s2).trim(); }
+function folderTargets(cat) {
+  const set = new Set(Object.keys(appCfg().cards));
+  Object.keys(appData?.[MONTHS[activeMes]]?.[cat] || {}).forEach(k => { const g = groupOf(k); if (g) set.add(g); });
+  return [...set].sort((a, b) => (isCardGroup(b) - isCardGroup(a)) || a.localeCompare(b));
+}
+/** Tira um valor de "Outros" e cria a compra detalhada dentro do cartão. */
+function askDetalhar(cat, g) {
+  const bucket = appData[MONTHS[activeMes]][cat];
+  const ok = findOutros(bucket, g); if (!ok) return;
+  const disp = parseMoneyBR(bucket[ok]);
+  openR7Modal(`Detalhar ${r7Esc(g)}`, `
+    <p class="r7-sub">Disponível em Outros: <b class="money">${formatMoneyBR(disp)}</b>. O valor sai de Outros e vira uma compra dentro do cartão.</p>
+    <label class="r7-lbl">O que foi</label>
+    <input class="login-input r7-in" id="dtNome" placeholder="Ex: Mercado, Celular [1/10]" autocomplete="off">
+    <label class="r7-lbl">Valor (deste mês)</label>
+    <input class="login-input r7-in" id="dtVal" inputmode="decimal" placeholder="0,00" autocomplete="off">
+    <p class="r7-sub" style="margin-top:8px">Parcelado? Escreva <b>[1/10]</b> no nome: as próximas parcelas também saem do Outros dos meses seguintes.</p>`,
+    [{ label: 'Detalhar', primary: true, fn: () => {
+        const nome = document.getElementById('dtNome').value.trim().replace(/:/g, ' ');
+        const v = parseMoneyBR(document.getElementById('dtVal').value);
+        if (!nome || !(v > 0)) { alert('Preencha o nome e o valor.'); return false; }
+        if (v - disp > 0.004) { alert(`Outros só tem ${formatMoneyBR(disp)}. Ajuste o valor ou aumente o total da fatura.`); return false; }
+        const p = parseParcelKey(nome);
+        const n = p ? p.t - p.a + 1 : 1;
+        for (let i = 0; i < n; i++) {
+          const t = activeMes + i; const yr = currentYear + Math.floor(t / 12); const mn = MONTHS[t % 12];
+          const b = ensureYear(yr)[mn][cat];
+          let key = `${g}: ` + (p ? formatParcelKey(p.base, p.a + i, p.t) : nome); let sfx = 2;
+          while (b[key] !== undefined) key = `${g}: ` + (p ? formatParcelKey(`${p.base} ${sfx++}`, p.a + i, p.t) : `${nome} ${sfx++}`);
+          b[key] = v;
+          const o = findOutros(b, g);
+          if (o) { const nv2 = Math.round((parseMoneyBR(b[o]) - v) * 100) / 100; if (nv2 > 0.004) b[o] = nv2; else delete b[o]; }
+        }
+        appData = fullData[String(currentYear)];
+        openGroups[g] = true; autoSave(); render();
+      } }]);
+  setTimeout(() => document.getElementById('dtNome')?.focus(), 50);
+}
+/** Move uma conta para um cartão/pasta (ou tira da pasta). Não mexe em Outros. */
+function askMoveItem(cat, k) {
+  const cur = groupOf(k);
+  const opts = folderTargets(cat).filter(g => g !== cur);
+  const p = parseParcelKey(k);
+  openR7Modal('Mover conta', `
+    <p class="r7-sub"><b>${r7Esc(leafOf(k))}</b>${cur ? ` — hoje em ${r7Esc(cur)}` : ''}</p>
+    <label class="r7-lbl">Para</label>
+    <select class="login-input r7-in" id="mvTo">
+      ${opts.map(g => `<option value="${r7Esc(g)}">${isCardGroup(g) ? '💳' : '📂'} ${r7Esc(g)}</option>`).join('')}
+      ${cur ? '<option value="">— Sem pasta —</option>' : ''}
+      <option value="__new">+ Nova pasta…</option>
+    </select>
+    <label class="r7-lbl">Em quais meses</label>
+    <select class="login-input r7-in" id="mvScope">
+      <option value="mes">Só ${MONTHS[activeMes]}/${currentYear}</option>
+      <option value="frente" ${p ? 'selected' : ''}>${MONTHS[activeMes]} em diante${p ? ' (todas as parcelas)' : ''}</option>
+    </select>`,
+    [{ label: 'Mover', primary: true, fn: () => {
+        let to = document.getElementById('mvTo').value;
+        if (to === '__new') { to = (prompt('Nome da nova pasta (ex: NUBANK):') || '').trim().replace(/:/g, ' ').toUpperCase(); if (!to) return false; }
+        moveItem(cat, k, to || null, document.getElementById('mvScope').value === 'frente');
+      } }]);
+}
+function moveItem(cat, k, to, forward) {
+  const leaf = leafOf(k); const p = parseParcelKey(leaf); const from = groupOf(k);
+  const startAbs = currentYear * 12 + activeMes;
+  const same = (key) => {
+    if (groupOf(key) !== from) return false;
+    const lf = leafOf(key);
+    if (!p) return lf === leaf;
+    const q = parseParcelKey(lf); return !!q && q.base === p.base && q.t === p.t;
+  };
+  let moved = 0;
+  Object.entries(fullData || {}).forEach(([yr, yd]) => {
+    const y = parseInt(yr, 10); if (!y || !yd || typeof yd !== 'object') return;
+    MONTHS.forEach((mn, i) => {
+      const abs = y * 12 + i;
+      if (forward ? abs < startAbs : abs !== startAbs) return;
+      const md = yd[mn]; if (!md?.[cat]) return;
+      Object.keys(md[cat]).filter(same).forEach(key => {
+        let nk = (to ? `${to}: ` : '') + leafOf(key); let sfx = 2;
+        while (md[cat][nk] !== undefined) nk = (to ? `${to}: ` : '') + leafOf(key) + ' ' + sfx++;
+        md[cat][nk] = md[cat][key]; delete md[cat][key];
+        if (md.paid?.[key]) { md.paid[nk] = true; delete md.paid[key]; }
+        moved++;
+      });
+    });
+  });
+  if (to && isCardGroup(to)) delete appCfg().due[dueKeyItem(cat, k)];
+  if (to) openGroups[to] = true;
+  appData = fullData[String(currentYear)];
+  autoSave(); render();
+  return moved;
+}
 function makeCardTotalInput(cat, g, total) {
   const inp = document.createElement('input');
   inp.className = 'edit-input group-header-total card-total-input';
@@ -2521,11 +2618,11 @@ const NV_ICONS = [
   [/pet|ra[cç][aã]o|veterin|cachorro|gato/, '🐾'], [/presente|gift|aniver/, '🎁'], [/viagem|hotel|airbnb|passeio/, '✈️'],
   [/nubank|neon|visa|master|cart[aã]o|fatura|bradesco|picpay|itau|itaú|inter\b|c6|santander|caixa/, '💳'],
   [/empr[eé]stimo|financ|parcela|consorcio|consórcio/, '🏦'], [/investi|poupan|reserva|cofrinho|tesouro|cdb/, '🐷'],
-  [/salario|salário|sal[aá]rio|pagamento|freela|freelance|cliente|vime|pro.?labore/, '💼'], [/pix|transfer/, '💸'],
+  [/salario|salário|sal[aá]rio|pagamento|freela|freelance|cliente|vime|pro.?labore/, '💼'], [/pix|transfer/, '💸'], [/^outros$/, '🧾'],
 ];
 function nvIcon(k, cat) {
   const p = parseParcelKey(k); const name = String(p ? p.base : k).toLowerCase();
-  const leaf = name.includes(':') ? name.split(':').slice(1).join(':') : name;
+  const leaf = (name.includes(':') ? name.split(':').slice(1).join(':') : name).trim();
   for (const [re, ic] of NV_ICONS) if (re.test(leaf)) return ic;
   if (cat === 'renda') return '💰';
   if (cat === 'descontos') return '📥';
@@ -2533,6 +2630,43 @@ function nvIcon(k, cat) {
 }
 function nvGreeting() { const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; }
 
+/** Gráfico do visual novo: áreas de entradas e saídas + linha de saldo; tocar no mês abre o mês. */
+function nvBuildChart(dR, dG) {
+  const light = document.body.getAttribute('data-theme') === 'light';
+  const cIn = light ? '#00b97a' : '#2fe6a7', cOut = light ? '#f0506a' : '#ff6b7d', cSal = light ? '#0b2a20' : '#c8f56a';
+  const tick = light ? '#6f8a80' : '#7d948b', grid = light ? 'rgba(6,40,28,0.07)' : 'rgba(255,255,255,0.06)';
+  const canvas = document.getElementById('barChart'); const ctx = canvas.getContext('2d');
+  const grad = (c) => { const g = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight || 220); g.addColorStop(0, c + '55'); g.addColorStop(1, c + '00'); return g; };
+  const dS = dR.map((r, i) => r - dG[i]);
+  const pr = MONTHS.map((_, i) => i === activeMes ? 6 : 0);
+  const panel = document.getElementById('nvChartPanel');
+  if (panel) { const t = panel.querySelector('.panel-title'); if (t && !t.dataset.nv) { t.dataset.nv = '1'; t.firstChild.textContent = 'Fluxo do ano'; } panel.querySelector('div[style*="height"]').style.height = '220px'; }
+  return new Chart(canvas, {
+    type: 'line',
+    data: { labels: MONTHS, datasets: [
+      { label: 'Entradas', data: dR, borderColor: cIn, backgroundColor: grad(cIn), fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: pr, pointBackgroundColor: cIn, pointBorderWidth: 0 },
+      { label: 'Saídas', data: dG, borderColor: cOut, backgroundColor: grad(cOut), fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: pr, pointBackgroundColor: cOut, pointBorderWidth: 0 },
+      { label: 'Saldo', data: dS, borderColor: cSal, borderDash: [5, 5], fill: false, tension: 0.4, borderWidth: 2, pointRadius: pr, pointBackgroundColor: cSal, pointBorderWidth: 0 },
+    ] },
+    options: {
+      maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { color: tick, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8, padding: 14, font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' } } },
+        tooltip: { backgroundColor: light ? '#ffffff' : '#0d1b16', titleColor: light ? '#0b2a20' : '#eef6f2', bodyColor: light ? '#0b2a20' : '#eef6f2', borderColor: grid, borderWidth: 1, padding: 10, cornerRadius: 12, usePointStyle: true,
+          callbacks: { label: (c) => ` ${c.dataset.label}: ${hideValues ? '••••' : formatMoneyBR(c.parsed.y)}` } },
+      },
+      scales: {
+        y: { grid: { color: grid }, border: { display: false }, ticks: { color: tick, font: { family: 'Plus Jakarta Sans', size: 10 }, maxTicksLimit: 5, callback: (v) => hideValues ? '' : (Math.abs(v) >= 1000 ? (v / 1000).toLocaleString('pt-BR') + 'k' : v) } },
+        x: { grid: { display: false }, border: { display: false }, ticks: { color: (c) => c.index === activeMes ? (light ? '#0b2a20' : '#eef6f2') : tick, font: (c) => ({ family: 'Plus Jakarta Sans', size: 11, weight: c.index === activeMes ? '800' : '600' }) } },
+      },
+      onClick: (_, els, chart) => {
+        const x = els?.[0]?.index ?? chart.scales.x.getValueForPixel(_.x);
+        if (x == null || x < 0 || x > 11 || x === activeMes) return;
+        activeMes = Math.round(x); render();
+      },
+    },
+  });
+}
 function nvHeroHtml(entradas, desp, s) {
   const m = MONTHS[activeMes];
   const pct = entradas > 0 ? Math.round((desp / entradas) * 100) : (desp > 0 ? 100 : 0);
@@ -2584,8 +2718,6 @@ function applyNv() {
   if (src && dst) { dst.textContent = src.textContent; dst.style.display = src.textContent && src.style.display !== 'none' ? '' : 'none'; }
   document.getElementById('nvQSaldo')?.classList.toggle('on', modoSaldoReal);
   document.getElementById('nvQHide')?.classList.toggle('on', hideValues);
-  const hasCards = featureVisible('betaCartoes');
-  const nb = document.getElementById('nvNavCards'); if (nb) nb.style.display = hasCards ? '' : 'none';
   nvSectionTotals();
   const act = document.querySelector('#monthNav .month-btn.active');
   if (act) { const nav = act.parentElement; nav.scrollLeft = act.offsetLeft - nav.clientWidth / 2 + act.clientWidth / 2; }
@@ -2669,13 +2801,6 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
 }
 </script>
 
-<nav id="nvNav">
-  <button type="button" class="nv-nb on" onclick="nvScroll('top')" title="Início">🏠</button>
-  <button type="button" class="nv-nb" id="nvNavCards" onclick="nvScroll('cardsPanel')" title="Cartões">💳</button>
-  <button type="button" class="nv-nb add" onclick="nvQuickAdd()" title="Nova conta">+</button>
-  <button type="button" class="nv-nb" onclick="nvScroll('nvChartPanel')" title="Gráfico">📊</button>
-  <button type="button" class="nv-nb" onclick="nvMenu(event)" title="Menu">☰</button>
-</nav>
 
 <div id="notifPanel">
   <div class="notif-backdrop" onclick="toggleNotifPanel()"></div>
