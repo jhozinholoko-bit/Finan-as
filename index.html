@@ -155,6 +155,12 @@
   /* ── BETA-R7: vencimentos, cartões, ocultar valores ── */
   .due-chip { flex: 0 0 auto; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; border: 1px solid var(--border); color: var(--muted); cursor: pointer; white-space: nowrap; user-select: none; }
   .due-chip.empty { opacity: 0.45; border-style: dashed; }
+  .folder-add { display: flex; align-items: center; gap: 8px; padding: 8px 0 8px 30px; font-size: 11px; color: var(--muted); opacity: 0.45; cursor: pointer; border-bottom: 1px dashed var(--border); transition: opacity .15s; }
+  .folder-add:hover { opacity: 0.9; }
+  .folder-add.editing { opacity: 1; cursor: default; padding-left: 0; }
+  .folder-add-name { flex: 1; min-width: 0; background: transparent; border: none; border-bottom: 1px solid var(--accent); color: var(--text); font-family: var(--font-mono); font-size: 14px; padding: 4px 2px; outline: none; }
+  .folder-add-val.edit-input { min-width: 10ch; width: 10ch; border-bottom: 1px solid var(--accent); }
+  .folder-add-ok { color: var(--accent); font-size: 18px; cursor: pointer; padding: 0 8px; min-width: 32px; text-align: center; }
   @media (max-width: 560px) {
     .edit-row:has(.due-chip) .edit-input, .group-header:has(.due-chip) .group-header-total { min-width: 12ch; width: 12ch; }
     .edit-row:has(.due-chip) .edit-name, .group-header:has(.due-chip) .group-header-name { word-break: normal; overflow-wrap: break-word; }
@@ -242,7 +248,7 @@
 
 <div class="header">
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R7</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R7.1</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -553,6 +559,8 @@ const FEATURE_RELEASE = {
   betaExportar: 'beta',
   /** Botão 👁 para borrar valores na tela. */
   betaOcultar: 'beta',
+  /** Linha "+ nova conta" no fim de cada pasta aberta. */
+  betaPastaAdd: 'beta',
 };
 
 function isAppTester() {
@@ -1384,6 +1392,7 @@ function render() {
       const cBar = makeCardBar(cat, n); if (cBar) w.appendChild(cBar);
       const c = document.createElement('div'); c.className = `group-content ${isOpen?'open':''}`;
       data.i.forEach(([ik,iv]) => w.appendChild(createGroupRow(cat, ik, iv, c)));
+      if (featureVisible('betaPastaAdd')) c.appendChild(makeFolderAddRow(cat, n));
       w.appendChild(c);
     });
   };
@@ -1459,6 +1468,10 @@ function toggleGroupPaid(keys) {
 function addRow(cat) {
   const n = prompt("Nome:"); if(!n) return;
   const val = parseMoneyBR(prompt("Valor:"));
+  addItemCore(cat, n, val);
+}
+/** Cria o item (aceita @menção e [1/12]); usado pelo botão da seção e pela linha dentro da pasta. */
+function addItemCore(cat, n, val) {
   normalizeAppData();
 
   const mention = parseAtMention(n);
@@ -1690,7 +1703,18 @@ function groupOf(k) { const s = String(k).split(':'); return s.length > 1 ? s[0]
 function dueBase(k) { const p = parseParcelKey(k); return (p ? p.base : String(k)).trim().toLowerCase(); }
 function dueKeyItem(cat, k) { return cat + '|' + dueBase(k); }
 function dueKeyGroup(cat, g) { return cat + '|#' + String(g).toUpperCase(); }
-function getDueItem(cat, k) { return appCfg().due[dueKeyItem(cat, k)] || null; }
+/** Conta solta que é um cartão (ex: "Nubank" com o valor da fatura). */
+function looseCardName(k) {
+  if (groupOf(k) || !featureVisible('betaCartoes')) return null;
+  const n = dueBase(k).toUpperCase();
+  return appCfg().cards[n] ? n : null;
+}
+function cardOfKey(k) { return groupOf(k) || looseCardName(k); }
+function getDueItem(cat, k) {
+  const lc = looseCardName(k);
+  if (lc) return appCfg().cards[lc].venc || null;
+  return appCfg().due[dueKeyItem(cat, k)] || null;
+}
 function getDueGroup(cat, g) {
   const card = appCfg().cards[String(g).toUpperCase()];
   if (card && card.venc) return card.venc;
@@ -1722,8 +1746,9 @@ function makeDueChipItem(cat, k) {
   const paid = !!appData[MONTHS[activeMes]].paid?.[k];
   const chip = document.createElement('span');
   chip.className = 'due-chip ' + (day ? dueClass(day, activeMes, currentYear, paid) : 'empty');
-  chip.textContent = day ? 'dia ' + day : '📅';
-  chip.title = 'Dia de vencimento';
+  const isCardItem = !!looseCardName(k);
+  chip.textContent = (isCardItem ? '💳 ' : '') + (day ? 'dia ' + day : '📅');
+  chip.title = isCardItem ? 'Cartão de crédito' : 'Dia de vencimento';
   chip.onclick = (e) => { e.stopPropagation(); askDueItem(cat, k); };
   return chip;
 }
@@ -1753,18 +1778,43 @@ function makeCardBar(cat, g) {
 }
 
 function askDueItem(cat, k) {
-  const cur = getDueItem(cat, k);
   const base = parseParcelKey(k)?.base || k;
+  const cardName = dueBase(k).toUpperCase();
+  const cardsOn = featureVisible('betaCartoes');
+  const card = cardsOn ? appCfg().cards[cardName] : null;
+  const cur = card ? card.venc : appCfg().due[dueKeyItem(cat, k)];
   openR7Modal(`Vencimento`, `
     <p class="r7-sub">${r7Esc(base)} — vale para todos os meses${parseParcelKey(k) ? ' e parcelas' : ''}.</p>
-    <label class="r7-lbl">Dia do mês (1 a 31)</label>
-    <input class="login-input r7-in" id="r7DueDay" type="number" inputmode="numeric" min="1" max="31" value="${cur || ''}" placeholder="Ex: 10">`,
+    ${cardsOn ? `<label class="r7-check"><input type="checkbox" id="r7IsCard" ${card ? 'checked' : ''}> É cartão de crédito (o valor desta conta é a fatura)</label>` : ''}
+    <label class="r7-lbl">Vence dia (1 a 31)</label>
+    <input class="login-input r7-in" id="r7DueDay" type="number" inputmode="numeric" min="1" max="31" value="${cur || ''}" placeholder="Ex: 10">
+    <div id="r7CardFields" style="display:${card ? 'block' : 'none'}">
+      <div class="r7-row">
+        <div><label class="r7-lbl">Limite total</label><input class="login-input r7-in" id="r7Lim" inputmode="decimal" value="${card?.limite ? formatMoneyBR(card.limite) : ''}" placeholder="Ex: 5.000,00"></div>
+        <div><label class="r7-lbl">Fecha dia</label><input class="login-input r7-in" id="r7Fech" type="number" inputmode="numeric" min="1" max="31" value="${card?.fech || ''}"></div>
+      </div>
+    </div>`,
     [{ label: 'Salvar', primary: true, fn: () => {
         const v = parseInt(document.getElementById('r7DueDay').value, 10);
-        if (!(v >= 1 && v <= 31)) { alert('Informe um dia entre 1 e 31.'); return false; }
-        appCfg().due[dueKeyItem(cat, k)] = v; autoSave(); render();
+        const isCard = cardsOn && document.getElementById('r7IsCard').checked;
+        const cards = appCfg().cards, due = appCfg().due;
+        if (isCard) {
+          const fech = parseInt(document.getElementById('r7Fech').value, 10);
+          if (!(v >= 1 && v <= 31) || !(fech >= 1 && fech <= 31)) { alert('Preencha os dias de vencimento e fechamento (1 a 31).'); return false; }
+          const lim = parseMoneyBR(document.getElementById('r7Lim').value);
+          cards[cardName] = { limite: lim > 0 ? lim : 0, fech, venc: v, loose: true };
+          delete due[dueKeyItem(cat, k)];
+        } else {
+          if (card && !confirm(`Deixar ${base} de ser cartão?`)) return false;
+          if (card) delete cards[cardName];
+          if (v >= 1 && v <= 31) due[dueKeyItem(cat, k)] = v;
+          else if (!card) { alert('Informe um dia entre 1 e 31.'); return false; }
+        }
+        autoSave(); render();
       } },
-     cur ? { label: 'Remover vencimento', fn: () => { delete appCfg().due[dueKeyItem(cat, k)]; autoSave(); render(); } } : null]);
+     (cur && !card) ? { label: 'Remover vencimento', fn: () => { delete appCfg().due[dueKeyItem(cat, k)]; autoSave(); render(); } } : null]);
+  const ck = document.getElementById('r7IsCard');
+  if (ck) ck.onchange = () => { document.getElementById('r7CardFields').style.display = ck.checked ? 'block' : 'none'; };
 }
 
 function openFolderModal(cat, g) {
@@ -1828,7 +1878,7 @@ function cardStats(g) {
       const md = yd[mn]; if (!md) return;
       const abs = y * 12 + i;
       DUE_CATS.forEach(cat => Object.entries(md[cat] || {}).forEach(([k, v]) => {
-        if (groupOf(k) !== g) return;
+        if (cardOfKey(k) !== g) return;
         const val = parseMoneyBR(v);
         if (y === currentYear && i === activeMes) fatura += val;
         if (abs >= tA && !md.paid?.[k]) usado += val;
@@ -1839,10 +1889,18 @@ function cardStats(g) {
 }
 function cardCatFor(g, yr, mIdx) {
   const md = fullData?.[String(yr)]?.[MONTHS[mIdx]];
-  if (md) for (const cat of DUE_CATS) if (Object.keys(md[cat] || {}).some(k => groupOf(k) === g)) return cat;
+  if (md) for (const cat of DUE_CATS) if (Object.keys(md[cat] || {}).some(k => cardOfKey(k) === g)) return cat;
   const cur = appData?.[MONTHS[activeMes]];
-  if (cur) for (const cat of DUE_CATS) if (Object.keys(cur[cat] || {}).some(k => groupOf(k) === g)) return cat;
+  if (cur) for (const cat of DUE_CATS) if (Object.keys(cur[cat] || {}).some(k => cardOfKey(k) === g)) return cat;
   return 'temp';
+}
+function looseCardLabel(g) {
+  let found = null;
+  Object.values(fullData || {}).some(yd => yd && typeof yd === 'object' && MONTHS.some(mn => DUE_CATS.some(cat => {
+    const k = Object.keys(yd[mn]?.[cat] || {}).find(x => !groupOf(x) && dueBase(x).toUpperCase() === g);
+    if (k) { found = parseParcelKey(k)?.base || k; return true; } return false;
+  })));
+  return found || (g.charAt(0) + g.slice(1).toLowerCase());
 }
 function addCardPurchase(g) {
   const card = appCfg().cards[g]; if (!card) return;
@@ -1863,6 +1921,21 @@ function addCardPurchase(g) {
         if (!nome || !(total > 0)) { alert('Preencha descrição e valor.'); return false; }
         const cat = cardCatFor(g, f.yr, f.m);
         const parc = Math.floor((total / n) * 100) / 100;
+        if (card.loose) {
+          // Cartão lançado como conta solta: a compra soma no valor da fatura de cada mês.
+          const label = looseCardLabel(g);
+          for (let i = 0; i < n; i++) {
+            const ym = absToYm(fAbs + i);
+            const bucket = ensureYear(ym.yr)[MONTHS[ym.m]][cat];
+            const key = Object.keys(bucket).find(k => !groupOf(k) && dueBase(k).toUpperCase() === g) || label;
+            const v = i === n - 1 ? Math.round((total - parc * (n - 1)) * 100) / 100 : parc;
+            bucket[key] = Math.round((parseMoneyBR(bucket[key]) + v) * 100) / 100;
+          }
+          appData = fullData[String(currentYear)];
+          autoSave(); render();
+          alert(`Somado na fatura de ${MONTHS[f.m]}${n === 2 ? ' e no mês seguinte' : n > 2 ? ` e nos ${n - 1} meses seguintes` : ''}.`);
+          return;
+        }
         for (let i = 0; i < n; i++) {
           const ym = absToYm(fAbs + i);
           const yd = ensureYear(ym.yr);
@@ -1888,7 +1961,7 @@ function renderCardsPanel() {
   el.style.display = 'block';
   if (!names.length) {
     el.innerHTML = `<div class="panel"><div class="panel-title">Cartões · beta</div>
-      <p class="r7-sub" style="margin:0">Toque no <b>📅</b> de uma pasta (ex: NUBANK) em Fixas ou Temporárias e marque "É cartão de crédito".</p></div>`;
+      <p class="r7-sub" style="margin:0">Toque no <b>📅</b> da conta do cartão (ex: Nubank) ou da pasta 📂 em Fixas/Temporárias e marque "É cartão de crédito".</p></div>`;
     return;
   }
   el.innerHTML = `<div class="panel"><div class="panel-title">Cartões · beta</div>${names.map(g => {
@@ -1908,7 +1981,8 @@ function renderCardsPanel() {
   el.querySelectorAll('[data-card-add]').forEach(b => b.onclick = () => addCardPurchase(b.getAttribute('data-card-add')));
   el.querySelectorAll('[data-card-cfg]').forEach(b => b.onclick = () => {
     const g = b.getAttribute('data-card-cfg');
-    openFolderModal(cardCatFor(g, currentYear, activeMes), g);
+    const cat = cardCatFor(g, currentYear, activeMes);
+    if (cards[g].loose) askDueItem(cat, looseCardLabel(g)); else openFolderModal(cat, g);
   });
 }
 
@@ -1958,6 +2032,45 @@ function renderDueAlerts() {
     currentYear = y; activeMes = m; ensureYear(y); appData = fullData[String(y)]; normalizeAppData(); render();
     window.scrollTo({ top: document.getElementById('fixasSection').getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' });
   });
+}
+
+// ── Nova conta direto dentro da pasta ──
+function makeFolderAddRow(cat, g) {
+  const row = document.createElement('div');
+  row.className = 'folder-add';
+  row.textContent = '+ nova conta';
+  row.onclick = () => {
+    if (row.classList.contains('editing')) return;
+    row.classList.add('editing');
+    row.innerHTML = '';
+    const nm = document.createElement('input');
+    nm.className = 'folder-add-name'; nm.placeholder = 'Nome (ex: Mercado ou Celular [1/10])'; nm.autocomplete = 'off';
+    const vl = document.createElement('input');
+    vl.className = 'edit-input folder-add-val'; vl.placeholder = '0,00'; vl.inputMode = 'decimal'; vl.autocomplete = 'off';
+    const ok = document.createElement('span'); ok.className = 'folder-add-ok'; ok.textContent = '✓';
+    const save = () => {
+      const name = nm.value.trim().replace(/:/g, ' ');
+      if (!name) { nm.focus(); return; }
+      openGroups[g] = true;
+      addItemCore(cat, `${g}: ${name}`, parseMoneyBR(vl.value));
+    };
+    const cancel = () => setTimeout(() => {
+      if (!row.isConnected || row.contains(document.activeElement)) return;
+      if (!nm.value.trim()) render();
+    }, 150);
+    [nm, vl].forEach(inp => {
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); if (inp === nm && !vl.value) vl.focus(); else save(); }
+        if (e.key === 'Escape') render();
+      });
+      inp.addEventListener('blur', cancel);
+    });
+    ok.onmousedown = e => e.preventDefault();
+    ok.onclick = save;
+    row.appendChild(nm); row.appendChild(vl); row.appendChild(ok);
+    nm.focus();
+  };
+  return row;
 }
 
 // Mantém o vencimento quando o item é renomeado
