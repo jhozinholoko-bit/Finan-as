@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Finanças">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -208,6 +208,138 @@
   .r7-ofx-n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .r7-ofx-v { white-space: nowrap; font-variant-numeric: tabular-nums; }
   .r7-ofx-v.neg { color: var(--accent2); } .r7-ofx-v.pos { color: var(--accent); }
+
+  /* ══ NOVO VISUAL (beta) — body.nv ══════════════════════════════════════ */
+  body.nv {
+    --bg: #06110d; --surface: #0d1b16; --surface2: #132a22; --border: rgba(255,255,255,0.07);
+    --accent: #2fe6a7; --accent2: #ff6b7d; --accent3: #ffd166; --lime: #c8f56a; --muted: #7d948b; --text: #eef6f2;
+    --hero-a: #0f3b2c; --hero-b: #072019; --hero-text: #eef6f2; --hero-muted: rgba(238,246,242,0.62);
+    --font-head: 'Plus Jakarta Sans', sans-serif; --font-mono: 'Plus Jakarta Sans', sans-serif;
+    --radius: 22px; --shadow: 0 10px 30px rgba(0,0,0,0.28);
+    font-family: var(--font-mono); font-weight: 500; padding: 14px 14px 120px; max-width: 760px; margin: 0 auto;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.1px;
+  }
+  body.nv[data-theme="light"] {
+    --bg: #eaf7f1; --surface: #ffffff; --surface2: #f2faf6; --border: rgba(6,40,28,0.08);
+    --accent: #00b97a; --accent2: #f0506a; --accent3: #f2a93b; --lime: #00d091; --muted: #6f8a80; --text: #0b2a20;
+    --hero-a: #00d091; --hero-b: #00a874; --hero-text: #04241a; --hero-muted: rgba(4,36,26,0.62);
+    --shadow: 0 10px 30px rgba(0,90,60,0.10);
+  }
+  body.nv .header { display: block; border: none; padding: 0; margin: 0 0 14px; }
+  body.nv .header-title h1, body.nv .tools-row, body.nv .sync-indicator#rolloutHint { display: none !important; }
+  body.nv #nvTop { display: flex; }
+  #nvTop { display: none; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .nv-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--lime)); color: #04241a; font-family: var(--font-head); font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; flex-shrink: 0; }
+  .nv-hello { flex: 1; min-width: 0; }
+  .nv-hello small { display: block; font-size: 12px; color: var(--muted); font-weight: 500; }
+  .nv-hello b { display: block; font-family: var(--font-head); font-size: 19px; font-weight: 800; letter-spacing: -0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nv-round { width: 42px; height: 42px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; justify-content: center; font-size: 17px; cursor: pointer; position: relative; flex-shrink: 0; }
+  .nv-round .bell-badge { top: -2px; right: -2px; }
+  body.nv #userDropdown { position: fixed; top: 64px; left: 14px; right: auto; border-radius: 16px; min-width: 230px; }
+  body.nv .menu-item { font-family: var(--font-mono); text-transform: none; font-size: 13px; padding: 13px 16px; border-left-width: 0 !important; }
+
+  /* navegação de meses */
+  body.nv .nav-area { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; }
+  body.nv .nav-area > div:first-child { order: 3; width: 100%; }
+  body.nv .sync-indicator { font-size: 11px; justify-content: flex-end; margin: 0; }
+  body.nv .year-nav { order: 1; flex: 1; justify-content: flex-start; }
+  body.nv .year-label { font-size: 15px; color: var(--text); }
+  body.nv .nav-area > div:nth-child(3) { order: 2; width: 100%; }
+  body.nv .nav-area > button { display: none; }
+  body.nv .month-nav { display: flex !important; flex-wrap: nowrap !important; overflow-x: auto; gap: 6px; width: auto !important; margin: 0 !important; scrollbar-width: none; scroll-snap-type: x proximity; padding: 2px; justify-content: flex-start !important; }
+  body.nv .month-nav::-webkit-scrollbar { display: none; }
+  body.nv .month-btn { flex: 0 0 auto; border-radius: 999px; padding: 9px 15px; font-size: 12px; font-weight: 600; background: var(--surface); border: 1px solid var(--border); color: var(--muted); scroll-snap-align: center; }
+  body.nv .month-btn.active { background: var(--accent); border-color: var(--accent); color: #04241a; box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 35%, transparent); }
+  body.nv .btn-ui { border-radius: 999px; font-size: 12px; text-transform: none; padding: 7px 12px; background: var(--surface); border-color: var(--border); }
+
+  /* card de saldo */
+  body.nv .kpi-grid { display: block; margin-bottom: 14px; }
+  .nv-hero { position: relative; overflow: hidden; border-radius: 28px; padding: 22px 20px 20px; color: var(--hero-text);
+    background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--lime) 30%, transparent) 0%, transparent 55%), linear-gradient(150deg, var(--hero-a), var(--hero-b)); box-shadow: var(--shadow); }
+  .nv-hero::after { content: ''; position: absolute; right: -40px; bottom: -60px; width: 190px; height: 190px; border-radius: 50%; border: 28px solid rgba(255,255,255,0.05); pointer-events: none; }
+  .nv-hero-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .nv-hero-lbl { font-size: 13px; color: var(--hero-muted); font-weight: 600; }
+  .nv-pill { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.12); color: var(--hero-text); white-space: nowrap; }
+  .nv-hero-val { font-family: var(--font-head); font-size: clamp(34px, 10vw, 46px); font-weight: 800; letter-spacing: -1.5px; margin: 6px 0 16px; line-height: 1.05; }
+  .nv-hero-val.neg { color: #ffb3bd; }
+  body.nv[data-theme="light"] .nv-hero-val.neg { color: #8b0f24; }
+  .nv-hero-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; z-index: 1; }
+  .nv-hero-col { background: rgba(255,255,255,0.08); border-radius: 16px; padding: 11px 12px; }
+  body.nv[data-theme="light"] .nv-hero-col { background: rgba(255,255,255,0.28); }
+  .nv-hero-col span { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--hero-muted); font-weight: 600; }
+  .nv-hero-col b { display: block; font-family: var(--font-head); font-size: 17px; font-weight: 800; margin-top: 3px; white-space: nowrap; }
+  .nv-ico-in, .nv-ico-out { width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
+  .nv-ico-in { background: var(--lime); color: #04241a; } .nv-ico-out { background: #ff8a98; color: #3a0610; }
+  .nv-prog { margin-top: 16px; position: relative; z-index: 1; }
+  .nv-prog-bar { height: 10px; border-radius: 999px; background: rgba(255,255,255,0.14); overflow: hidden; }
+  body.nv[data-theme="light"] .nv-prog-bar { background: rgba(4,36,26,0.14); }
+  .nv-prog-fill { height: 100%; border-radius: 999px; background: var(--lime); }
+  body.nv[data-theme="light"] .nv-prog-fill { background: #04241a; }
+  .nv-prog-fill.warm { background: #ffd166; } .nv-prog-fill.hot { background: #ff6b7d; }
+  .nv-prog-txt { display: flex; justify-content: space-between; margin-top: 7px; font-size: 12px; color: var(--hero-muted); font-weight: 600; }
+
+  /* ações rápidas */
+  #nvQuick { display: none; }
+  body.nv #nvQuick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+  .nv-q { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 12px 4px 10px; display: flex; flex-direction: column; align-items: center; gap: 7px; cursor: pointer; color: var(--text); font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-align: center; line-height: 1.2; }
+  .nv-q i { font-style: normal; width: 40px; height: 40px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 19px; background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .nv-q.on i { background: var(--accent); }
+
+  /* painéis */
+  body.nv .panel { border-radius: var(--radius); padding: 16px; margin-bottom: 14px; border-color: var(--border); box-shadow: var(--shadow); }
+  body.nv .panel-title { font-family: var(--font-head); font-size: 17px; font-weight: 800; color: var(--text); text-transform: none; letter-spacing: -0.3px; margin-bottom: 8px; }
+  body.nv .panel-title::after { display: none; }
+  body.nv .panel-title .nv-sum { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--muted); font-family: var(--font-mono); }
+
+  /* linhas */
+  body.nv .edit-row { gap: 12px; padding: 9px 0; min-height: 58px; border-bottom-color: var(--border); }
+  body.nv .edit-row:last-child { border-bottom: none; }
+  body.nv .edit-row.paid { opacity: 0.55; }
+  body.nv .check-circle { width: 40px; height: 40px; border-radius: 14px; border: none; background: var(--surface2); font-size: 18px; position: relative; transition: background .15s, transform .1s; }
+  body.nv .check-circle:active { transform: scale(0.92); }
+  body.nv .check-circle.checked { background: var(--accent); color: #04241a; font-size: 18px; font-weight: 800; }
+  body.nv .edit-name { font-size: 14px; font-weight: 600; }
+  body.nv .edit-input { font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+  body.nv #fixasSection .edit-input, body.nv #tempSection .edit-input { color: var(--accent2); }
+  body.nv #rendaSection .edit-input, body.nv #descontosSection .edit-input { color: var(--accent); }
+  body.nv .edit-row.paid .edit-input { color: var(--muted) !important; }
+  body.nv .group-header { min-height: 58px; gap: 12px; font-weight: 700; border-bottom-color: var(--border); }
+  body.nv .group-header-total { font-weight: 800; }
+  body.nv .group-content { border-left: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); margin-left: 19px; padding-left: 12px; }
+  body.nv .del-btn { opacity: 0.25; font-size: 15px; }
+  body.nv .edit-row:hover .del-btn, body.nv .group-header:hover .del-btn { opacity: 0.7; }
+  body.nv .add-row-btn { border-radius: 14px; font-size: 12px; text-transform: none; font-weight: 600; padding: 12px; font-family: var(--font-mono); }
+  body.nv .due-chip { border-radius: 999px; font-size: 10px; }
+  body.nv .card-item { background: var(--surface2); border-radius: 18px; padding: 14px; margin-bottom: 10px; border: none; }
+  body.nv .card-item:last-child { margin-bottom: 0; }
+  body.nv .card-fat { font-size: 20px; }
+  body.nv .card-bar { height: 8px; border-radius: 999px; border: none; background: var(--bg); }
+  body.nv .card-bar-fill { border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--lime)); }
+  body.nv .due-line { padding: 10px 0; }
+  body.nv .help-card { border-radius: 24px; }
+  body.nv .login-btn { border-radius: 14px; }
+  body.nv .login-input { border-radius: 12px; }
+
+  /* barra inferior */
+  #nvNav { display: none; }
+  body.nv #nvNav { display: flex; position: fixed; left: 50%; transform: translateX(-50%); bottom: max(14px, env(safe-area-inset-bottom)); z-index: 9000; gap: 4px; padding: 7px; border-radius: 999px; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--border); box-shadow: 0 12px 34px rgba(0,0,0,0.35); }
+  .nv-nb { width: 52px; height: 48px; border-radius: 999px; border: none; background: transparent; color: var(--muted); font-size: 19px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .nv-nb.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+  .nv-nb.add { background: var(--accent); color: #04241a; font-size: 26px; font-weight: 700; width: 58px; box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .nv-seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--bg); padding: 4px; border-radius: 14px; margin-top: 6px; }
+  .nv-seg button { border: none; background: transparent; color: var(--muted); font-family: var(--font-mono); font-size: 12px; font-weight: 700; padding: 9px 2px; border-radius: 10px; cursor: pointer; }
+  .nv-seg button.on { background: var(--accent); color: #04241a; }
+  @media (min-width: 900px) { body.nv { padding-top: 28px; } }
+  body.nv .edit-input { min-width: 0 !important; width: 10.5ch !important; max-width: 34%; padding-left: 0; padding-right: 0; }
+  .card-total-input { font-weight: 800 !important; border-bottom: 1px dashed var(--border) !important; color: var(--text) !important; }
+  body.nv .group-header-total { min-width: 0 !important; width: auto !important; max-width: none !important; }
+  body.nv .edit-name, body.nv .group-header-name { word-break: normal !important; overflow-wrap: break-word !important; line-height: 1.3; }
+  body.nv .del-btn { min-width: 22px; padding: 0 2px; }
+  body.nv .group-content { margin-left: 8px; padding-left: 8px; }
+  body.nv .group-content .check-circle { width: 34px; height: 34px; border-radius: 12px; font-size: 15px; }
+  body.nv .group-content .edit-name { font-size: 13px; }
+  body.nv .card-mini { padding-left: 52px; }
+  body.nv .due-chip.empty { opacity: 0.3; }
 </style>
 </head>
 <body>
@@ -247,8 +379,14 @@
 </div>
 
 <div class="header">
+  <div id="nvTop">
+    <button type="button" class="nv-avatar" id="nvAvatar" onclick="nvMenu(event)" title="Menu"></button>
+    <div class="nv-hello"><small id="nvHelloSub"></small><b id="nvHelloName"></b></div>
+    <button type="button" class="nv-round" onclick="toggleHideValues()" title="Ocultar valores">👁</button>
+    <button type="button" class="nv-round" onclick="toggleNotifPanel()" title="Notificações">🔔<span class="bell-badge" id="nvBellBadge" style="display:none"></span></button>
+  </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R7.1</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R8</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -258,6 +396,7 @@
             <button type="button" class="menu-item" onclick="exportCSV()" style="border-left:3px solid var(--accent);">⬇ Exportar CSV do ano</button>
             <button type="button" class="menu-item" onclick="pickImportFile()" style="border-left:3px solid var(--accent);">⬆ Importar CSV / OFX</button>
           </div>
+          <button type="button" class="menu-item" onclick="document.getElementById('helpModal').style.display='flex'" style="border-left:3px solid var(--muted);">❓ Ajuda</button>
           <button type="button" class="menu-item" onclick="sairDaConta()" style="border-left:3px solid var(--accent2);">Trocar conta</button>
         </div>
       </div>
@@ -288,6 +427,12 @@
 </div>
 
 <div class="kpi-grid" id="kpiGrid"></div>
+<div id="nvQuick">
+  <button type="button" class="nv-q" onclick="copyPreviousMonth()"><i>📂</i>Replicar mês</button>
+  <button type="button" class="nv-q" id="nvQSaldo" onclick="toggleSaldoReal()"><i>✅</i>Saldo real</button>
+  <button type="button" class="nv-q" id="nvQHide" onclick="toggleHideValues()"><i>🙈</i>Ocultar</button>
+  <button type="button" class="nv-q" onclick="toggleTheme()"><i>🌓</i>Tema</button>
+</div>
 <div id="dueAlerts" style="display:none"></div>
 <div id="cardsPanel" style="display:none"></div>
 <input type="file" id="r7FileInput" accept=".csv,.ofx,text/csv,application/x-ofx" style="display:none" onchange="onImportFile(event)">
@@ -298,7 +443,7 @@
     <div class="choice-actions r7-actions" style="margin-top:16px"></div>
   </div>
 </div>
-<div class="panel"><div class="panel-title">Evolução Anual</div><div style="height: 180px;"><canvas id="barChart"></canvas></div></div>
+<div class="panel" id="nvChartPanel"><div class="panel-title">Evolução Anual</div><div style="height: 180px;"><canvas id="barChart"></canvas></div></div>
 <div class="panel"><div class="panel-title">Renda Mensal</div><div id="rendaSection"></div><button class="add-row-btn" onclick="addRow('renda')">+ Nova Renda</button></div>
 <div class="panel"><div class="panel-title">Despesas Fixas</div><div id="fixasSection"></div><button class="add-row-btn" onclick="addRow('fixas')">+ Nova Fixa</button></div>
 <div class="panel"><div class="panel-title">Temporárias</div><div id="tempSection"></div><button class="add-row-btn" onclick="addRow('temp')">+ Nova Temporária</button></div>
@@ -559,6 +704,8 @@ const FEATURE_RELEASE = {
   betaExportar: 'beta',
   /** Botão 👁 para borrar valores na tela. */
   betaOcultar: 'beta',
+  /** Visual novo (card de saldo, ícones, barra inferior). */
+  betaNovoVisual: 'beta',
   /** Linha "+ nova conta" no fim de cada pasta aberta. */
   betaPastaAdd: 'beta',
 };
@@ -1296,7 +1443,7 @@ function renderRow(cat, k, v) {
     
     const check = document.createElement('div'); 
     check.className = `check-circle ${isP?'checked':''}`;
-    check.innerHTML = isP ? '✓' : '';
+    check.innerHTML = isP ? '✓' : (nvOn() ? nvIcon(k, cat) : '');
     check.onclick = () => togglePaid(k);
 
     const name = document.createElement('div');
@@ -1374,15 +1521,16 @@ function render() {
       const allPaid = isGroupAllPaid(keys);
       const isOpen = openGroups[n], h = document.createElement('div'); h.className = 'group-header' + (allPaid ? ' all-paid' : '');
       h.onclick = (ev) => {
-        if (ev.target.closest('.del-btn') || ev.target.closest('.check-circle') || ev.target.closest('.due-chip')) return;
+        if (ev.target.closest('.del-btn') || ev.target.closest('.check-circle') || ev.target.closest('.due-chip') || ev.target.closest('input')) return;
         openGroups[n] = !isOpen; render();
       };
       const check = document.createElement('div');
       check.className = 'check-circle' + (allPaid ? ' checked' : '');
-      check.innerHTML = allPaid ? '✓' : '';
+      check.innerHTML = allPaid ? '✓' : (nvOn() ? ((featureVisible('betaCartoes') && appCfg().cards[n]) ? '💳' : '📂') : '');
       check.onclick = (ev) => { ev.stopPropagation(); toggleGroupPaid(keys); };
-      const nameSpan = document.createElement('span'); nameSpan.className = 'group-header-name'; nameSpan.textContent = `📂 ${n}`;
-      const totalSpan = document.createElement('span'); totalSpan.className = 'group-header-total'; totalSpan.textContent = formatMoneyBR(data.t);
+      const nameSpan = document.createElement('span'); nameSpan.className = 'group-header-name'; nameSpan.textContent = nvOn() ? n : `📂 ${n}`;
+      const totalSpan = (DUE_CATS.includes(cat) && isCardGroup(n)) ? makeCardTotalInput(cat, n, data.t) : document.createElement('span');
+      if (totalSpan.tagName !== 'INPUT') { totalSpan.className = 'group-header-total'; totalSpan.textContent = formatMoneyBR(data.t); }
       const del = document.createElement('span'); del.className = 'del-btn'; del.innerHTML = '✕';
       del.onclick = (ev) => { ev.stopPropagation(); deleteGroup(cat, n, keys); };
       h.appendChild(check); h.appendChild(nameSpan);
@@ -1448,7 +1596,7 @@ function normalizeAppData() {
     });
   });
 }
-function toggleTheme() { const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; document.body.setAttribute('data-theme', t); localStorage.setItem('theme', t); }
+function toggleTheme() { const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; document.body.setAttribute('data-theme', t); localStorage.setItem('theme', t); if (typeof nvOn === 'function' && nvOn() && appData) render(); }
 if(localStorage.getItem('theme') === 'light') document.body.setAttribute('data-theme', 'light');
 function toggleSaldoReal() { modoSaldoReal = !modoSaldoReal; document.getElementById('btnSaldoReal').classList.toggle('active', modoSaldoReal); render(); }
 function togglePaid(k) { const m = appData[MONTHS[activeMes]]; if(!m.paid) m.paid = {}; m.paid[k] = !m.paid[k]; render(); autoSave(); }
@@ -1672,7 +1820,8 @@ function updateKPIsOnly() {
   const desp = f + t + sharedDesp;
   const entradas = r + aReceber + sharedAReceber;
   const s = entradas - desp;
-  document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card green"><div class="kpi-label">Entradas</div><div class="kpi-value">${formatMoneyBR(entradas)}</div></div>
+  if (nvOn()) { document.body.classList.add('nv'); document.getElementById('kpiGrid').innerHTML = nvHeroHtml(entradas, desp, s); }
+  else document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card green"><div class="kpi-label">Entradas</div><div class="kpi-value">${formatMoneyBR(entradas)}</div></div>
     <div class="kpi-card red"><div class="kpi-label">Saídas</div><div class="kpi-value">${formatMoneyBR(desp)}</div></div>
     <div class="kpi-card yellow"><div class="kpi-label">Saldo</div><div class="kpi-value">${formatMoneyBR(s)}</div></div>`;
   const getSumF = (md, c) => Object.values(md[c] || {}).reduce((a,v)=>a+parseMoneyBR(v),0);
@@ -1683,6 +1832,17 @@ function updateKPIsOnly() {
     type:'bar', data: { labels: MONTHS, datasets: [{ label: 'Renda', data: dR, backgroundColor: '#00e5a0' }, { label: 'Gastos', data: dG, backgroundColor: '#ff4d6d' }]},
     options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#1e2330' }, ticks: { color: '#5a6070', font: { size: 9 } } }, x: { ticks: { color: '#5a6070', font: { size: 10 } }, grid: { display: false } } } }
   });
+  if (nvOn()) {
+    const light = document.body.getAttribute('data-theme') === 'light';
+    const ds = barInst.data.datasets;
+    ds[0].backgroundColor = light ? '#00b97a' : '#2fe6a7'; ds[1].backgroundColor = light ? '#f0506a' : '#ff6b7d';
+    ds.forEach(d => { d.borderRadius = 6; d.borderSkipped = false; d.barPercentage = 0.75; d.categoryPercentage = 0.7; });
+    const sc = barInst.options.scales; const grid = light ? 'rgba(6,40,28,0.07)' : 'rgba(255,255,255,0.06)'; const tick = light ? '#6f8a80' : '#7d948b';
+    sc.y.grid.color = grid; sc.y.border = { display: false }; sc.x.border = { display: false };
+    sc.y.ticks.color = tick; sc.x.ticks.color = tick;
+    sc.y.ticks.font = { family: 'Plus Jakarta Sans', size: 10 }; sc.x.ticks.font = { family: 'Plus Jakarta Sans', size: 11, weight: '600' };
+    barInst.update('none');
+  }
 }
 
 // ── BETA-R7: Cartões, Vencimentos, CSV/OFX, Ocultar valores ─────────────
@@ -1706,6 +1866,7 @@ function dueKeyGroup(cat, g) { return cat + '|#' + String(g).toUpperCase(); }
 /** Conta solta que é um cartão (ex: "Nubank" com o valor da fatura). */
 function looseCardName(k) {
   if (groupOf(k) || !featureVisible('betaCartoes')) return null;
+  return null;
   const n = dueBase(k).toUpperCase();
   return appCfg().cards[n] ? n : null;
 }
@@ -1785,7 +1946,7 @@ function askDueItem(cat, k) {
   const cur = card ? card.venc : appCfg().due[dueKeyItem(cat, k)];
   openR7Modal(`Vencimento`, `
     <p class="r7-sub">${r7Esc(base)} — vale para todos os meses${parseParcelKey(k) ? ' e parcelas' : ''}.</p>
-    ${cardsOn ? `<label class="r7-check"><input type="checkbox" id="r7IsCard" ${card ? 'checked' : ''}> É cartão de crédito (o valor desta conta é a fatura)</label>` : ''}
+    ${cardsOn ? `<label class="r7-check"><input type="checkbox" id="r7IsCard" ${card ? 'checked' : ''}> É cartão de crédito (vira pasta; o valor fica em "Outros")</label>` : ''}
     <label class="r7-lbl">Vence dia (1 a 31)</label>
     <input class="login-input r7-in" id="r7DueDay" type="number" inputmode="numeric" min="1" max="31" value="${cur || ''}" placeholder="Ex: 10">
     <div id="r7CardFields" style="display:${card ? 'block' : 'none'}">
@@ -1802,8 +1963,10 @@ function askDueItem(cat, k) {
           const fech = parseInt(document.getElementById('r7Fech').value, 10);
           if (!(v >= 1 && v <= 31) || !(fech >= 1 && fech <= 31)) { alert('Preencha os dias de vencimento e fechamento (1 a 31).'); return false; }
           const lim = parseMoneyBR(document.getElementById('r7Lim').value);
-          cards[cardName] = { limite: lim > 0 ? lim : 0, fech, venc: v, loose: true };
+          cards[cardName] = { limite: lim > 0 ? lim : 0, fech, venc: v };
           delete due[dueKeyItem(cat, k)];
+          convertLooseToCardFolder(cardName);
+          openGroups[cardName] = true;
         } else {
           if (card && !confirm(`Deixar ${base} de ser cartão?`)) return false;
           if (card) delete cards[cardName];
@@ -1921,21 +2084,6 @@ function addCardPurchase(g) {
         if (!nome || !(total > 0)) { alert('Preencha descrição e valor.'); return false; }
         const cat = cardCatFor(g, f.yr, f.m);
         const parc = Math.floor((total / n) * 100) / 100;
-        if (card.loose) {
-          // Cartão lançado como conta solta: a compra soma no valor da fatura de cada mês.
-          const label = looseCardLabel(g);
-          for (let i = 0; i < n; i++) {
-            const ym = absToYm(fAbs + i);
-            const bucket = ensureYear(ym.yr)[MONTHS[ym.m]][cat];
-            const key = Object.keys(bucket).find(k => !groupOf(k) && dueBase(k).toUpperCase() === g) || label;
-            const v = i === n - 1 ? Math.round((total - parc * (n - 1)) * 100) / 100 : parc;
-            bucket[key] = Math.round((parseMoneyBR(bucket[key]) + v) * 100) / 100;
-          }
-          appData = fullData[String(currentYear)];
-          autoSave(); render();
-          alert(`Somado na fatura de ${MONTHS[f.m]}${n === 2 ? ' e no mês seguinte' : n > 2 ? ` e nos ${n - 1} meses seguintes` : ''}.`);
-          return;
-        }
         for (let i = 0; i < n; i++) {
           const ym = absToYm(fAbs + i);
           const yd = ensureYear(ym.yr);
@@ -1946,6 +2094,7 @@ function addCardPurchase(g) {
           while (bucket[key] !== undefined) key = n > 1 ? formatParcelKey(`${base} ${sfx++}`, i + 1, n) : `${base} ${sfx++}`;
           const v = i === n - 1 ? Math.round((total - parc * (n - 1)) * 100) / 100 : parc;
           bucket[key] = v;
+          consumeOutros(bucket, g, v);
         }
         appData = fullData[String(currentYear)];
         openGroups[g] = true;
@@ -1960,11 +2109,11 @@ function renderCardsPanel() {
   const names = Object.keys(cards);
   el.style.display = 'block';
   if (!names.length) {
-    el.innerHTML = `<div class="panel"><div class="panel-title">Cartões · beta</div>
-      <p class="r7-sub" style="margin:0">Toque no <b>📅</b> da conta do cartão (ex: Nubank) ou da pasta 📂 em Fixas/Temporárias e marque "É cartão de crédito".</p></div>`;
+    el.innerHTML = `<div class="panel"><div class="panel-title">${nvOn() ? 'Cartões' : 'Cartões · beta'}</div>
+      <p class="r7-sub" style="margin:0">Toque no <b>📅</b> da conta do cartão (ex: Nubank) e marque "É cartão de crédito". O valor vira a fatura; o que você não detalhar fica em <b>Outros</b>.</p></div>`;
     return;
   }
-  el.innerHTML = `<div class="panel"><div class="panel-title">Cartões · beta</div>${names.map(g => {
+  el.innerHTML = `<div class="panel"><div class="panel-title">${nvOn() ? 'Cartões' : 'Cartões · beta'}</div>${names.map(g => {
     const c = cards[g]; const st = cardStats(g);
     const pct = c.limite ? Math.min(100, (st.usado / c.limite) * 100) : 0;
     const f = absToYm(faturaAbsFor(c));
@@ -1982,7 +2131,7 @@ function renderCardsPanel() {
   el.querySelectorAll('[data-card-cfg]').forEach(b => b.onclick = () => {
     const g = b.getAttribute('data-card-cfg');
     const cat = cardCatFor(g, currentYear, activeMes);
-    if (cards[g].loose) askDueItem(cat, looseCardLabel(g)); else openFolderModal(cat, g);
+    openFolderModal(cat, g);
   });
 }
 
@@ -2020,7 +2169,7 @@ function renderDueAlerts() {
   if (!late.length && !soon.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
   const line = (e, cls) => {
     const when = e.diff < 0 ? `${-e.diff}d atrasada` : e.diff === 0 ? 'vence hoje' : e.diff === 1 ? 'amanhã' : `em ${e.diff} dias`;
-    return `<div class="due-line ${cls}" data-go="${e.yr}-${e.mIdx}"><span class="due-l-name">${r7Esc(e.label)}</span><span class="due-l-when">${when} · dia ${e.day}</span><span class="due-l-val money">${formatMoneyBR(e.val)}</span></div>`;
+    return `<div class="due-line ${cls}" data-go="${e.yr}-${e.mIdx}"><span class="due-l-name">${r7Esc(e.label)}${e.mIdx !== new Date().getMonth() ? ` <small style="color:var(--muted)">· ${MONTHS[e.mIdx]}</small>` : ''}</span><span class="due-l-when">${when} · dia ${e.day}</span><span class="due-l-val money">${formatMoneyBR(e.val)}</span></div>`;
   };
   el.style.display = 'block';
   el.innerHTML = `<div class="panel due-panel">
@@ -2032,6 +2181,91 @@ function renderDueAlerts() {
     currentYear = y; activeMes = m; ensureYear(y); appData = fullData[String(y)]; normalizeAppData(); render();
     window.scrollTo({ top: document.getElementById('fixasSection').getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' });
   });
+}
+
+// ── Cartão = fatura: total digitado, o que não está detalhado vira "Outros" ──
+function outrosKey(g) { return `${g}: Outros`; }
+function isCardGroup(g) { return !!g && featureVisible('betaCartoes') && !!appCfg().cards[g]; }
+function findOutros(bucket, g) { return Object.keys(bucket || {}).find(k => groupOf(k) === g && /^outros$/i.test(String(k).split(':').slice(1).join(':').trim())); }
+/** Detalhar uma compra tira o valor do "Outros" (sem passar de zero). */
+function consumeOutros(bucket, g, amount) {
+  const ok = findOutros(bucket, g); if (!ok || !amount) return;
+  const nv = Math.round((parseMoneyBR(bucket[ok]) - amount) * 100) / 100;
+  if (nv > 0.004) bucket[ok] = nv; else delete bucket[ok];
+}
+/** Digitou o total da fatura: "Outros" = total − detalhado. */
+function setCardTotal(cat, g, total) {
+  const bucket = appData[MONTHS[activeMes]][cat];
+  const ok = findOutros(bucket, g) || outrosKey(g);
+  const detalhado = Object.entries(bucket).filter(([k]) => groupOf(k) === g && k !== ok).reduce((a, [, v]) => a + parseMoneyBR(v), 0);
+  const outros = Math.round((total - detalhado) * 100) / 100;
+  if (outros < -0.004) {
+    alert(`O detalhado de ${g} já soma ${formatMoneyBR(detalhado)}. Para baixar a fatura, ajuste ou apague as compras detalhadas.`);
+    render(); return;
+  }
+  if (outros > 0.004) bucket[ok] = outros; else delete bucket[ok];
+  autoSave(); render();
+}
+/** Conta solta "Nubank" em todos os meses vira pasta NUBANK com o valor em "Outros". */
+function convertLooseToCardFolder(g) {
+  Object.values(fullData || {}).forEach(yd => {
+    if (!yd || typeof yd !== 'object') return;
+    MONTHS.forEach(mn => {
+      const md = yd[mn]; if (!md) return;
+      DUE_CATS.forEach(cat => {
+        Object.keys(md[cat] || {}).forEach(k => {
+          if (groupOf(k) || dueBase(k).toUpperCase() !== g || parseParcelKey(k)) return;
+          const ok = findOutros(md[cat], g) || outrosKey(g);
+          md[cat][ok] = Math.round((parseMoneyBR(md[cat][ok]) + parseMoneyBR(md[cat][k])) * 100) / 100;
+          if (md.paid?.[k]) { md.paid[ok] = true; delete md.paid[k]; }
+          delete md[cat][k];
+        });
+      });
+    });
+  });
+}
+/** Cartões marcados na R7.1 como conta solta passam para o modelo de pasta. */
+function migrateLooseCards() {
+  if (!fullData) return;
+  const cards = appCfg().cards; let changed = false;
+  Object.entries(cards).forEach(([g, c]) => { if (c.loose) { convertLooseToCardFolder(g); delete c.loose; changed = true; } });
+  if (changed) { appData = fullData[String(currentYear)]; autoSave(); }
+}
+const _ocAddItemCore = addItemCore;
+addItemCore = function (cat, n, val) {
+  const g = groupOf(n);
+  if (!isCardGroup(g) || parseAtMention(n) || !DUE_CATS.includes(cat)) return _ocAddItemCore(cat, n, val);
+  const p = parseParcelKey(n);
+  const months = [];
+  for (let i = 0; i <= (p ? p.t - p.a : 0); i++) { const t = activeMes + i; months.push({ yr: currentYear + Math.floor(t / 12), mn: MONTHS[t % 12] }); }
+  const before = months.map(m => ({ ...m, outros: findOutros(fullData[String(m.yr)]?.[m.mn]?.[cat], g) }));
+  _ocAddItemCore(cat, n, val);
+  let touched = false;
+  before.forEach(m => { if (m.outros) { consumeOutros(fullData[String(m.yr)][m.mn][cat], g, parseMoneyBR(val)); touched = true; } });
+  if (touched) { autoSave(); render(); }
+};
+const _ocUpdateValue = updateValue;
+updateValue = function (cat, key, val) {
+  const g = groupOf(key);
+  const bucket = appData?.[MONTHS[activeMes]]?.[cat];
+  const ok = bucket && isCardGroup(g) ? findOutros(bucket, g) : null;
+  if (!ok || ok === key) return _ocUpdateValue(cat, key, val);
+  const prev = parseMoneyBR(bucket[key]); const num = typeof val === 'number' ? val : parseMoneyBR(val);
+  const r = _ocUpdateValue(cat, key, val);
+  const apply = () => { if (Math.abs(parseMoneyBR(bucket[key]) - prev) < 1e-9) return; consumeOutros(bucket, g, num - prev); autoSave(); render(); };
+  if (r && typeof r.then === 'function') r.then(apply); else setTimeout(apply, 0);
+  return r;
+};
+function makeCardTotalInput(cat, g, total) {
+  const inp = document.createElement('input');
+  inp.className = 'edit-input group-header-total card-total-input';
+  inp.type = 'text'; inp.inputMode = 'decimal'; inp.autocomplete = 'off';
+  inp.value = formatMoneyBR(total);
+  inp.title = 'Total da fatura — o que não estiver detalhado vira "Outros"';
+  inp.onclick = (e) => e.stopPropagation();
+  inp.onblur = () => { const v = parseMoneyBR(inp.value); if (Math.abs(v - total) < 0.004) { inp.value = formatMoneyBR(total); return; } setCardTotal(cat, g, v); };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } });
+  return inp;
 }
 
 // ── Nova conta direto dentro da pasta ──
@@ -2098,6 +2332,7 @@ function toggleHideValues() {
   hideValues = !hideValues;
   try { localStorage.setItem('financas_hide_values', hideValues ? '1' : '0'); } catch (_) {}
   applyHideValues();
+  if (nvOn() && appData) render();
 }
 
 // ── Exportar / importar ──
@@ -2257,11 +2492,131 @@ function openR7Modal(title, bodyHtml, actions) {
 function closeR7Modal() { document.getElementById('r7Modal').style.display = 'none'; }
 
 function refreshR7Ui() {
+  if (CURRENT_USER && fullData && featureVisible('betaCartoes') && Object.values(appCfg().cards).some(c => c.loose)) { migrateLooseCards(); render(); return; }
+  applyNv();
   applyHideValues();
   const io = document.getElementById('userMenuIO');
   if (io) io.style.display = featureVisible('betaExportar') && CURRENT_USER ? 'block' : 'none';
   renderDueAlerts();
   renderCardsPanel();
+}
+// ───────────────────────────────────────────────────────────
+
+const _nvRenderBellBadge = renderBellBadge;
+renderBellBadge = function () {
+  _nvRenderBellBadge();
+  const src = document.getElementById('bellBadge'), dst = document.getElementById('nvBellBadge');
+  if (src && dst) { dst.textContent = src.textContent; dst.style.display = src.textContent && src.style.display !== 'none' ? '' : 'none'; }
+};
+// ── NOVO VISUAL (beta) ─────────────────────────────────────────────
+function nvOn() { return !!CURRENT_USER && featureVisible('betaNovoVisual'); }
+const NV_ICONS = [
+  [/aluguel|condom|casa|apto|apartamento|iptu/, '🏠'], [/luz|energia|celesc|eletric/, '⚡'], [/agua|água|casan|samae/, '💧'],
+  [/internet|wifi|fibra|vivo|claro|tim\b|oi\b/, '📶'], [/celular|telefone|chip/, '📱'], [/gas\b|gás/, '🔥'],
+  [/mercado|supermerc|feira|compras|atacad/, '🛒'], [/ifood|lanche|restaur|pizza|jantar|almo|comida|padaria|caf[eé]/, '🍔'],
+  [/uber|99|taxi|táxi|onibus|ônibus|transporte|passagem/, '🚕'], [/gasolina|combust|posto|shell|ipiranga|carro|seguro|ipva|oficina|moto/, '🚗'],
+  [/academia|gym|treino|personal|crossfit/, '🏋️'], [/farm|remedio|remédio|medic|m[eé]dico|dentista|unimed|saude|saúde|plano/, '💊'],
+  [/faculdade|fac\b|curso|escola|unesc|livro|formatura|ingl/, '🎓'], [/netflix|spotify|prime|disney|hbo|max\b|youtube|streaming|deezer|apple/, '🎬'],
+  [/jogo|game|steam|playstation|xbox|psn/, '🎮'], [/roupa|tenis|tênis|shopee|shein|amazon|mercado livre|loja/, '🛍️'],
+  [/pet|ra[cç][aã]o|veterin|cachorro|gato/, '🐾'], [/presente|gift|aniver/, '🎁'], [/viagem|hotel|airbnb|passeio/, '✈️'],
+  [/nubank|neon|visa|master|cart[aã]o|fatura|bradesco|picpay|itau|itaú|inter\b|c6|santander|caixa/, '💳'],
+  [/empr[eé]stimo|financ|parcela|consorcio|consórcio/, '🏦'], [/investi|poupan|reserva|cofrinho|tesouro|cdb/, '🐷'],
+  [/salario|salário|sal[aá]rio|pagamento|freela|freelance|cliente|vime|pro.?labore/, '💼'], [/pix|transfer/, '💸'],
+];
+function nvIcon(k, cat) {
+  const p = parseParcelKey(k); const name = String(p ? p.base : k).toLowerCase();
+  const leaf = name.includes(':') ? name.split(':').slice(1).join(':') : name;
+  for (const [re, ic] of NV_ICONS) if (re.test(leaf)) return ic;
+  if (cat === 'renda') return '💰';
+  if (cat === 'descontos') return '📥';
+  return cat === 'fixas' ? '📌' : '🧾';
+}
+function nvGreeting() { const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; }
+
+function nvHeroHtml(entradas, desp, s) {
+  const m = MONTHS[activeMes];
+  const pct = entradas > 0 ? Math.round((desp / entradas) * 100) : (desp > 0 ? 100 : 0);
+  const cls = pct >= 100 ? 'hot' : pct >= 85 ? 'warm' : '';
+  const status = entradas <= 0 && desp <= 0 ? 'Mês ainda vazio'
+    : pct >= 100 ? '⚠️ Saídas passam das entradas' : pct >= 85 ? '⚡ Atenção: quase no limite' : '✓ Gastos sob controle';
+  return `<div class="nv-hero">
+    <div class="nv-hero-top"><span class="nv-hero-lbl">Saldo de ${m} ${currentYear}${modoSaldoReal ? ' · real' : ''}</span>
+      <span class="nv-pill" onclick="toggleHideValues()" style="cursor:pointer">${hideValues ? '🙈 oculto' : '👁 visível'}</span></div>
+    <div class="nv-hero-val money ${s < 0 ? 'neg' : ''}">${formatMoneyBR(s)}</div>
+    <div class="nv-hero-cols">
+      <div class="nv-hero-col"><span><i class="nv-ico-in">↓</i>Entradas</span><b class="money">${formatMoneyBR(entradas)}</b></div>
+      <div class="nv-hero-col"><span><i class="nv-ico-out">↑</i>Saídas</span><b class="money">${formatMoneyBR(desp)}</b></div>
+    </div>
+    <div class="nv-prog"><div class="nv-prog-bar"><div class="nv-prog-fill ${cls}" style="width:${Math.min(100, pct)}%"></div></div>
+      <div class="nv-prog-txt"><span>${pct}% das entradas comprometidas</span><span>${status}</span></div></div>
+  </div>`;
+}
+
+function nvSectionTotals() {
+  const md = appData?.[MONTHS[activeMes]]; if (!md) return;
+  [['rendaSection', 'renda'], ['fixasSection', 'fixas'], ['tempSection', 'temp'], ['descontosSection', 'descontos']].forEach(([id, cat]) => {
+    const title = document.getElementById(id)?.parentElement?.querySelector('.panel-title'); if (!title) return;
+    let sp = title.querySelector('.nv-sum');
+    if (!nvOn()) { if (sp) sp.remove(); return; }
+    if (!sp) { sp = document.createElement('span'); sp.className = 'nv-sum money'; title.appendChild(sp); }
+    sp.textContent = formatMoneyBR(Object.values(md[cat] || {}).reduce((a, v) => a + parseMoneyBR(v), 0));
+  });
+}
+
+let nvMenuHome = null;
+function applyNv() {
+  const on = nvOn();
+  document.body.classList.toggle('nv', on);
+  const dd = document.getElementById('userDropdown');
+  if (dd) {
+    if (!nvMenuHome) nvMenuHome = dd.parentElement;
+    const target = on ? document.body : nvMenuHome;
+    if (dd.parentElement !== target) target.appendChild(dd);
+  }
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.content = on && document.body.getAttribute('data-theme') === 'light' ? '#eaf7f1' : on ? '#06110d' : '#0a0c10';
+  if (!on) { nvSectionTotals(); return; }
+  const nm = String(CURRENT_USER || '');
+  document.getElementById('nvAvatar').textContent = nm.charAt(0).toUpperCase() || '?';
+  document.getElementById('nvHelloName').textContent = nm.charAt(0).toUpperCase() + nm.slice(1);
+  document.getElementById('nvHelloSub').textContent = nvGreeting() + ' 👋';
+  const src = document.getElementById('bellBadge'), dst = document.getElementById('nvBellBadge');
+  if (src && dst) { dst.textContent = src.textContent; dst.style.display = src.textContent && src.style.display !== 'none' ? '' : 'none'; }
+  document.getElementById('nvQSaldo')?.classList.toggle('on', modoSaldoReal);
+  document.getElementById('nvQHide')?.classList.toggle('on', hideValues);
+  const hasCards = featureVisible('betaCartoes');
+  const nb = document.getElementById('nvNavCards'); if (nb) nb.style.display = hasCards ? '' : 'none';
+  nvSectionTotals();
+  const act = document.querySelector('#monthNav .month-btn.active');
+  if (act) { const nav = act.parentElement; nav.scrollLeft = act.offsetLeft - nav.clientWidth / 2 + act.clientWidth / 2; }
+}
+function nvScroll(id) {
+  if (id === 'top') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  const el = document.getElementById(id); if (!el || el.offsetParent === null) return;
+  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 16, behavior: 'smooth' });
+}
+function nvMenu(e) { toggleUserMenu(e); }
+
+let nvAddCat = 'temp';
+function nvQuickAdd() {
+  const labels = { fixas: 'Fixa', temp: 'Temporária', renda: 'Renda', descontos: 'A receber' };
+  openR7Modal('Nova conta', `
+    <div class="nv-seg" id="nvSeg">${Object.entries(labels).map(([c, l]) => `<button type="button" data-c="${c}" class="${c === nvAddCat ? 'on' : ''}">${l}</button>`).join('')}</div>
+    <label class="r7-lbl">Nome</label>
+    <input class="login-input r7-in" id="nvAddName" placeholder="Ex: Mercado, NUBANK: Tênis, Celular [1/10]" autocomplete="off">
+    <label class="r7-lbl">Valor</label>
+    <input class="login-input r7-in" id="nvAddVal" inputmode="decimal" placeholder="0,00" autocomplete="off">
+    <p class="r7-sub" style="margin-top:10px">Lança em ${MONTHS[activeMes]}/${currentYear}. Use <b>Pasta: nome</b> para pôr numa pasta e <b>[1/10]</b> para parcelar.</p>`,
+    [{ label: 'Adicionar', primary: true, fn: () => {
+        const n = document.getElementById('nvAddName').value.trim();
+        if (!n) { alert('Informe o nome.'); return false; }
+        addItemCore(nvAddCat, n, parseMoneyBR(document.getElementById('nvAddVal').value));
+      } }]);
+  document.querySelectorAll('#nvSeg button').forEach(b => b.onclick = () => {
+    nvAddCat = b.getAttribute('data-c');
+    document.querySelectorAll('#nvSeg button').forEach(x => x.classList.toggle('on', x === b));
+  });
+  setTimeout(() => document.getElementById('nvAddName')?.focus(), 50);
 }
 // ───────────────────────────────────────────────────────────
 
@@ -2313,6 +2668,14 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 </script>
+
+<nav id="nvNav">
+  <button type="button" class="nv-nb on" onclick="nvScroll('top')" title="Início">🏠</button>
+  <button type="button" class="nv-nb" id="nvNavCards" onclick="nvScroll('cardsPanel')" title="Cartões">💳</button>
+  <button type="button" class="nv-nb add" onclick="nvQuickAdd()" title="Nova conta">+</button>
+  <button type="button" class="nv-nb" onclick="nvScroll('nvChartPanel')" title="Gráfico">📊</button>
+  <button type="button" class="nv-nb" onclick="nvMenu(event)" title="Menu">☰</button>
+</nav>
 
 <div id="notifPanel">
   <div class="notif-backdrop" onclick="toggleNotifPanel()"></div>
