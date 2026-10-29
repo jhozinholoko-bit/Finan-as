@@ -356,6 +356,46 @@
   body.nv .more-chip { padding: 0 8px; font-size: 13px; line-height: 16px; }
   .detail-chip { color: var(--accent); border-color: var(--accent); }
   body.nv .due-chip.empty { opacity: 0.3; }
+
+  #nvTabs, #calView { display: none; }
+  body.nv #nvTabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--surface); border: 1px solid var(--border); padding: 4px; border-radius: 16px; margin-bottom: 14px; position: sticky; top: 8px; z-index: 50; box-shadow: var(--shadow); }
+  #nvTabs button { border: none; background: transparent; color: var(--muted); font-family: var(--font-mono); font-size: 13px; font-weight: 700; padding: 10px; border-radius: 12px; cursor: pointer; }
+  #nvTabs button.on { background: var(--accent); color: #04241a; }
+  body.nv.nv-cal #calView { display: block; }
+  body.nv.nv-cal #dueAlerts, body.nv.nv-cal #nvChartPanel, body.nv.nv-cal .panel:has(#rendaSection), body.nv.nv-cal .panel:has(#fixasSection), body.nv.nv-cal .panel:has(#tempSection), body.nv.nv-cal .panel:has(#descontosSection), body.nv.nv-cal #cardsSecPanel { display: none !important; }
+  .cal-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .cal-sum div { background: var(--surface2); border-radius: 14px; padding: 10px 12px; }
+  .cal-sum small { display: block; font-size: 11px; color: var(--muted); font-weight: 600; }
+  .cal-sum b { font-family: var(--font-head); font-size: 18px; font-weight: 800; }
+  .cal-sum b.neg { color: var(--accent2); } .cal-sum b.pos { color: var(--accent); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-wd { text-align: center; font-size: 11px; color: var(--muted); font-weight: 700; padding-bottom: 4px; }
+  .cal-cell { position: relative; aspect-ratio: 1; border: none; border-radius: 12px; background: transparent; color: var(--text); font-family: var(--font-mono); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .cal-cell.empty { cursor: default; }
+  .cal-cell.has { background: var(--surface2); }
+  .cal-cell i { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; border-radius: 50%; }
+  .cal-cell.open i, .cal-legend i.open { background: var(--muted); } .cal-cell.soon i, .cal-legend i.soon { background: var(--accent3); }
+  .cal-cell.late i, .cal-legend i.late { background: var(--accent2); } .cal-cell.ok i, .cal-legend i.ok { background: var(--accent); }
+  .cal-cell.today { box-shadow: inset 0 0 0 2px var(--accent); }
+  .cal-cell.sel { background: var(--accent); color: #04241a; }
+  .cal-cell.sel i { background: #04241a !important; }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; font-size: 11px; color: var(--muted); font-weight: 600; }
+  .cal-legend span { display: flex; align-items: center; gap: 5px; }
+  .cal-legend i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .cal-dayhead { display: flex; align-items: baseline; gap: 6px; padding: 14px 0 4px; font-size: 12px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+  .cal-dayhead b { color: var(--text); font-size: 14px; font-family: var(--font-head); }
+  .cal-dayhead em { margin-left: auto; font-style: normal; color: var(--text); font-weight: 700; }
+  .cal-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .cal-row:last-child { border-bottom: none; }
+  .cal-row.paid { opacity: 0.5; }
+  .cal-row .check-circle { flex-shrink: 0; }
+  .cal-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cal-val { font-weight: 700; white-space: nowrap; color: var(--accent2); font-size: 14px; }
+  .cal-row.paid .cal-val { color: var(--muted); }
+  .cal-row.late .cal-name { color: var(--accent2); }
+  .cal-setday { border: 1px dashed var(--border); background: transparent; color: var(--accent); font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+  .cal-clear { margin-left: auto; border: none; background: transparent; color: var(--accent); font-family: var(--font-mono); font-size: 12px; font-weight: 700; cursor: pointer; }
+  body.nv .check-circle { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 </style>
 </head>
 <body>
@@ -379,6 +419,7 @@
     <h3>Dicas de Atalhos 🚀</h3>
     <div class="help-item"><b>📂 Pastas</b> Use <code>Nome: Item</code> (Ex: Gabi: Aluguel)</div>
     <div class="help-item"><b>💳 Parcelas</b> Use <code>[1/12]</code> no nome para distribuir nos meses.</div>
+    <div class="help-item"><b>👆 Segurar o ícone</b> Segure o ícone de uma conta para definir vencimento, mover para um cartão, replicar ou excluir. Deslize para o lado para ver o calendário.</div>
     <div class="help-item"><b>📊 Saldo Real</b> Quando ativado no topo, os cálculos mostram apenas o que você já deu "Check".</div>
     <button class="login-btn" onclick="document.getElementById('helpModal').style.display='none'">ENTENDI!</button>
   </div>
@@ -402,7 +443,7 @@
     <button type="button" class="nv-round" onclick="toggleNotifPanel()" title="Notificações">🔔<span class="bell-badge" id="nvBellBadge" style="display:none"></span></button>
   </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R9</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R10</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -447,11 +488,13 @@
 <div id="nvQuick">
   <button type="button" class="nv-q" onclick="copyPreviousMonth()"><i>📂</i>Replicar mês</button>
   <button type="button" class="nv-q" id="nvQSaldo" onclick="toggleSaldoReal()"><i>✅</i>Saldo real</button>
-  <button type="button" class="nv-q" id="nvQHide" onclick="toggleHideValues()"><i>🙈</i>Ocultar</button>
+  <button type="button" class="nv-q" onclick="askNewCard()"><i>💳</i>Novo cartão</button>
   <button type="button" class="nv-q nv-q-add" onclick="nvQuickAdd()"><i>＋</i>Nova conta</button>
 </div>
 <div id="dueAlerts" style="display:none"></div>
 <div id="cardsPanel" style="display:none"></div>
+<div id="nvTabs"><button type="button" class="on" data-view="contas" onclick="setNvView('contas')">Contas</button><button type="button" data-view="cal" onclick="setNvView('cal')">📅 Calendário</button></div>
+<div id="calView"></div>
 <input type="file" id="r7FileInput" accept=".csv,.ofx,text/csv,application/x-ofx" style="display:none" onchange="onImportFile(event)">
 <div id="r7Modal" onclick="if(event.target===this)closeR7Modal()">
   <div class="help-card" onclick="event.stopPropagation()">
@@ -463,6 +506,7 @@
 <div class="panel" id="nvChartPanel"><div class="panel-title">Evolução Anual</div><div style="height: 180px;"><canvas id="barChart"></canvas></div></div>
 <div class="panel"><div class="panel-title">Renda Mensal</div><div id="rendaSection"></div><button class="add-row-btn" onclick="addRow('renda')">+ Nova Renda</button></div>
 <div class="panel"><div class="panel-title">Despesas Fixas</div><div id="fixasSection"></div><button class="add-row-btn" onclick="addRow('fixas')">+ Nova Fixa</button></div>
+<div class="panel" id="cardsSecPanel" style="display:none"><div class="panel-title">Cartões</div><div id="cardsSection"></div><button class="add-row-btn" onclick="askNewCard()">+ Novo cartão</button></div>
 <div class="panel"><div class="panel-title">Temporárias</div><div id="tempSection"></div><button class="add-row-btn" onclick="addRow('temp')">+ Nova Temporária</button></div>
 <div class="panel"><div class="panel-title">A Receber</div><div id="descontosSection"></div><button class="add-row-btn" onclick="addRow('descontos')">+ Novo a receber</button></div>
 
@@ -1462,6 +1506,7 @@ function renderRow(cat, k, v) {
     check.className = `check-circle ${isP?'checked':''}`;
     check.innerHTML = isP ? '✓' : (nvOn() ? nvIcon(k, cat) : '');
     check.onclick = () => togglePaid(k);
+    if (nvOn()) attachLongPress(check, () => openItemSheet(cat, k));
 
     const name = document.createElement('div');
     name.className = 'edit-name';
@@ -1540,6 +1585,18 @@ function render() {
       } else w.appendChild(renderRow(cat, k, v));
     });
     Object.entries(groups).forEach(([n, data]) => {
+      if (cardsTabOn() && DUE_CATS.includes(cat) && isCardGroup(n)) return;
+      renderGroupBlock(w, cat, n, data);
+    });
+  };
+  build('rendaSection','renda'); build('fixasSection','fixas'); build('tempSection','temp'); build('descontosSection','descontos');
+  ['fixas','temp','descontos'].forEach(c => renderSharedRows(c, m, currentYear, document.getElementById(c+'Section')));
+  renderCardsSection(d);
+  updateKPIsOnly();
+  refreshR7Ui();
+}
+
+function renderGroupBlock(w, cat, n, data) {
       const keys = data.i.map(([k]) => k);
       const allPaid = isGroupAllPaid(keys);
       const isOpen = openGroups[n], h = document.createElement('div'); h.className = 'group-header' + (allPaid ? ' all-paid' : '');
@@ -1550,12 +1607,17 @@ function render() {
       const check = document.createElement('div');
       check.className = 'check-circle' + (allPaid ? ' checked' : '');
       check.innerHTML = allPaid ? '✓' : (nvOn() ? ((featureVisible('betaCartoes') && appCfg().cards[n]) ? '💳' : '📂') : '');
-      check.onclick = (ev) => { ev.stopPropagation(); toggleGroupPaid(keys); };
+      check.onclick = (ev) => { ev.stopPropagation(); if (keys.length) toggleGroupPaid(keys); };
+      if (nvOn() && DUE_CATS.includes(cat)) attachLongPress(check, () => openFolderModal(cat, n));
       const nameSpan = document.createElement('span'); nameSpan.className = 'group-header-name'; nameSpan.textContent = nvOn() ? n : `📂 ${n}`;
       const totalSpan = (DUE_CATS.includes(cat) && isCardGroup(n)) ? makeCardTotalInput(cat, n, data.t) : document.createElement('span');
       if (totalSpan.tagName !== 'INPUT') { totalSpan.className = 'group-header-total'; totalSpan.textContent = formatMoneyBR(data.t); }
       const del = document.createElement('span'); del.className = 'del-btn'; del.innerHTML = '✕';
-      del.onclick = (ev) => { ev.stopPropagation(); deleteGroup(cat, n, keys); };
+      del.onclick = (ev) => {
+        ev.stopPropagation();
+        if (!keys.length && isCardGroup(n)) { if (confirm(`Remover o cartão ${n}?`)) { delete appCfg().cards[n]; autoSave(); render(); } return; }
+        deleteGroup(cat, n, keys);
+      };
       h.appendChild(check); h.appendChild(nameSpan);
       const gChip = makeGroupChip(cat, n, keys); if (gChip) h.appendChild(gChip);
       h.appendChild(totalSpan); h.appendChild(del);
@@ -1565,12 +1627,6 @@ function render() {
       data.i.forEach(([ik,iv]) => w.appendChild(createGroupRow(cat, ik, iv, c)));
       if (featureVisible('betaPastaAdd')) c.appendChild(makeFolderAddRow(cat, n));
       w.appendChild(c);
-    });
-  };
-  build('rendaSection','renda'); build('fixasSection','fixas'); build('tempSection','temp'); build('descontosSection','descontos');
-  ['fixas','temp','descontos'].forEach(c => renderSharedRows(c, m, currentYear, document.getElementById(c+'Section')));
-  updateKPIsOnly();
-  refreshR7Ui();
 }
 
 function createGroupRow(cat, k, v, container) {
@@ -1924,7 +1980,7 @@ function makeDueChipItem(cat, k) {
     return d;
   }
   if (g) {
-    if (!featureVisible('betaCartoes')) return null;
+    if (!featureVisible('betaCartoes') || nvOn()) return null;
     const m = document.createElement('span'); m.className = 'due-chip empty more-chip'; m.textContent = '⋯';
     m.title = 'Mover para outro cartão/pasta';
     m.onclick = (e) => { e.stopPropagation(); askMoveItem(cat, k); };
@@ -1932,6 +1988,7 @@ function makeDueChipItem(cat, k) {
   }
   if (!featureVisible('betaVencimentos')) return null;
   const day = getDueItem(cat, k);
+  if (!day && nvOn()) return null;
   const paid = !!appData[MONTHS[activeMes]].paid?.[k];
   const chip = document.createElement('span');
   chip.className = 'due-chip ' + (day ? dueClass(day, activeMes, currentYear, paid) : 'empty');
@@ -1945,6 +2002,7 @@ function makeGroupChip(cat, g, keys) {
   if (!vencOn() || !DUE_CATS.includes(cat)) return null;
   const card = featureVisible('betaCartoes') ? appCfg().cards[g] : null;
   const day = getDueGroup(cat, g);
+  if (!day && nvOn()) return null;
   const chip = document.createElement('span');
   const paid = isGroupAllPaid(keys);
   chip.className = 'due-chip ' + (day ? dueClass(day, activeMes, currentYear, paid) : 'empty');
@@ -1956,7 +2014,7 @@ function makeGroupChip(cat, g, keys) {
 function makeCardBar(cat, g) {
   if (!featureVisible('betaCartoes')) return null;
   const card = appCfg().cards[g];
-  if (!card || !card.limite) return null;
+  if (!card || !card.limite || (nvOn() && !openGroups[g])) return null;
   const st = cardStats(g);
   const pct = Math.min(100, (st.usado / card.limite) * 100);
   const el = document.createElement('div');
@@ -2589,6 +2647,7 @@ function openR7Modal(title, bodyHtml, actions) {
 function closeR7Modal() { document.getElementById('r7Modal').style.display = 'none'; }
 
 function refreshR7Ui() {
+  if (typeof renderCalendar === 'function') { document.body.classList.toggle('nv-cal', nvOn() && nvView === 'cal'); renderCalendar(); }
   if (CURRENT_USER && fullData && featureVisible('betaCartoes') && Object.values(appCfg().cards).some(c => c.loose)) { migrateLooseCards(); render(); return; }
   applyNv();
   applyHideValues();
@@ -2644,9 +2703,9 @@ function nvBuildChart(dR, dG) {
   return new Chart(canvas, {
     type: 'line',
     data: { labels: MONTHS, datasets: [
-      { label: 'Entradas', data: dR, borderColor: cIn, backgroundColor: grad(cIn), fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: pr, pointBackgroundColor: cIn, pointBorderWidth: 0 },
-      { label: 'Saídas', data: dG, borderColor: cOut, backgroundColor: grad(cOut), fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: pr, pointBackgroundColor: cOut, pointBorderWidth: 0 },
-      { label: 'Saldo', data: dS, borderColor: cSal, borderDash: [5, 5], fill: false, tension: 0.4, borderWidth: 2, pointRadius: pr, pointBackgroundColor: cSal, pointBorderWidth: 0 },
+      { label: 'Entradas', data: dR, borderColor: cIn, backgroundColor: grad(cIn), fill: true, tension: 0.35, cubicInterpolationMode: 'monotone', borderWidth: 2.5, pointRadius: pr, pointBackgroundColor: cIn, pointBorderWidth: 0 },
+      { label: 'Saídas', data: dG, borderColor: cOut, backgroundColor: grad(cOut), fill: true, tension: 0.35, cubicInterpolationMode: 'monotone', borderWidth: 2.5, pointRadius: pr, pointBackgroundColor: cOut, pointBorderWidth: 0 },
+      { label: 'Saldo', data: dS, borderColor: cSal, borderDash: [5, 5], fill: false, tension: 0.35, cubicInterpolationMode: 'monotone', borderWidth: 2, pointRadius: pr, pointBackgroundColor: cSal, pointBorderWidth: 0 },
     ] },
     options: {
       maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
@@ -2675,7 +2734,7 @@ function nvHeroHtml(entradas, desp, s) {
     : pct >= 100 ? '⚠️ Saídas passam das entradas' : pct >= 85 ? '⚡ Atenção: quase no limite' : '✓ Gastos sob controle';
   return `<div class="nv-hero">
     <div class="nv-hero-top"><span class="nv-hero-lbl">Saldo de ${m} ${currentYear}${modoSaldoReal ? ' · real' : ''}</span>
-      <span class="nv-pill" onclick="toggleHideValues()" style="cursor:pointer">${hideValues ? '🙈 oculto' : '👁 visível'}</span></div>
+</div>
     <div class="nv-hero-val money ${s < 0 ? 'neg' : ''}">${formatMoneyBR(s)}</div>
     <div class="nv-hero-cols">
       <div class="nv-hero-col"><span><i class="nv-ico-in">↓</i>Entradas</span><b class="money">${formatMoneyBR(entradas)}</b></div>
@@ -2693,7 +2752,7 @@ function nvSectionTotals() {
     let sp = title.querySelector('.nv-sum');
     if (!nvOn()) { if (sp) sp.remove(); return; }
     if (!sp) { sp = document.createElement('span'); sp.className = 'nv-sum money'; title.appendChild(sp); }
-    sp.textContent = formatMoneyBR(Object.values(md[cat] || {}).reduce((a, v) => a + parseMoneyBR(v), 0));
+    sp.textContent = formatMoneyBR(Object.entries(md[cat] || {}).filter(([k]) => !(cardsTabOn() && DUE_CATS.includes(cat) && isCardGroup(groupOf(k)))).reduce((a, [, v]) => a + parseMoneyBR(v), 0));
   });
 }
 
@@ -2750,6 +2809,205 @@ function nvQuickAdd() {
   });
   setTimeout(() => document.getElementById('nvAddName')?.focus(), 50);
 }
+// ───────────────────────────────────────────────────────────
+
+// ── R10: seção Cartões, menu de segurar, calendário ─────────────────────
+function cardsTabOn() { return nvOn() && featureVisible('betaCartoes'); }
+function cardCatDefault(g) { return appCfg().cards[g]?.cat || 'fixas'; }
+
+/** Segurar (celular) ou botão direito (desktop) — sem disparar o toque normal. */
+function attachLongPress(el, fn) {
+  let t = null, fired = false, sx = 0, sy = 0;
+  el.addEventListener('touchstart', (e) => {
+    fired = false; sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    clearTimeout(t); t = setTimeout(() => { fired = true; if (navigator.vibrate) try { navigator.vibrate(12); } catch (_) {} fn(); }, 480);
+  }, { passive: true });
+  el.addEventListener('touchmove', (e) => { if (Math.abs(e.touches[0].clientX - sx) > 10 || Math.abs(e.touches[0].clientY - sy) > 10) clearTimeout(t); }, { passive: true });
+  ['touchend', 'touchcancel'].forEach(ev => el.addEventListener(ev, () => clearTimeout(t), { passive: true }));
+  el.addEventListener('click', (e) => { if (fired) { e.stopImmediatePropagation(); e.preventDefault(); fired = false; } }, true);
+  el.addEventListener('contextmenu', (e) => { e.preventDefault(); fn(); });
+}
+
+function openItemSheet(cat, k) {
+  const g = groupOf(k);
+  const day = !g ? getDueItem(cat, k) : null;
+  const acts = [];
+  if (!g && DUE_CATS.includes(cat) && featureVisible('betaVencimentos')) acts.push({ label: day ? `📅 Vencimento (dia ${day})` : '📅 Definir vencimento', fn: () => { setTimeout(() => askDueItem(cat, k), 0); } });
+  if (DUE_CATS.includes(cat) && featureVisible('betaCartoes')) acts.push({ label: g ? '↪ Mover para outro cartão / pasta' : '↪ Mover para cartão / pasta', fn: () => { setTimeout(() => askMoveItem(cat, k), 0); } });
+  if (!parseParcelKey(k)) acts.push({ label: '🔁 Replicar nos próximos meses', fn: () => { setTimeout(() => askReplicateCommonItem(cat, k), 0); } });
+  acts.push({ label: '🗑 Excluir', fn: () => { setTimeout(() => deleteItem(cat, k), 0); } });
+  openR7Modal(r7Esc(leafOf(k)), `<p class="r7-sub">${formatMoneyBR(parseMoneyBR(appData[MONTHS[activeMes]][cat][k]))} · ${MONTHS[activeMes]}/${currentYear}</p>`,
+    acts.map((a, i) => ({ ...a, primary: i === 0 })));
+}
+
+// ── Novo cartão ──
+function askNewCard() {
+  openR7Modal('💳 Novo cartão', `
+    <label class="r7-lbl">Nome do cartão</label>
+    <input class="login-input r7-in" id="ncNome" placeholder="Ex: Nubank" autocomplete="off">
+    <label class="r7-lbl">Fatura de ${MONTHS[activeMes]} (opcional)</label>
+    <input class="login-input r7-in" id="ncFat" inputmode="decimal" placeholder="0,00 — o valor fica em Outros">
+    <label class="r7-lbl">Limite total</label>
+    <input class="login-input r7-in" id="ncLim" inputmode="decimal" placeholder="Ex: 5.000,00">
+    <div class="r7-row">
+      <div><label class="r7-lbl">Fecha dia</label><input class="login-input r7-in" id="ncFech" type="number" inputmode="numeric" min="1" max="31"></div>
+      <div><label class="r7-lbl">Vence dia</label><input class="login-input r7-in" id="ncVenc" type="number" inputmode="numeric" min="1" max="31"></div>
+    </div>`,
+    [{ label: 'Criar cartão', primary: true, fn: () => {
+        const g = document.getElementById('ncNome').value.trim().replace(/:/g, ' ').toUpperCase();
+        const fech = parseInt(document.getElementById('ncFech').value, 10), venc = parseInt(document.getElementById('ncVenc').value, 10);
+        if (!g) { alert('Dê um nome ao cartão.'); return false; }
+        if (!(fech >= 1 && fech <= 31) || !(venc >= 1 && venc <= 31)) { alert('Preencha os dias de fechamento e vencimento (1 a 31).'); return false; }
+        if (appCfg().cards[g]) { alert(`Já existe um cartão ${g}.`); return false; }
+        const lim = parseMoneyBR(document.getElementById('ncLim').value);
+        appCfg().cards[g] = { limite: lim > 0 ? lim : 0, fech, venc, cat: 'fixas' };
+        const fat = parseMoneyBR(document.getElementById('ncFat').value);
+        if (fat > 0) appData[MONTHS[activeMes]].fixas[outrosKey(g)] = fat;
+        openGroups[g] = true; autoSave(); render();
+      } }]);
+  setTimeout(() => document.getElementById('ncNome')?.focus(), 50);
+}
+
+function renderCardsSection(d) {
+  const panel = document.getElementById('cardsSecPanel'), w = document.getElementById('cardsSection');
+  if (!panel || !w) return;
+  if (!cardsTabOn()) { panel.style.display = 'none'; w.innerHTML = ''; return; }
+  panel.style.display = '';
+  w.innerHTML = '';
+  const names = Object.keys(appCfg().cards).sort();
+  let total = 0;
+  names.forEach(g => {
+    let any = false;
+    DUE_CATS.forEach(cat => {
+      const items = Object.entries(d[cat] || {}).filter(([k]) => groupOf(k) === g);
+      if (!items.length) return;
+      any = true;
+      const t = items.reduce((a, [, v]) => a + parseMoneyBR(v), 0); total += t;
+      renderGroupBlock(w, cat, g, { t, i: items });
+    });
+    if (!any) renderGroupBlock(w, cardCatDefault(g), g, { t: 0, i: [] });
+  });
+  if (!names.length) w.innerHTML = `<p class="r7-sub" style="margin:4px 0 0">Nenhum cartão ainda. Crie um aqui embaixo — o que você não detalhar fica em <b>Outros</b>.</p>`;
+  const title = panel.querySelector('.panel-title');
+  let sp = title.querySelector('.nv-sum'); if (!sp) { sp = document.createElement('span'); sp.className = 'nv-sum money'; title.appendChild(sp); }
+  sp.textContent = formatMoneyBR(total);
+}
+
+// ── Calendário ──
+let nvView = 'contas', calSel = null;
+const WD = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+const WDL = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+function calEntries(yr, mIdx) {
+  const md = fullData?.[String(yr)]?.[MONTHS[mIdx]]; if (!md) return { com: [], sem: [] };
+  const dim = new Date(yr, mIdx + 1, 0).getDate();
+  const com = [], sem = [];
+  DUE_CATS.forEach(cat => {
+    const groups = {};
+    Object.entries(md[cat] || {}).forEach(([k, v]) => {
+      const g = groupOf(k);
+      if (g) { (groups[g] = groups[g] || { t: 0, keys: [] }); groups[g].t += parseMoneyBR(v); groups[g].keys.push(k); return; }
+      const day = getDueItem(cat, k);
+      const e = { label: parseParcelKey(k) ? k : k, icon: nvIcon(k, cat), val: parseMoneyBR(v), paid: !!md.paid?.[k], keys: [k], cat, g: null };
+      if (day) com.push({ ...e, day: Math.min(day, dim) }); else sem.push(e);
+    });
+    Object.entries(groups).forEach(([g, o]) => {
+      const isCard = isCardGroup(g);
+      const day = getDueGroup(cat, g);
+      const e = { label: g, icon: isCard ? '💳' : '📂', val: o.t, paid: o.keys.every(k => md.paid?.[k]), keys: o.keys, cat, g, isCard };
+      if (day) com.push({ ...e, day: Math.min(day, dim) }); else sem.push(e);
+    });
+  });
+  com.sort((a, b) => a.day - b.day || b.val - a.val);
+  return { com, sem };
+}
+function calStatus(list, yr, mIdx) {
+  if (!list.length) return '';
+  if (list.every(e => e.paid)) return 'ok';
+  if (list.some(e => !e.paid && dueDiff(e.day, mIdx, yr) < 0)) return 'late';
+  if (list.some(e => !e.paid && dueDiff(e.day, mIdx, yr) <= 3)) return 'soon';
+  return 'open';
+}
+function calTogglePaid(i, which) {
+  const { com, sem } = calEntries(currentYear, activeMes);
+  const e = (which === 'sem' ? sem : com)[i]; if (!e) return;
+  if (e.keys.length === 1) togglePaid(e.keys[0]); else toggleGroupPaid(e.keys);
+}
+function calSetDay(i) {
+  const e = calEntries(currentYear, activeMes).sem[i]; if (!e) return;
+  if (e.g) openFolderModal(e.cat, e.g); else askDueItem(e.cat, e.keys[0]);
+}
+function renderCalendar() {
+  const el = document.getElementById('calView'); if (!el) return;
+  if (!nvOn() || nvView !== 'cal' || !fullData) { el.innerHTML = ''; return; }
+  const yr = currentYear, mIdx = activeMes;
+  const { com, sem } = calEntries(yr, mIdx);
+  const first = new Date(yr, mIdx, 1).getDay(), dim = new Date(yr, mIdx + 1, 0).getDate();
+  const t = new Date(); const isCur = t.getFullYear() === yr && t.getMonth() === mIdx;
+  const byDay = {}; com.forEach(e => (byDay[e.day] = byDay[e.day] || []).push(e));
+  const aPagar = com.concat(sem).filter(e => !e.paid).reduce((a, e) => a + e.val, 0);
+  const pago = com.concat(sem).filter(e => e.paid).reduce((a, e) => a + e.val, 0);
+  let cells = '';
+  for (let i = 0; i < first; i++) cells += '<span class="cal-cell empty"></span>';
+  for (let dd = 1; dd <= dim; dd++) {
+    const st = calStatus(byDay[dd] || [], yr, mIdx);
+    cells += `<button type="button" class="cal-cell ${st ? 'has ' + st : ''} ${isCur && t.getDate() === dd ? 'today' : ''} ${calSel === dd ? 'sel' : ''}" data-day="${dd}">${dd}${st ? '<i></i>' : ''}</button>`;
+  }
+  const list = calSel ? com.filter(e => e.day === calSel) : com;
+  let lastDay = null, rows = '';
+  list.forEach(e => {
+    const idx = com.indexOf(e);
+    if (e.day !== lastDay) {
+      lastDay = e.day;
+      const dd = dueDiff(e.day, mIdx, yr);
+      const rel = dd === 0 ? 'hoje' : dd === 1 ? 'amanhã' : dd < 0 ? `${-dd}d atrás` : `em ${dd}d`;
+      const tot = list.filter(x => x.day === e.day).reduce((a, x) => a + x.val, 0);
+      rows += `<div class="cal-dayhead"><b>Dia ${e.day}</b> · ${WDL[new Date(yr, mIdx, e.day).getDay()]} <span>${rel}</span><em class="money">${formatMoneyBR(tot)}</em></div>`;
+    }
+    const st = e.paid ? 'paid' : dueDiff(e.day, mIdx, yr) < 0 ? 'late' : dueDiff(e.day, mIdx, yr) <= 3 ? 'soon' : '';
+    rows += `<div class="cal-row ${st}"><button type="button" class="check-circle ${e.paid ? 'checked' : ''}" data-pay="${idx}">${e.paid ? '✓' : e.icon}</button>
+      <span class="cal-name">${r7Esc(e.g ? e.label : leafOf(e.label))}</span><span class="cal-val money">${formatMoneyBR(e.val)}</span></div>`;
+  });
+  if (!list.length) rows = `<p class="r7-sub" style="padding:10px 0">${calSel ? `Nada vence no dia ${calSel}.` : 'Nenhuma conta com vencimento neste mês.'}</p>`;
+  const semRows = sem.map((e, i) => `<div class="cal-row ${e.paid ? 'paid' : ''}"><button type="button" class="check-circle ${e.paid ? 'checked' : ''}" data-pays="${i}">${e.paid ? '✓' : e.icon}</button>
+      <span class="cal-name">${r7Esc(e.g ? e.label : leafOf(e.label))}</span><button type="button" class="cal-setday" data-set="${i}">definir dia</button><span class="cal-val money">${formatMoneyBR(e.val)}</span></div>`).join('');
+  el.innerHTML = `<div class="panel cal-panel">
+      <div class="cal-sum"><div><small>A pagar</small><b class="money neg">${formatMoneyBR(aPagar)}</b></div><div><small>Pago</small><b class="money pos">${formatMoneyBR(pago)}</b></div></div>
+      <div class="cal-grid">${WD.map(w => `<span class="cal-wd">${w}</span>`).join('')}${cells}</div>
+      <div class="cal-legend"><span><i class="late"></i>atrasada</span><span><i class="soon"></i>até 3 dias</span><span><i class="open"></i>a vencer</span><span><i class="ok"></i>paga</span></div>
+    </div>
+    <div class="panel"><div class="panel-title">${calSel ? `Dia ${calSel}` : 'Ordem de pagamento'}${calSel ? '<button type="button" class="cal-clear" data-clear="1">ver todas</button>' : ''}</div>${rows}</div>
+    ${sem.length ? `<div class="panel"><div class="panel-title">Sem vencimento <span class="nv-sum">${sem.length}</span></div>${semRows}</div>` : ''}`;
+  el.querySelectorAll('[data-day]').forEach(b => b.onclick = () => { const dd = +b.dataset.day; calSel = calSel === dd ? null : dd; renderCalendar(); });
+  el.querySelectorAll('[data-pay]').forEach(b => b.onclick = () => calTogglePaid(+b.dataset.pay, 'com'));
+  el.querySelectorAll('[data-pays]').forEach(b => b.onclick = () => calTogglePaid(+b.dataset.pays, 'sem'));
+  el.querySelectorAll('[data-set]').forEach(b => b.onclick = () => calSetDay(+b.dataset.set));
+  el.querySelectorAll('[data-clear]').forEach(b => b.onclick = () => { calSel = null; renderCalendar(); });
+}
+function setNvView(v) {
+  if (v === nvView) return;
+  nvView = v; calSel = null;
+  document.body.classList.toggle('nv-cal', v === 'cal');
+  document.querySelectorAll('#nvTabs button').forEach(b => b.classList.toggle('on', b.dataset.view === v));
+  renderCalendar();
+  const tabs = document.getElementById('nvTabs');
+  if (tabs && tabs.getBoundingClientRect().top < 0) window.scrollTo({ top: tabs.getBoundingClientRect().top + window.scrollY - 10 });
+}
+(function nvSwipe() {
+  let sx = 0, sy = 0, ok = false;
+  document.addEventListener('touchstart', (e) => {
+    ok = false;
+    if (!nvOn() || e.touches.length !== 1) return;
+    if (e.target.closest('input, textarea, select, [contenteditable="true"], .month-nav, canvas, #r7Modal, #helpModal, #notifPanel, #choiceModal, #loginOverlay')) return;
+    if (document.getElementById('r7Modal')?.style.display === 'flex') return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; ok = true;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!ok) return; ok = false;
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
+    setNvView(dx < 0 ? 'cal' : 'contas');
+  }, { passive: true });
+})();
 // ───────────────────────────────────────────────────────────
 
 // ── Pull to Refresh ─────────────────────────────────────────
