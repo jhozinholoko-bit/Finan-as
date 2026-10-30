@@ -526,6 +526,8 @@
   #helpModal details .hb code { background: var(--bg); padding: 1px 6px; border-radius: 6px; color: var(--accent); }
   #helpModal .help-sub { font-size: 13px; color: var(--muted); margin: -6px 0 10px; }
 
+  .menu-ver { font-size: 11px; color: var(--muted); padding: 8px 16px 10px; opacity: .7; }
+  #nvAlertSlot { display: flex; flex-direction: column; gap: 14px; }
   .beta-tag { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .6px; background: var(--accent3); color: #000; padding: 1px 6px; border-radius: 999px; vertical-align: 1px; margin-left: 4px; }
   /* calendário — computador */
   body.nv-desk.nv-cal #calView { display: flex !important; flex-direction: column; gap: 20px; align-items: stretch !important; }
@@ -569,6 +571,33 @@
   .cd-lists { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px; align-items: start; }
   .cd-lists > .panel { margin: 0; }
   body.nv-desk .cal-legend span:last-child { color: var(--muted); opacity: .8; }
+
+  /* ── login novo + carregamento ── */
+  #loginOverlay { --lg-bg: #06110d; --lg-card: #0d1b16; --lg-line: rgba(255,255,255,0.08); --lg-text: #eef6f2; --lg-muted: #7d948b; --lg-acc: #2fe6a7;
+    background: radial-gradient(90% 60% at 50% 0%, rgba(47,230,167,0.16), transparent 70%), var(--lg-bg) !important; font-family: 'Plus Jakarta Sans', sans-serif; }
+  [data-theme="light"] #loginOverlay { --lg-bg: #eaf7f1; --lg-card: #ffffff; --lg-line: rgba(6,40,28,0.1); --lg-text: #0b2a20; --lg-muted: #6f8a80; --lg-acc: #00b97a; }
+  #loginOverlay .login-card { background: var(--lg-card); border: 1px solid var(--lg-line); border-radius: 28px; padding: 32px 26px 26px; max-width: 380px; text-align: left; box-shadow: 0 30px 80px rgba(0,0,0,0.35); color: var(--lg-text); }
+  .lg-logo { width: 64px; height: 64px; border-radius: 20px; overflow: hidden; margin: 0 auto 14px; box-shadow: 0 10px 30px rgba(47,230,167,0.25); }
+  .lg-logo img { width: 100%; height: 100%; display: block; }
+  .lg-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -0.6px; text-align: center; }
+  .lg-sub { text-align: center; color: var(--lg-muted); font-size: 14px; margin: 4px 0 18px; }
+  .lg-lbl { display: block; font-size: 12px; font-weight: 700; color: var(--lg-muted); margin: 12px 0 0; }
+  #loginOverlay .login-input { background: transparent; border: 1px solid var(--lg-line); color: var(--lg-text); border-radius: 14px; padding: 14px; margin: 6px 0 0; font-family: inherit; font-size: 15px; }
+  #loginOverlay .login-input:focus { border-color: var(--lg-acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lg-acc) 20%, transparent); }
+  .lg-err { display: none; margin-top: 10px; font-size: 13px; font-weight: 600; color: #ff6b7d; background: rgba(255,107,125,0.1); padding: 9px 12px; border-radius: 10px; }
+  #loginOverlay .login-remember { justify-content: flex-start; color: var(--lg-muted); font-family: inherit; margin-top: 14px; }
+  #loginOverlay .login-btn { background: var(--lg-acc); color: #04241a; border-radius: 14px; padding: 15px; font-size: 15px; font-weight: 800; font-family: inherit; margin-top: 16px; }
+  .lg-forgot { text-align: center; margin-top: 14px; font-size: 13px; color: var(--lg-muted); }
+  .lg-forgot span { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .lg-new { text-align: center; margin-top: 8px; font-size: 12px; color: var(--lg-muted); opacity: .75; }
+  #bootScreen { display: none; position: fixed; inset: 0; z-index: 9998; background: #06110d; color: #7d948b; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 600; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+  [data-theme="light"] #bootScreen { background: #eaf7f1; color: #6f8a80; }
+  body.booting #bootScreen { display: flex; }
+  .boot-spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(47,230,167,0.2); border-top-color: #2fe6a7; animation: ptr-spin .7s linear infinite; }
+  #betaBanner { display: none; align-items: center; gap: 10px; flex-wrap: wrap; background: color-mix(in srgb, #ffd166 18%, transparent); border: 1px solid color-mix(in srgb, #ffd166 45%, transparent); color: var(--text); border-radius: 16px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; }
+  #betaBanner span { flex: 1; min-width: 180px; line-height: 1.4; }
+  #betaBanner button { margin-left: auto; border: none; background: #ffd166; color: #000; font-weight: 800; font-family: inherit; font-size: 12px; padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+  body.nv-desk #betaBanner { margin: 0; }
 </style>
 </head>
 <body>
@@ -622,13 +651,21 @@
 
 <div id="loginOverlay">
   <div class="login-card">
-    <h2 style="font-family: 'Syne'; font-size: 28px;">FINANÇAS <span>2026</span></h2>
-    <input type="text" id="userInput" class="login-input" placeholder="Usuário...">
+    <div class="lg-logo"><img src="icon-192.png" alt=""></div>
+    <h2 class="lg-title">Finanças</h2>
+    <p class="lg-sub">Entre para ver suas contas</p>
+    <label class="lg-lbl" for="userInput">Usuário</label>
+    <input type="text" id="userInput" class="login-input" placeholder="seu usuário" autocomplete="username" autocapitalize="none" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('passInput').focus();}">
+    <label class="lg-lbl" for="passInput">Senha</label>
+    <input type="password" id="passInput" class="login-input" placeholder="sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter'){event.preventDefault();initApp();}">
+    <p class="lg-err" id="loginErr"></p>
     <label class="login-remember"><input type="checkbox" id="rememberMe"> Lembrar de mim</label>
-    <button class="login-btn" onclick="initApp()">ENTRAR</button>
-    <p style="margin-top:14px;font-size:11px;color:var(--muted);font-family:var(--font-mono);"><span onclick="forgotPassword()" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;">Esqueceu a senha?</span></p>
+    <button class="login-btn" id="loginBtn" onclick="initApp()">Entrar</button>
+    <p class="lg-forgot"><span onclick="forgotPassword()">Esqueceu a senha?</span></p>
+    <p class="lg-new">Primeira vez? Digite um usuário novo e crie sua senha.</p>
   </div>
 </div>
+<div id="bootScreen"><div class="boot-spin"></div><span>Carregando suas contas…</span></div>
 
 <div class="header">
   <div id="nvTop">
@@ -638,11 +675,12 @@
     <span id="nvBellBadge" style="display:none"></span>
   </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.1</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.2</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
         <div id="userDropdown" class="menu-dropdown" style="display:none;min-width:180px;">
+          <button type="button" class="menu-item" id="userMenuBetaCopy" onclick="betaRecopy()" style="display:none;border-left:3px solid var(--accent3);">🔄 Recopiar beta da conta principal</button>
           <button type="button" class="menu-item" id="userMenuBeta" onclick="toggleBetaMode()" style="border-left:3px solid var(--accent3);">Beta: —</button>
           <div id="userMenuIO" style="display:none">
             <button type="button" class="menu-item" onclick="exportCSV()" style="border-left:3px solid var(--accent);">⬇ Exportar CSV do ano</button>
@@ -652,6 +690,7 @@
           <button type="button" class="menu-item nv-only" onclick="toggleTheme()" style="border-left:3px solid var(--muted);">🌓 Tema claro / escuro</button>
           <button type="button" class="menu-item" onclick="document.getElementById('helpModal').style.display='flex'" style="border-left:3px solid var(--muted);">❓ Ajuda</button>
           <button type="button" class="menu-item" onclick="sairDaConta()" style="border-left:3px solid var(--accent2);">Trocar conta</button>
+          <div class="menu-ver">Finanças v2.2</div>
         </div>
       </div>
       <button class="btn-ui" id="btnHide" onclick="toggleHideValues()" title="Ocultar valores" style="display:none">👁</button>
@@ -680,6 +719,7 @@
   </div>
 </div>
 
+<div id="betaBanner"><span>🧪 <b>Você está no BETA</b> · dados de teste, separados da sua conta principal.</span><button type="button" onclick="toggleBetaMode()">Voltar à principal</button></div>
 <div class="kpi-grid" id="kpiGrid"></div>
 <div id="nvQuick">
   <button type="button" class="nv-q" onclick="copyPreviousMonth()"><i>📂</i>Replicar mês</button>
@@ -719,7 +759,7 @@ function getLastUser() { try { return (localStorage.getItem(LAST_USER_LS) || '')
 function setLastUser(usuario) { try { if (usuario) localStorage.setItem(LAST_USER_LS, usuario); } catch (_) {} }
 const MONTHS = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 let CURRENT_USER = "", activeMes = new Date().getMonth(), currentYear = new Date().getFullYear(), fullData = null, appData = null, userPassword = "", barInst, openGroups = {}, saveTimeout, modoSaldoReal = false;
-let betaDesativado = localStorage.getItem('financas_beta_off') === '1';
+let betaDesativado = (() => { try { return localStorage.getItem('financas_beta_on_v2') !== '1'; } catch (_) { return true; } })();
 
 // ── Despesas Compartilhadas ─────────────────────────────────
 let sharedTransactions = [];
@@ -1389,10 +1429,11 @@ function refreshUserLabel() {
   if (ul) ul.textContent = CURRENT_USER.toUpperCase() + (isTester && hasAnyBetaFeature() ? (betaDesativado ? ' · BETA OFF' : ' · BETA') : '');
   const wrap = document.getElementById('userDropdown');
   if (wrap) wrap.style.display = 'none';
+  const rc = document.getElementById('userMenuBetaCopy'); if (rc) rc.style.display = isTester && !betaDesativado ? 'block' : 'none';
   const betaBtn = document.getElementById('userMenuBeta');
   if (betaBtn) {
     betaBtn.style.display = isTester ? 'block' : 'none';
-    betaBtn.textContent = betaDesativado ? '🧪 Canal beta: desligado → ligar' : '🧪 Canal beta: ligado → desligar';
+    betaBtn.textContent = betaDesativado ? '🧪 Entrar no beta (cópia de teste)' : '↩ Sair do beta (voltar à conta principal)';
   }
 }
 function toggleUserMenu(e) {
@@ -1401,12 +1442,42 @@ function toggleUserMenu(e) {
   if (!dd) return;
   dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
 }
-function toggleBetaMode() {
+function betaSandboxOn() { return !!CURRENT_USER && isAppTester(); }
+function dataUser() { return betaSandboxOn() ? CURRENT_USER + '__beta' : CURRENT_USER; }
+/** Beta usa uma cópia dos dados (registro "<usuario>__beta"); na 1ª vez copia da principal. */
+async function loadBetaData(mainDados, forceCopy) {
+  if (!forceCopy) {
+    const { data } = await _supabase.from('registros').select('dados').eq('usuario', CURRENT_USER + '__beta').maybeSingle();
+    if (data && data.dados) return data.dados;
+  }
+  const copy = JSON.parse(JSON.stringify(mainDados || {}));
+  await _supabase.from('registros').upsert({ usuario: CURRENT_USER + '__beta', dados: copy, senha: userPassword }, { onConflict: 'usuario' });
+  return copy;
+}
+async function reloadDataSpace(forceCopy) {
+  clearTimeout(saveTimeout);
+  document.body.classList.add('booting');
+  fullData = null; appData = null;
+  const { data } = await _supabase.from('registros').select('dados').eq('usuario', CURRENT_USER).maybeSingle();
+  let dados = data ? data.dados : {};
+  if (betaSandboxOn()) dados = await loadBetaData(dados, forceCopy);
+  openGroups = {}; secAppliedKey = '';
+  applyLoadedData(dados);
+}
+async function toggleBetaMode() {
+  document.getElementById('userDropdown').style.display = 'none';
+  const entering = betaDesativado;
+  if (entering && !confirm('Entrar no BETA?\n\nVocê vai usar uma CÓPIA dos seus dados. O que fizer lá não altera sua conta principal.')) return;
+  await persistCloud();
   betaDesativado = !betaDesativado;
-  localStorage.setItem('financas_beta_off', betaDesativado ? '1' : '0');
+  try { localStorage.setItem('financas_beta_on_v2', betaDesativado ? '0' : '1'); } catch (_) {}
   refreshUserLabel();
-  refreshBetaUi();
-  if (appData) render();
+  await reloadDataSpace(false);
+}
+async function betaRecopy() {
+  if (!betaSandboxOn()) return;
+  if (!confirm('Recomeçar o beta com uma cópia nova da sua conta principal? O que você testou no beta será descartado.')) return;
+  await reloadDataSpace(true);
 }
 document.addEventListener('click', () => {
   const dd = document.getElementById('userDropdown');
@@ -1421,9 +1492,18 @@ async function forgotPassword() {
   alert(`Senha de ${name}: ${data.senha}`);
 }
 
+function loginError(msg) {
+  CURRENT_USER = '';
+  document.body.classList.remove('booting');
+  const ov = document.getElementById('loginOverlay'); if (ov) ov.style.display = 'flex';
+  const e = document.getElementById('loginErr'); if (e) { e.textContent = msg; e.style.display = 'block'; }
+  const p = document.getElementById('passInput'); if (p) { p.value = ''; p.focus(); }
+}
 function initApp() {
   const name = document.getElementById('userInput').value.trim().toLowerCase();
-  if(!name) return;
+  if(!name) { document.getElementById('userInput').focus(); return; }
+  const e = document.getElementById('loginErr'); if (e) e.style.display = 'none';
+  document.body.classList.add('booting');
   CURRENT_USER = name;
   setLastUser(CURRENT_USER);
   document.getElementById('loginOverlay').style.display = 'none';
@@ -1441,21 +1521,33 @@ async function loadFromCloud() {
       const savedOk = remembered && remembered.usuario === CURRENT_USER && remembered.senha === data.senha;
       if (savedOk) userPassword = data.senha;
       else {
-        const p = prompt(`Senha para ${CURRENT_USER}:`);
-        if (p !== data.senha) { alert("Incorreta!"); location.reload(); return; }
+        const p = document.getElementById('passInput')?.value || '';
+        if (!p) { loginError('Digite sua senha.'); return; }
+        if (p !== data.senha) { loginError('Senha incorreta. Tente de novo.'); return; }
         userPassword = data.senha;
         if (wantRemember()) setRemembered(CURRENT_USER, userPassword);
         else if (remembered?.usuario === CURRENT_USER) clearRemembered();
       }
     } else {
-      userPassword = prompt(`Defina uma senha:`);
+      userPassword = document.getElementById('passInput')?.value || '';
+      if (!userPassword) { loginError('Crie uma senha para sua conta no campo Senha.'); return; }
       if (wantRemember() && userPassword) setRemembered(CURRENT_USER, userPassword);
     }
   } else {
-    userPassword = prompt(`Novo usuário. Defina uma senha:`);
+    userPassword = document.getElementById('passInput')?.value || '';
+    if (userPassword.length < 3) { loginError(`Usuário "${CURRENT_USER}" é novo. Crie uma senha (mín. 3 caracteres) e toque em Entrar.`); return; }
     if (wantRemember() && userPassword) setRemembered(CURRENT_USER, userPassword);
   }
-  fullData = data ? data.dados : {};
+  let dadosBase = data ? data.dados : {};
+  if (betaSandboxOn()) dadosBase = await loadBetaData(dadosBase);
+  applyLoadedData(dadosBase);
+}
+
+/** Aplica os dados carregados na tela (usado no login e ao entrar/sair do beta). */
+let dataSpace = null;
+function applyLoadedData(dados) {
+  dataSpace = dataUser();
+  fullData = dados || {};
   // Migra formato antigo (fullData era direto o ano, sem wrapper)
   if (fullData && fullData['JAN']) fullData = { '2026': fullData };
   if (!fullData || typeof fullData !== 'object') fullData = {};
@@ -1553,6 +1645,10 @@ function migrarParcelamentosMultiAno() {
 /** Encerra a sessão sem recarregar (evita auto-login com “Lembrar de mim”). */
 function sairDaConta() {
   clearTimeout(saveTimeout);
+  dataSpace = null;
+  document.body.classList.remove('nv', 'nv-desk', 'nv-cal', 'booting');
+  const pi = document.getElementById('passInput'); if (pi) pi.value = '';
+  const bb = document.getElementById('betaBanner'); if (bb) bb.style.display = 'none';
   if (typeof wnChecked !== 'undefined') wnChecked = false;
   clearRemembered();
   CURRENT_USER = '';
@@ -1600,7 +1696,8 @@ function sairDaConta() {
   if (r?.usuario && r?.senha) {
     const ck = document.getElementById('rememberMe');
     if (ck) ck.checked = true;
-    // Deixa o DOM "respirar" antes de abrir conexão/prompt
+    const pi = document.getElementById('passInput'); if (pi) pi.value = r.senha;
+    document.body.classList.add('booting');
     setTimeout(() => initApp(), 0);
   }
 })();
@@ -1618,7 +1715,8 @@ async function persistCloud() {
   if (!CURRENT_USER || !fullData || !appData) return;
   try {
     fullData[String(currentYear)] = appData;
-    const { error } = await _supabase.from('registros').upsert({ usuario: CURRENT_USER, dados: fullData, senha: userPassword }, { onConflict: 'usuario' });
+    if (!dataSpace) return;
+    const { error } = await _supabase.from('registros').upsert({ usuario: dataSpace, dados: fullData, senha: userPassword }, { onConflict: 'usuario' });
     if (error) throw error;
     if (st) { st.innerText = "☁️ Sincronizado"; st.className = "sync-indicator saved"; }
   } catch (e) {
@@ -1684,6 +1782,11 @@ function deleteGroup(cat, groupLabel, keys) {
       }
     });
     delete openGroups[groupLabel];
+    const g = String(groupLabel).toUpperCase();
+    if (typeof isCardGroup === 'function' && isCardGroup(g)) {
+      const still = Object.values(fullData || {}).some(yd => yd && typeof yd === 'object' && MONTHS.some(mn => DUE_CATS.some(c => Object.keys(yd[mn]?.[c] || {}).some(k => groupOf(k) === g))));
+      if (!still || confirm(`O cartão ${g} ainda tem contas em outros meses. Remover o cartão mesmo assim? (as contas viram uma pasta comum)`)) delete appCfg().cards[g];
+    }
     render();
     autoSave();
   };
@@ -2978,6 +3081,8 @@ function applyNv() {
   }
   const tc = document.querySelector('meta[name="theme-color"]');
   if (tc) tc.content = on && document.body.getAttribute('data-theme') === 'light' ? '#eaf7f1' : on ? '#06110d' : '#0a0c10';
+  const bb = document.getElementById('betaBanner'); if (bb) bb.style.display = betaSandboxOn() ? 'flex' : 'none';
+  document.body.classList.remove('booting');
   if (!on) { nvSectionTotals(); return; }
   const nm = String(CURRENT_USER || '');
   const av = fullData ? appCfg().avatar : null;
@@ -3011,7 +3116,7 @@ function nvDeskParts() {
     side: [document.querySelector('body > .header'), document.getElementById('nvTabs'), document.getElementById('kpiGrid'), document.getElementById('nvChartPanel'), document.getElementById('nvQuick')],
     hero: [],
     cal: [document.getElementById('calView')],
-    alerts: [document.getElementById('dueAlerts')],
+    alerts: [document.getElementById('betaBanner'), document.getElementById('dueAlerts')],
     colA: [panelOf('rendaSection'), panelOf('fixasSection'), panelOf('tempSection')],
     colB: [panelOf('descontosSection'), document.getElementById('cardsSecPanel')],
   };
@@ -3465,7 +3570,7 @@ function askAvatar() {
     [cur ? { label: 'Voltar para a inicial do nome', fn: () => { delete appCfg().avatar; autoSave(); applyNv(); } } : null]);
   document.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { appCfg().avatar = b.dataset.av; autoSave(); closeR7Modal(); applyNv(); });
 }
-const RELEASE_ID = 'r13-2026-10';
+const RELEASE_ID = 'r13-2026-10'; const APP_VERSION = 'v2.2';
 let wnChecked = false;
 function maybeShowWhatsNew() {
   if (wnChecked || !CURRENT_USER || !fullData) return;
@@ -3530,7 +3635,9 @@ function closeWhatsNew() {
 })();
 // ────────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {}));
+  let swReloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (swReloaded) return; swReloaded = true; if (!document.querySelector('#r7Modal[style*="flex"]')) location.reload(); });
 }
 </script>
 
