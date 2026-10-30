@@ -525,6 +525,50 @@
   #helpModal details .hb b { color: var(--text); }
   #helpModal details .hb code { background: var(--bg); padding: 1px 6px; border-radius: 6px; color: var(--accent); }
   #helpModal .help-sub { font-size: 13px; color: var(--muted); margin: -6px 0 10px; }
+
+  .beta-tag { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .6px; background: var(--accent3); color: #000; padding: 1px 6px; border-radius: 999px; vertical-align: 1px; margin-left: 4px; }
+  /* calendário — computador */
+  body.nv-desk.nv-cal #calView { display: flex !important; flex-direction: column; gap: 20px; align-items: stretch !important; }
+  body.nv-desk.nv-cal #calView > .panel { grid-column: auto; grid-row: auto; position: static; margin: 0; }
+  .cd-board { padding: 24px !important; }
+  .cd-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cd-title small { display: block; font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+  .cd-title h2 { font-family: var(--font-head); font-size: 30px; font-weight: 800; letter-spacing: -0.8px; margin-top: 2px; }
+  .cd-title h2 span { color: var(--muted); font-weight: 700; }
+  .cd-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .cd-stat { background: var(--surface2); border-radius: 14px; padding: 10px 16px; min-width: 150px; }
+  .cd-stat small { display: block; font-size: 11px; color: var(--muted); font-weight: 600; }
+  .cd-stat b { font-family: var(--font-head); font-size: 18px; font-weight: 800; white-space: nowrap; }
+  .cd-stat b.neg { color: var(--accent2); } .cd-stat b.pos { color: var(--accent); }
+  .cd-stat.alert { background: color-mix(in srgb, var(--accent2) 14%, transparent); } .cd-stat.alert b { color: var(--accent2); }
+  .cd-prog { height: 8px; border-radius: 999px; background: var(--bg); overflow: hidden; }
+  .cd-prog > div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--lime)); }
+  .cd-prog-txt { font-size: 11px; color: var(--muted); font-weight: 600; margin: 6px 0 16px; }
+  .cd-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .cd-wd { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; padding: 0 8px 4px; }
+  .cd-cell { min-height: 104px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg); padding: 8px; text-align: left; display: flex; flex-direction: column; gap: 6px; cursor: pointer; color: var(--text); font-family: var(--font-mono); transition: border-color .12s, background .12s; min-width: 0; }
+  .cd-cell.out { background: transparent; border-style: dashed; opacity: .35; cursor: default; }
+  .cd-cell.wkd:not(.has) { background: color-mix(in srgb, var(--bg) 60%, transparent); }
+  .cd-cell:not(.out):hover { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+  .cd-cell.has { background: var(--surface2); }
+  .cd-cell.late { box-shadow: inset 3px 0 0 var(--accent2); } .cd-cell.soon { box-shadow: inset 3px 0 0 var(--accent3); } .cd-cell.ok { box-shadow: inset 3px 0 0 var(--accent); } .cd-cell.open { box-shadow: inset 3px 0 0 var(--muted); }
+  .cd-cell.today { border-color: var(--accent); }
+  .cd-cell.today .cd-top b { background: var(--accent); color: #04241a; }
+  .cd-cell.sel { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface2)); }
+  .cd-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+  .cd-top b { font-size: 13px; font-weight: 800; min-width: 24px; height: 24px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+  .cd-top em { font-style: normal; font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cd-pills { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .cd-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 3px 7px; border-radius: 8px; background: color-mix(in srgb, var(--muted) 14%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .cd-pt { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .cd-pill i { font-style: normal; font-size: 10px; flex-shrink: 0; }
+  .cd-pill.late { background: color-mix(in srgb, var(--accent2) 18%, transparent); color: var(--accent2); }
+  .cd-pill.soon { background: color-mix(in srgb, var(--accent3) 20%, transparent); color: var(--accent3); }
+  .cd-pill.paid { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); text-decoration: line-through; text-decoration-thickness: 1px; opacity: .8; }
+  .cd-more { font-size: 10px; color: var(--muted); font-weight: 700; padding-left: 4px; }
+  .cd-lists { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  .cd-lists > .panel { margin: 0; }
+  body.nv-desk .cal-legend span:last-child { color: var(--muted); opacity: .8; }
 </style>
 </head>
 <body>
@@ -554,7 +598,6 @@
     <details><summary>📅 Vencimentos e calendário</summary><div class="hb">Defina o dia segurando o ícone da conta. Contas com dia mostram o selo <b>dia X</b> (amarelo: vence em até 3 dias; vermelho: atrasada) e aparecem em <b>Atrasadas / Próximos 7 dias</b>.<br>No <b>Calendário</b>: grade do mês com bolinhas por dia, lista na <b>ordem de pagamento</b> (toque no ícone para pagar) e <b>Sem vencimento</b> com o botão <b>definir dia</b>.</div></details>
     <details><summary>⠿ Organizar a tela</summary><div class="hb">Segure o título de uma seção (Renda, Despesas, Cartões…) e <b>arraste</b> para onde quiser. No computador dá para trocar de coluna. A ordem fica salva na sua conta (uma para celular, outra para computador).</div></details>
     <details><summary>📊 Saldo real e 👁 ocultar</summary><div class="hb"><b>Saldo real</b> (atalhos): os totais consideram só o que já foi pago. <b>👁</b> no topo borra os valores — bom para abrir o app perto de outras pessoas.</div></details>
-    <details><summary>🤝 Contas compartilhadas</summary><div class="hb">Escreva <code>@usuario</code> no nome da conta para dividir com outra pessoa do app. Ela recebe no 🔔 e pode aceitar ou recusar.</div></details>
     <details><summary>⬇ Exportar, importar e instalar</summary><div class="hb">No menu do seu ícone: <b>Exportar CSV</b> do ano (abre no Excel) e <b>Importar</b> CSV ou extrato <b>OFX</b> do banco.<br><b>Instalar no celular:</b> abra no navegador → compartilhar/menu → <b>Adicionar à tela inicial</b>.</div></details>
     <details><summary>🎨 Seu ícone e tema</summary><div class="hb">No menu do seu ícone: <b>Trocar ícone</b> (vários de finanças 🐷💰📈) e <b>Tema claro/escuro</b>.</div></details>
     <div style="display:flex;gap:10px;margin-top:16px"><button class="login-btn secondary" style="flex:1" onclick="document.getElementById('helpModal').style.display='none';openWhatsNew(true)">✨ Novidades</button><button class="login-btn" style="flex:1" onclick="document.getElementById('helpModal').style.display='none'">Entendi</button></div>
@@ -592,10 +635,10 @@
     <button type="button" class="nv-avatar" id="nvAvatar" onclick="nvMenu(event)" title="Menu"></button>
     <div class="nv-hello"><small id="nvHelloSub"></small><b id="nvHelloName"></b></div>
     <button type="button" class="nv-round" onclick="toggleHideValues()" title="Ocultar valores">👁</button>
-    <button type="button" class="nv-round" onclick="toggleNotifPanel()" title="Notificações">🔔<span class="bell-badge" id="nvBellBadge" style="display:none"></span></button>
+    <span id="nvBellBadge" style="display:none"></span>
   </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.0</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.1</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -615,7 +658,7 @@
       <button class="btn-ui" onclick="toggleTheme()">🌓 TEMA</button>
       <button class="btn-ui" onclick="document.getElementById('helpModal').style.display='flex'">❓ AJUDA</button>
       <button class="btn-ui" id="btnSaldoReal" onclick="toggleSaldoReal()">📊 MODO SALDO REAL</button>
-      <div class="bell-wrap">
+      <div class="bell-wrap" style="display:none">
         <button type="button" class="btn-ui" onclick="toggleNotifPanel()" id="bellBtn">🔔</button>
         <span class="bell-badge" id="bellBadge"></span>
       </div>
@@ -708,19 +751,26 @@ async function createSharedExpense(title, amount, cat, mentionedUser, month, yea
   return data;
 }
 
+/** Contas compartilhadas foram removidas. Uma única vez, o que a pessoa criou com @
+ *  (e só existia em shared_transactions) vira conta normal dela, para não sumir dos totais. */
 async function loadSharedData() {
-  if (!CURRENT_USER) return;
-  const { data: txs } = await _supabase.from('shared_transactions')
-    .select('*')
-    .or(`creator_user_id.eq.${CURRENT_USER},mentioned_user_id.eq.${CURRENT_USER}`)
-    .not('status', 'in', '("rejected","cancelled")');
-  sharedTransactions = txs || [];
-  const { data: notifs } = await _supabase.from('notifications')
-    .select('*').eq('user_id', CURRENT_USER)
-    .order('created_at', { ascending: false }).limit(50);
-  sharedNotifications = notifs || [];
-  renderBellBadge();
-  render();
+  sharedTransactions = []; sharedNotifications = [];
+  if (!CURRENT_USER || !fullData || appCfg().sharedMigrated) return;
+  try {
+    const { data: txs, error } = await _supabase.from('shared_transactions').select('*')
+      .eq('creator_user_id', CURRENT_USER).in('status', ['waiting_acceptance', 'pending', 'paid']);
+    if (error) return;
+    (txs || []).forEach(tx => {
+      const md = ensureYear(tx.year)[tx.month]; if (!md || !md[tx.cat]) return;
+      const base = `${String(tx.title).trim()} · ${tx.mentioned_user_id}`;
+      let key = base, n = 2; while (md[tx.cat][key] !== undefined) key = `${base} ${n++}`;
+      md[tx.cat][key] = Number(tx.amount) || 0;
+      if (tx.status === 'paid') md.paid[key] = true;
+    });
+    appCfg().sharedMigrated = true;
+    appData = fullData[String(currentYear)];
+    autoSave(); render();
+  } catch (_) {}
 }
 
 function renderBellBadge() {
@@ -871,6 +921,7 @@ function mirrorCat(cat) {
 
 // Renders creator's shared items in their section — identical layout to renderRow
 function renderSharedRows(cat, mn, yr, container) {
+  return;
   sharedTransactions.filter(tx =>
     tx.creator_user_id === CURRENT_USER && tx.month === mn && tx.year === yr && tx.cat === cat
   ).forEach(tx => {
@@ -1340,8 +1391,8 @@ function refreshUserLabel() {
   if (wrap) wrap.style.display = 'none';
   const betaBtn = document.getElementById('userMenuBeta');
   if (betaBtn) {
-    betaBtn.style.display = isTester && hasAnyBetaFeature() ? 'block' : 'none';
-    betaBtn.textContent = betaDesativado ? 'Beta: desativado  →  ativar' : 'Beta: ativado  →  desativar';
+    betaBtn.style.display = isTester ? 'block' : 'none';
+    betaBtn.textContent = betaDesativado ? '🧪 Canal beta: desligado → ligar' : '🧪 Canal beta: ligado → desligar';
   }
 }
 function toggleUserMenu(e) {
@@ -1858,7 +1909,7 @@ function addRow(cat) {
 function addItemCore(cat, n, val) {
   normalizeAppData();
 
-  const mention = parseAtMention(n);
+  const mention = null; // contas compartilhadas removidas
   if (mention) {
     if (!mention.cleanTitle) { alert("Adicione um nome além do @usuário."); return; }
     const pShare = parseParcelKey(mention.cleanTitle);
@@ -2935,7 +2986,7 @@ function applyNv() {
   avEl.classList.toggle('emoji', !!av);
   maybeShowWhatsNew();
   document.getElementById('nvHelloName').textContent = nm.charAt(0).toUpperCase() + nm.slice(1);
-  document.getElementById('nvHelloSub').textContent = nvGreeting() + ' 👋';
+  document.getElementById('nvHelloSub').innerHTML = nvGreeting() + ' 👋' + (isAppTester() ? ' <span class="beta-tag">BETA</span>' : '');
   const src = document.getElementById('bellBadge'), dst = document.getElementById('nvBellBadge');
   if (src && dst) { dst.textContent = src.textContent; dst.style.display = src.textContent && src.style.display !== 'none' ? '' : 'none'; }
   document.getElementById('nvQSaldo')?.classList.toggle('on', modoSaldoReal);
@@ -3191,7 +3242,46 @@ function renderCalendar() {
   if (!list.length) rows = `<p class="r7-sub" style="padding:10px 0">${calSel ? `Nada vence no dia ${calSel}.` : 'Nenhuma conta com vencimento neste mês.'}</p>`;
   const semRows = sem.map((e, i) => `<div class="cal-row ${e.paid ? 'paid' : ''}"><button type="button" class="check-circle ${e.paid ? 'checked' : ''}" data-pays="${i}">${e.paid ? '✓' : e.icon}</button>
       <span class="cal-name">${r7Esc(e.g ? e.label : leafOf(e.label))}</span><button type="button" class="cal-setday" data-set="${i}">definir dia</button><span class="cal-val money">${formatMoneyBR(e.val)}</span></div>`).join('');
-  el.innerHTML = `<div class="panel cal-panel">
+  if (nvDeskOn) {
+    const late = com.filter(e => !e.paid && dueDiff(e.day, mIdx, yr) < 0);
+    const lateSum = late.reduce((a, e) => a + e.val, 0);
+    const pctPago = (pago + aPagar) > 0 ? Math.round(pago / (pago + aPagar) * 100) : 0;
+    let cd = '';
+    const lead = first, total = Math.ceil((lead + dim) / 7) * 7;
+    for (let c = 0; c < total; c++) {
+      const dd = c - lead + 1;
+      if (dd < 1 || dd > dim) { cd += '<div class="cd-cell out"></div>'; continue; }
+      const its = byDay[dd] || [];
+      const st = calStatus(its, yr, mIdx);
+      const tot = its.reduce((a, e) => a + e.val, 0);
+      const pills = its.slice(0, 3).map(e => {
+        const ps = e.paid ? 'paid' : dueDiff(e.day, mIdx, yr) < 0 ? 'late' : dueDiff(e.day, mIdx, yr) <= 3 ? 'soon' : '';
+        return `<span class="cd-pill ${ps}"><i>${e.paid ? '✓' : e.icon}</i><span class="cd-pt">${r7Esc(e.g ? e.label : leafOf(e.label))}</span></span>`;
+      }).join('');
+      const wd = new Date(yr, mIdx, dd).getDay();
+      cd += `<button type="button" class="cd-cell ${st ? 'has ' + st : ''} ${isCur && t.getDate() === dd ? 'today' : ''} ${calSel === dd ? 'sel' : ''} ${wd === 0 || wd === 6 ? 'wkd' : ''}" data-day="${dd}">
+        <div class="cd-top"><b>${dd}</b>${tot ? `<em class="money">${formatMoneyBR(tot)}</em>` : ''}</div>
+        <div class="cd-pills">${pills}${its.length > 3 ? `<span class="cd-more">+${its.length - 3} mais</span>` : ''}</div></button>`;
+    }
+    const MF = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    el.innerHTML = `<div class="panel cd-board">
+        <div class="cd-head">
+          <div class="cd-title"><small>Calendário de pagamentos</small><h2>${MF[mIdx]} <span>${yr}</span></h2></div>
+          <div class="cd-stats">
+            <div class="cd-stat"><small>A pagar</small><b class="money neg">${formatMoneyBR(aPagar)}</b></div>
+            <div class="cd-stat"><small>Pago</small><b class="money pos">${formatMoneyBR(pago)}</b></div>
+            <div class="cd-stat ${late.length ? 'alert' : ''}"><small>Atrasadas</small><b class="money">${late.length ? `${late.length} · ${formatMoneyBR(lateSum)}` : 'nenhuma'}</b></div>
+          </div>
+        </div>
+        <div class="cd-prog"><div style="width:${pctPago}%"></div></div><div class="cd-prog-txt">${pctPago}% do mês já pago</div>
+        <div class="cd-grid">${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(w => `<span class="cd-wd">${w}</span>`).join('')}${cd}</div>
+        <div class="cal-legend"><span><i class="late"></i>atrasada</span><span><i class="soon"></i>até 3 dias</span><span><i class="open"></i>a vencer</span><span><i class="ok"></i>paga</span><span style="margin-left:auto">Clique num dia para filtrar a lista</span></div>
+      </div>
+      <div class="cd-lists">
+        <div class="panel"><div class="panel-title">${calSel ? `Dia ${calSel}` : 'Ordem de pagamento'}${calSel ? '<button type="button" class="cal-clear" data-clear="1">ver todas</button>' : ''}</div>${rows}</div>
+        <div class="panel"><div class="panel-title">Sem vencimento <span class="nv-sum">${sem.length}</span></div>${semRows || '<p class="r7-sub" style="padding:10px 0">Todas as contas têm dia definido. 👌</p>'}</div>
+      </div>`;
+  } else el.innerHTML = `<div class="panel cal-panel">
       <div class="cal-sum"><div><small>A pagar</small><b class="money neg">${formatMoneyBR(aPagar)}</b></div><div><small>Pago</small><b class="money pos">${formatMoneyBR(pago)}</b></div></div>
       <div class="cal-grid">${WD.map(w => `<span class="cal-wd">${w}</span>`).join('')}${cells}</div>
       <div class="cal-legend"><span><i class="late"></i>atrasada</span><span><i class="soon"></i>até 3 dias</span><span><i class="open"></i>a vencer</span><span><i class="ok"></i>paga</span></div>
