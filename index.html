@@ -456,6 +456,15 @@
   body.nv-desk .cal-cell { font-size: 15px; }
   body.nv-desk #userDropdown { left: auto; }
   @media (min-width: 1500px) { #nvDesk { grid-template-columns: 320px minmax(0, 1fr); } }
+
+  .sec-grip { display: none; }
+  body.nv .panel[data-sec] > .panel-title { cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  body.nv .panel[data-sec] .sec-grip { display: inline-flex; color: var(--muted); opacity: 0.45; font-size: 15px; margin-right: 2px; transition: opacity .15s; }
+  body.nv .panel[data-sec] > .panel-title:hover .sec-grip { opacity: 1; color: var(--accent); }
+  body.nv .panel.sec-dragging { outline: 2px dashed var(--accent); outline-offset: 3px; opacity: 0.55; transform: scale(0.985); transition: transform .12s, opacity .12s; }
+  body.sec-drag-on, body.sec-drag-on * { cursor: grabbing !important; -webkit-user-select: none !important; user-select: none !important; }
+  #secGhost { position: fixed; left: 0; top: 0; z-index: 20001; pointer-events: none; background: var(--accent); color: #04241a; font-family: var(--font-mono); font-size: 13px; font-weight: 800; padding: 8px 14px; border-radius: 999px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); white-space: nowrap; }
+  body.nv-desk #nvColA, body.nv-desk #nvColB { min-height: 120px; }
 </style>
 </head>
 <body>
@@ -479,6 +488,7 @@
     <h3>Dicas de Atalhos 🚀</h3>
     <div class="help-item"><b>📂 Pastas</b> Use <code>Nome: Item</code> (Ex: Gabi: Aluguel)</div>
     <div class="help-item"><b>💳 Parcelas</b> Use <code>[1/12]</code> no nome para distribuir nos meses.</div>
+    <div class="help-item"><b>⠿ Organizar seções</b> Segure o título de uma seção (Renda, Despesas, Cartões…) e arraste para onde quiser. No computador dá para trocar de coluna.</div>
     <div class="help-item"><b>👆 Segurar o ícone</b> Segure o ícone de uma conta para definir vencimento, mover para um cartão, replicar ou excluir. Deslize para o lado para ver o calendário.</div>
     <div class="help-item"><b>📊 Saldo Real</b> Quando ativado no topo, os cálculos mostram apenas o que você já deu "Check".</div>
     <button class="login-btn" onclick="document.getElementById('helpModal').style.display='none'">ENTENDI!</button>
@@ -503,7 +513,7 @@
     <button type="button" class="nv-round" onclick="toggleNotifPanel()" title="Notificações">🔔<span class="bell-badge" id="nvBellBadge" style="display:none"></span></button>
   </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R11.1</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R12</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -2824,6 +2834,7 @@ function applyNv() {
   const on = nvOn();
   document.body.classList.toggle('nv', on);
   nvLayout();
+  if (typeof secApplyOrder === 'function') secApplyOrder();
   const dd = document.getElementById('userDropdown');
   if (dd) {
     if (!nvMenuHome) nvMenuHome = dd.parentElement;
@@ -2874,7 +2885,7 @@ function nvDeskMove(el, target) {
 function nvLayout() {
   const want = nvOn() && NV_DESK_MQ.matches;
   if (want === nvDeskOn) return;
-  nvDeskOn = want;
+  nvDeskOn = want; secAppliedKey = '';
   document.body.classList.toggle('nv-desk', want);
   if (want) {
     const header = document.querySelector('body > .header');
@@ -3126,6 +3137,131 @@ function setNvView(v) {
     if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
     setNvView(dx < 0 ? 'cal' : 'contas');
   }, { passive: true });
+})();
+// ───────────────────────────────────────────────────────────
+
+// ── Seções arrastáveis (segurar o título) ────────────────────────
+const SEC_IDS = ['renda', 'descontos', 'fixas', 'temp', 'cartoes'];
+const SEC_DEF = { desk: { A: ['renda', 'fixas', 'temp'], B: ['descontos', 'cartoes'] }, mob: ['renda', 'fixas', 'cartoes', 'temp', 'descontos'] };
+function secEl(id) {
+  if (id === 'cartoes') return document.getElementById('cardsSecPanel');
+  const map = { renda: 'rendaSection', descontos: 'descontosSection', fixas: 'fixasSection', temp: 'tempSection' };
+  return document.getElementById(map[id])?.closest('.panel') || null;
+}
+function secIdOf(el) { return el?.dataset?.sec || null; }
+function secNorm(list, used) { const out = (list || []).filter(id => SEC_IDS.includes(id) && !used.has(id)); out.forEach(id => used.add(id)); return out; }
+function secLayout() {
+  const L = fullData ? (appCfg().layout || {}) : {};
+  const used = new Set();
+  const A = secNorm(L.desk?.A || SEC_DEF.desk.A, used), B = secNorm(L.desk?.B || SEC_DEF.desk.B, used);
+  SEC_IDS.forEach(id => { if (!used.has(id)) { (A.length <= B.length ? A : B).push(id); used.add(id); } });
+  const u2 = new Set(); const mob = secNorm(L.mob || SEC_DEF.mob, u2); SEC_IDS.forEach(id => { if (!u2.has(id)) mob.push(id); });
+  return { desk: { A, B }, mob };
+}
+function secMark() {
+  SEC_IDS.forEach(id => {
+    const el = secEl(id); if (!el || el.dataset.sec) return;
+    el.dataset.sec = id;
+    const t = el.querySelector('.panel-title');
+    if (t && !t.querySelector('.sec-grip')) { const g = document.createElement('span'); g.className = 'sec-grip'; g.textContent = '⠿'; g.title = 'Segure para mover a seção'; t.insertBefore(g, t.firstChild); }
+  });
+}
+let secAppliedKey = '';
+function secApplyOrder(force) {
+  if (!nvOn()) return;
+  secMark();
+  const L = secLayout();
+  const key = (nvDeskOn ? 'd' : 'm') + JSON.stringify(nvDeskOn ? L.desk : L.mob);
+  if (!force && key === secAppliedKey) return;
+  secAppliedKey = key;
+  if (nvDeskOn) {
+    const a = document.getElementById('nvColA'), b = document.getElementById('nvColB'); if (!a || !b) return;
+    L.desk.A.forEach(id => { const el = secEl(id); if (el) nvDeskMove(el, a); });
+    L.desk.B.forEach(id => { const el = secEl(id); if (el) nvDeskMove(el, b); });
+  } else {
+    const anchor = document.getElementById('nvChartPanel'); if (!anchor || anchor.parentNode !== document.body) return;
+    let ref = anchor;
+    L.mob.forEach(id => { const el = secEl(id); if (el) { ref.after(el); ref = el; } });
+  }
+}
+function secSave() {
+  if (!fullData) return;
+  const cfg = appCfg(); const L = secLayout();
+  if (nvDeskOn) {
+    const ids = (c) => [...document.getElementById(c).children].map(secIdOf).filter(Boolean);
+    L.desk = { A: ids('nvColA'), B: ids('nvColB') };
+  } else {
+    L.mob = [...document.body.children].map(secIdOf).filter(Boolean);
+  }
+  cfg.layout = L; autoSave();
+  secAppliedKey = (nvDeskOn ? 'd' : 'm') + JSON.stringify(nvDeskOn ? L.desk : L.mob);
+}
+
+(function secDrag() {
+  let pending = null, drag = null, raf = 0, lastY = 0, lastX = 0;
+  const HOLD = 320;
+  function containers() { return nvDeskOn ? [document.getElementById('nvColA'), document.getElementById('nvColB')] : [document.body]; }
+  function start(panel, x, y) {
+    drag = { panel };
+    panel.classList.add('sec-dragging');
+    document.body.classList.add('sec-drag-on');
+    const ghost = document.createElement('div'); ghost.id = 'secGhost';
+    ghost.textContent = '↕ ' + (panel.querySelector('.panel-title')?.childNodes[1]?.textContent || 'Seção').trim();
+    document.body.appendChild(ghost); drag.ghost = ghost;
+    if (navigator.vibrate) try { navigator.vibrate(15); } catch (_) {}
+    move(x, y); loop();
+  }
+  function move(x, y) {
+    lastX = x; lastY = y;
+    if (!drag) return;
+    drag.ghost.style.transform = `translate(${x + 14}px, ${y - 18}px)`;
+    const cs = containers().filter(Boolean);
+    let cont = cs[0];
+    if (cs.length > 1) {
+      let best = Infinity;
+      cs.forEach(c => { const r = c.getBoundingClientRect(); const d = x < r.left ? r.left - x : x > r.right ? x - r.right : 0; if (d < best) { best = d; cont = c; } });
+    }
+    const sibs = [...cont.children].filter(el => secIdOf(el) && el !== drag.panel && el.offsetParent !== null);
+    const before = sibs.find(el => { const r = el.getBoundingClientRect(); return y < r.top + r.height / 2; });
+    if (before) { if (drag.panel.nextElementSibling !== before) cont.insertBefore(drag.panel, before); }
+    else if (sibs.length) { const last = sibs[sibs.length - 1]; if (last.nextElementSibling !== drag.panel) last.after(drag.panel); }
+    else if (drag.panel.parentNode !== cont) cont.appendChild(drag.panel);
+  }
+  function loop() {
+    if (!drag) return;
+    const edge = 90;
+    if (lastY < edge) window.scrollBy(0, -Math.ceil((edge - lastY) / 6));
+    else if (lastY > innerHeight - edge) window.scrollBy(0, Math.ceil((lastY - (innerHeight - edge)) / 6));
+    raf = requestAnimationFrame(() => { move(lastX, lastY); loop(); });
+  }
+  function end(save) {
+    clearTimeout(pending?.t); pending = null;
+    if (!drag) return;
+    cancelAnimationFrame(raf);
+    drag.panel.classList.remove('sec-dragging');
+    drag.ghost.remove();
+    document.body.classList.remove('sec-drag-on');
+    drag = null;
+    if (save) { secSave(); if (barInst) try { barInst.resize(); } catch (_) {} }
+  }
+  document.addEventListener('pointerdown', (e) => {
+    if (!nvOn() || nvView === 'cal' || e.button > 0) return;
+    const title = e.target.closest('.panel[data-sec] > .panel-title');
+    if (!title || e.target.closest('button, input, a')) return;
+    const panel = title.parentElement;
+    const sx = e.clientX, sy = e.clientY;
+    pending = { sx, sy, panel, t: setTimeout(() => { if (pending) { start(panel, lastX || sx, lastY || sy); pending = null; } }, e.pointerType === 'mouse' ? 160 : HOLD) };
+    lastX = sx; lastY = sy;
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (pending) { if (Math.hypot(e.clientX - pending.sx, e.clientY - pending.sy) > (e.pointerType === 'mouse' ? 4 : 10)) { if (e.pointerType === 'mouse') { const p = pending.panel; clearTimeout(pending.t); pending = null; start(p, e.clientX, e.clientY); } else { clearTimeout(pending.t); pending = null; } } else { lastX = e.clientX; lastY = e.clientY; } return; }
+    if (drag) { e.preventDefault(); move(e.clientX, e.clientY); }
+  });
+  document.addEventListener('pointerup', () => end(true));
+  document.addEventListener('pointercancel', () => end(true));
+  document.addEventListener('touchmove', (e) => { if (drag) e.preventDefault(); }, { passive: false });
+  document.addEventListener('contextmenu', (e) => { if (drag || (pending && e.target.closest('.panel-title'))) e.preventDefault(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drag) end(true); });
 })();
 // ───────────────────────────────────────────────────────────
 
