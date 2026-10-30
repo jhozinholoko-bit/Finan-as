@@ -445,6 +445,10 @@
   body.nv-desk #dueAlerts[style*="none"] { display: none !important; }
   body.nv-desk .panel-title { font-size: 18px; }
   body.nv-desk.nv-cal #nvCols { display: none; }
+  #nvAlertSlot:empty, #nvAlertSlot:has(> #dueAlerts[style*="none"]) { display: none; }
+  body.nv-desk #dueAlerts .due-panel { columns: 2; column-gap: 32px; }
+  body.nv-desk #dueAlerts .due-line, body.nv-desk #dueAlerts .panel-title { break-inside: avoid; }
+  body.nv-desk #dueAlerts .panel-title { column-span: all; }
   body.nv-desk #calView { display: none; }
   body.nv-desk.nv-cal #calView { display: grid; grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.1fr); gap: 20px; align-items: start; }
   body.nv-desk.nv-cal #calView > .panel { margin: 0; grid-column: 2; }
@@ -499,7 +503,7 @@
     <button type="button" class="nv-round" onclick="toggleNotifPanel()" title="Notificações">🔔<span class="bell-badge" id="nvBellBadge" style="display:none"></span></button>
   </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R11</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R11.1</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -2857,8 +2861,9 @@ function nvDeskParts() {
     side: [document.querySelector('body > .header') || nvDeskMarks.get('header')?.el, document.getElementById('nvQuick'), document.getElementById('nvTabs')],
     hero: [document.getElementById('kpiGrid'), document.getElementById('nvChartPanel')],
     cal: [document.getElementById('calView')],
-    colA: [document.getElementById('dueAlerts'), panelOf('fixasSection'), panelOf('tempSection')],
-    colB: [document.getElementById('cardsSecPanel'), panelOf('rendaSection'), panelOf('descontosSection')],
+    alerts: [document.getElementById('dueAlerts')],
+    colA: [panelOf('rendaSection'), panelOf('fixasSection'), panelOf('tempSection')],
+    colB: [panelOf('descontosSection'), document.getElementById('cardsSecPanel')],
   };
 }
 function nvDeskMove(el, target) {
@@ -2876,13 +2881,14 @@ function nvLayout() {
     let root = document.getElementById('nvDesk');
     if (!root) {
       root = document.createElement('div'); root.id = 'nvDesk';
-      root.innerHTML = '<aside id="nvSide"></aside><main id="nvMain"><div id="nvHeroRow"></div><div id="nvCalSlot"></div><div id="nvCols"><div id="nvColA"></div><div id="nvColB"></div></div></main>';
+      root.innerHTML = '<aside id="nvSide"></aside><main id="nvMain"><div id="nvHeroRow"></div><div id="nvCalSlot"></div><div id="nvAlertSlot"></div><div id="nvCols"><div id="nvColA"></div><div id="nvColB"></div></div></main>';
       header.parentNode.insertBefore(root, header);
     }
     const parts = nvDeskParts();
     parts.side.forEach(el => nvDeskMove(el, document.getElementById('nvSide')));
     parts.hero.forEach(el => nvDeskMove(el, document.getElementById('nvHeroRow')));
     parts.cal.forEach(el => nvDeskMove(el, document.getElementById('nvCalSlot')));
+    parts.alerts.forEach(el => nvDeskMove(el, document.getElementById('nvAlertSlot')));
     parts.colA.forEach(el => nvDeskMove(el, document.getElementById('nvColA')));
     parts.colB.forEach(el => nvDeskMove(el, document.getElementById('nvColB')));
   } else {
