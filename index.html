@@ -465,6 +465,66 @@
   body.sec-drag-on, body.sec-drag-on * { cursor: grabbing !important; -webkit-user-select: none !important; user-select: none !important; }
   #secGhost { position: fixed; left: 0; top: 0; z-index: 20001; pointer-events: none; background: var(--accent); color: #04241a; font-family: var(--font-mono); font-size: 13px; font-weight: 800; padding: 8px 14px; border-radius: 999px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); white-space: nowrap; }
   body.nv-desk #nvColA, body.nv-desk #nvColB { min-height: 120px; }
+
+  /* ── R13: lateral com saldo + gráfico; colunas que preenchem a tela ── */
+  #nvDesk { grid-template-columns: 360px minmax(0, 1fr) !important; }
+  #nvSide { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; gap: 14px !important; }
+  body.nv-desk #nvSide > .header { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 16px; box-shadow: var(--shadow); }
+  body.nv-desk #nvSide > #nvQuick { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 12px; box-shadow: var(--shadow); }
+  body.nv-desk #nvSide #nvTabs { background: var(--surface); box-shadow: var(--shadow); }
+  body.nv-desk #nvSide .kpi-grid { margin: 0; }
+  body.nv-desk #nvSide .nv-hero { padding: 20px; border-radius: 22px; }
+  body.nv-desk #nvSide .nv-hero-val { font-size: 34px; margin: 4px 0 12px; }
+  body.nv-desk #nvSide .nv-hero-col b { font-size: 15px; }
+  body.nv-desk #nvSide .nv-prog-txt { flex-direction: column; gap: 2px; }
+  body.nv-desk #nvSide #nvChartPanel { margin: 0; padding: 16px; }
+  body.nv-desk #nvSide #nvChartPanel .panel-title { font-size: 15px; }
+  body.nv-desk #nvSide #nvChartPanel > div[style*="height"] { height: 190px !important; }
+  body.nv-desk #nvSide::-webkit-scrollbar { display: none; }
+  #nvColC { display: none; }
+  #nvCalSlot:empty { display: none; }
+  body.nv .shared-row { gap: 12px; min-height: 52px; }
+  body.nv .shared-row .edit-name { font-size: 14px; }
+  body.nv-desk.nv-3col #nvColC { display: flex; flex-direction: column; gap: 20px; min-width: 0; min-height: 120px; }
+  body.nv-desk.nv-3col #nvColC > * { margin: 0; }
+  body.nv-desk.nv-3col #nvCols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.nv-desk.nv-3col #dueAlerts .due-panel { columns: 3; }
+  body.nv.nv-desk { max-width: none !important; }
+  /* avatar com ícone */
+  .nv-avatar.emoji { font-size: 22px; background: color-mix(in srgb, var(--accent) 18%, var(--surface)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }
+  .av-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 8px; }
+  .av-grid button { aspect-ratio: 1; border-radius: 14px; border: 1px solid var(--border); background: var(--surface2, var(--bg)); font-size: 22px; cursor: pointer; }
+  .av-grid button.on { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+  /* novidades + ajuda */
+  #whatsNew { position: fixed; inset: 0; z-index: 10010; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 16px; }
+  #whatsNew.open { display: flex; }
+  .wn-card { background: var(--surface); border: 1px solid var(--border); border-radius: 26px; width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.5); }
+  .wn-hero { padding: 26px 24px 18px; background: radial-gradient(120% 100% at 100% 0%, color-mix(in srgb, var(--accent) 35%, transparent), transparent 60%), var(--surface); border-bottom: 1px solid var(--border); }
+  .wn-tag { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; background: var(--accent); color: #04241a; padding: 4px 10px; border-radius: 999px; }
+  .wn-hero h2 { font-family: var(--font-head); font-size: 26px; font-weight: 800; letter-spacing: -0.6px; margin: 12px 0 4px; }
+  .wn-hero p { color: var(--muted); font-size: 14px; line-height: 1.45; }
+  .wn-list { padding: 8px 24px 4px; }
+  .wn-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .wn-item:last-child { border-bottom: none; }
+  .wn-ic { width: 40px; height: 40px; flex-shrink: 0; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 19px; background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .wn-item b { display: block; font-size: 14px; margin-bottom: 2px; }
+  .wn-item span { font-size: 13px; color: var(--muted); line-height: 1.45; }
+  .wn-moved { margin: 6px 24px 0; padding: 12px 14px; border-radius: 14px; background: var(--bg); font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+  .wn-moved b { color: var(--text); }
+  .wn-actions { display: flex; gap: 10px; padding: 18px 24px 22px; }
+  .wn-actions button { flex: 1; border-radius: 14px; padding: 13px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .wn-actions .pri { background: var(--accent); color: #04241a; border: none; }
+  .wn-actions .sec { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  #helpModal .help-card { max-width: 560px; max-height: 90vh; overflow-y: auto; border-radius: 24px; }
+  #helpModal details { border-bottom: 1px solid var(--border); padding: 4px 0; }
+  #helpModal summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; padding: 11px 0; font-weight: 700; font-size: 14px; }
+  #helpModal summary::-webkit-details-marker { display: none; }
+  #helpModal summary::after { content: '+'; margin-left: auto; color: var(--muted); font-size: 18px; }
+  #helpModal details[open] summary::after { content: '–'; }
+  #helpModal details .hb { font-size: 13px; color: var(--muted); line-height: 1.55; padding: 0 0 12px 30px; }
+  #helpModal details .hb b { color: var(--text); }
+  #helpModal details .hb code { background: var(--bg); padding: 1px 6px; border-radius: 6px; color: var(--accent); }
+  #helpModal .help-sub { font-size: 13px; color: var(--muted); margin: -6px 0 10px; }
 </style>
 </head>
 <body>
@@ -485,13 +545,35 @@
 
 <div id="helpModal" onclick="this.style.display='none'">
   <div class="help-card" onclick="event.stopPropagation()">
-    <h3>Dicas de Atalhos 🚀</h3>
-    <div class="help-item"><b>📂 Pastas</b> Use <code>Nome: Item</code> (Ex: Gabi: Aluguel)</div>
-    <div class="help-item"><b>💳 Parcelas</b> Use <code>[1/12]</code> no nome para distribuir nos meses.</div>
-    <div class="help-item"><b>⠿ Organizar seções</b> Segure o título de uma seção (Renda, Despesas, Cartões…) e arraste para onde quiser. No computador dá para trocar de coluna.</div>
-    <div class="help-item"><b>👆 Segurar o ícone</b> Segure o ícone de uma conta para definir vencimento, mover para um cartão, replicar ou excluir. Deslize para o lado para ver o calendário.</div>
-    <div class="help-item"><b>📊 Saldo Real</b> Quando ativado no topo, os cálculos mostram apenas o que você já deu "Check".</div>
-    <button class="login-btn" onclick="document.getElementById('helpModal').style.display='none'">ENTENDI!</button>
+    <h3>Ajuda 💡</h3>
+    <p class="help-sub">Toque num tópico para ver como funciona.</p>
+    <details open><summary>🧭 Navegar</summary><div class="hb">Escolha o mês nas pílulas do topo (ou setas). O card verde mostra o <b>saldo do mês</b>, entradas, saídas e quanto das entradas já está comprometido. No celular, <b>deslize para o lado</b> para alternar entre <b>Contas</b> e <b>Calendário</b>.</div></details>
+    <details><summary>➕ Lançar contas</summary><div class="hb">Use <b>Nova conta</b> nos atalhos ou o botão no fim de cada seção. Toque no nome ou no valor para editar. Toque no <b>ícone</b> da conta para marcar como <b>paga</b>.<br><br><b>Pasta:</b> escreva <code>Pasta: item</code> (ex: <code>Gabi: Aluguel</code>). Dentro de uma pasta aberta tem a linha <b>+ nova conta</b>.<br><b>Parcelas:</b> coloque <code>[1/12]</code> no nome e as parcelas vão para os próximos meses.</div></details>
+    <details><summary>👆 Segurar o ícone</summary><div class="hb"><b>Segure</b> o ícone de uma conta (no computador: botão direito ou o <b>⋯</b> ao passar o mouse) para: definir <b>vencimento</b>, <b>mover</b> para um cartão/pasta, <b>replicar</b> nos próximos meses ou <b>excluir</b>. Segurando o ícone de uma pasta abre as configurações dela.</div></details>
+    <details><summary>💳 Cartões de crédito</summary><div class="hb">Crie em <b>Novo cartão</b> (limite, fechamento, vencimento). O cartão funciona como a <b>fatura</b>:<br>• Digite o total da fatura no cabeçalho do cartão — o que não estiver detalhado fica em <b>Outros</b>.<br>• Quer detalhar? Toque em <b>＋ detalhar</b> no Outros: o valor sai de Outros e vira uma compra (aceita <code>[1/10]</code>).<br>• Conta nova dentro do cartão <b>soma</b> na fatura (não mexe em Outros).<br>• Já tinha a conta fora do cartão? Segure o ícone → <b>Mover para cartão</b>.<br>• Abra o cartão para ver o <b>limite usado</b>. Quem prefere não detalhar só preenche o total.</div></details>
+    <details><summary>📅 Vencimentos e calendário</summary><div class="hb">Defina o dia segurando o ícone da conta. Contas com dia mostram o selo <b>dia X</b> (amarelo: vence em até 3 dias; vermelho: atrasada) e aparecem em <b>Atrasadas / Próximos 7 dias</b>.<br>No <b>Calendário</b>: grade do mês com bolinhas por dia, lista na <b>ordem de pagamento</b> (toque no ícone para pagar) e <b>Sem vencimento</b> com o botão <b>definir dia</b>.</div></details>
+    <details><summary>⠿ Organizar a tela</summary><div class="hb">Segure o título de uma seção (Renda, Despesas, Cartões…) e <b>arraste</b> para onde quiser. No computador dá para trocar de coluna. A ordem fica salva na sua conta (uma para celular, outra para computador).</div></details>
+    <details><summary>📊 Saldo real e 👁 ocultar</summary><div class="hb"><b>Saldo real</b> (atalhos): os totais consideram só o que já foi pago. <b>👁</b> no topo borra os valores — bom para abrir o app perto de outras pessoas.</div></details>
+    <details><summary>🤝 Contas compartilhadas</summary><div class="hb">Escreva <code>@usuario</code> no nome da conta para dividir com outra pessoa do app. Ela recebe no 🔔 e pode aceitar ou recusar.</div></details>
+    <details><summary>⬇ Exportar, importar e instalar</summary><div class="hb">No menu do seu ícone: <b>Exportar CSV</b> do ano (abre no Excel) e <b>Importar</b> CSV ou extrato <b>OFX</b> do banco.<br><b>Instalar no celular:</b> abra no navegador → compartilhar/menu → <b>Adicionar à tela inicial</b>.</div></details>
+    <details><summary>🎨 Seu ícone e tema</summary><div class="hb">No menu do seu ícone: <b>Trocar ícone</b> (vários de finanças 🐷💰📈) e <b>Tema claro/escuro</b>.</div></details>
+    <div style="display:flex;gap:10px;margin-top:16px"><button class="login-btn secondary" style="flex:1" onclick="document.getElementById('helpModal').style.display='none';openWhatsNew(true)">✨ Novidades</button><button class="login-btn" style="flex:1" onclick="document.getElementById('helpModal').style.display='none'">Entendi</button></div>
+  </div>
+</div>
+
+<div id="whatsNew">
+  <div class="wn-card">
+    <div class="wn-hero"><span class="wn-tag">Nova atualização</span><h2 id="wnTitle">Bem-vindo de volta 👋</h2><p>O app ganhou cara nova e várias funções. Um resumo rápido:</p></div>
+    <div class="wn-list">
+      <div class="wn-item"><div class="wn-ic">✨</div><div><b>Visual novo</b><span>Card de saldo com entradas, saídas e % comprometido, ícones automáticos por conta, gráfico de fluxo do ano. No computador tem layout próprio.</span></div></div>
+      <div class="wn-item"><div class="wn-ic">💳</div><div><b>Cartões de crédito</b><span>Seção própria. Digite o total da fatura — o que não detalhar fica em “Outros”. Detalhe compras quando quiser e veja o limite usado.</span></div></div>
+      <div class="wn-item"><div class="wn-ic">📅</div><div><b>Vencimentos e calendário</b><span>Defina o dia de cada conta, veja atrasadas e próximas, e o calendário do mês em ordem de pagamento (deslize para o lado no celular).</span></div></div>
+      <div class="wn-item"><div class="wn-ic">👆</div><div><b>Segure para mais opções</b><span>Segure o ícone de uma conta para vencimento, mover para um cartão, replicar ou excluir.</span></div></div>
+      <div class="wn-item"><div class="wn-ic">⠿</div><div><b>Organize do seu jeito</b><span>Segure o título de uma seção e arraste para onde quiser.</span></div></div>
+      <div class="wn-item"><div class="wn-ic">⬇</div><div><b>Exportar, importar e mais</b><span>CSV para Excel, extrato OFX do banco, 👁 para ocultar valores, seu ícone de finanças e instalar na tela inicial.</span></div></div>
+    </div>
+    <div class="wn-moved"><b>Mudou de lugar:</b> Tema, Ajuda, Exportar e Sair agora ficam no <b>menu do seu ícone</b> (canto superior esquerdo). Saldo real e Replicar mês estão nos <b>atalhos</b>. Seus dados continuam todos aqui — nada foi apagado.</div>
+    <div class="wn-actions"><button class="sec" onclick="closeWhatsNew();document.getElementById('helpModal').style.display='flex'">Ver ajuda completa</button><button class="pri" onclick="closeWhatsNew()">Bora!</button></div>
   </div>
 </div>
 
@@ -513,7 +595,7 @@
     <button type="button" class="nv-round" onclick="toggleNotifPanel()" title="Notificações">🔔<span class="bell-badge" id="nvBellBadge" style="display:none"></span></button>
   </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">BETA-R12</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.0</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -523,6 +605,7 @@
             <button type="button" class="menu-item" onclick="exportCSV()" style="border-left:3px solid var(--accent);">⬇ Exportar CSV do ano</button>
             <button type="button" class="menu-item" onclick="pickImportFile()" style="border-left:3px solid var(--accent);">⬆ Importar CSV / OFX</button>
           </div>
+          <button type="button" class="menu-item nv-only" onclick="askAvatar()" style="border-left:3px solid var(--muted);">🐷 Trocar ícone</button>
           <button type="button" class="menu-item nv-only" onclick="toggleTheme()" style="border-left:3px solid var(--muted);">🌓 Tema claro / escuro</button>
           <button type="button" class="menu-item" onclick="document.getElementById('helpModal').style.display='flex'" style="border-left:3px solid var(--muted);">❓ Ajuda</button>
           <button type="button" class="menu-item" onclick="sairDaConta()" style="border-left:3px solid var(--accent2);">Trocar conta</button>
@@ -800,7 +883,7 @@ function renderSharedRows(cat, mn, yr, container) {
 
     const check = document.createElement('div');
     check.className = `check-circle${isPaid ? ' checked' : ''}`;
-    check.innerHTML = isPaid ? '✓' : '';
+    check.innerHTML = isPaid ? '✓' : (typeof nvOn === 'function' && nvOn() ? '🤝' : '');
 
     const name = document.createElement('div');
     name.className = 'edit-name';
@@ -828,17 +911,17 @@ function renderSharedRows(cat, mn, yr, container) {
 const TESTER_USERNAMES = new Set(['victor']);
 const FEATURE_RELEASE = {
   /** Cartões de crédito: pasta vira cartão (limite, fechamento, vencimento, + compra). */
-  betaCartoes: 'beta',
+  betaCartoes: 'public',
   /** Dia de vencimento por conta + alertas de atrasadas / próximos 7 dias. */
-  betaVencimentos: 'beta',
+  betaVencimentos: 'public',
   /** Exportar CSV do ano / importar CSV ou extrato OFX (menu do usuário). */
-  betaExportar: 'beta',
+  betaExportar: 'public',
   /** Botão 👁 para borrar valores na tela. */
-  betaOcultar: 'beta',
+  betaOcultar: 'public',
   /** Visual novo (card de saldo, ícones, barra inferior). */
-  betaNovoVisual: 'beta',
+  betaNovoVisual: 'public',
   /** Linha "+ nova conta" no fim de cada pasta aberta. */
-  betaPastaAdd: 'beta',
+  betaPastaAdd: 'public',
 };
 
 function isAppTester() {
@@ -1252,12 +1335,12 @@ function createParcelSeriesFromCurrent(cat, oldK, pNew) {
 function refreshUserLabel() {
   const ul = document.getElementById('userLabel');
   const isTester = TESTER_USERNAMES.has((CURRENT_USER || '').toLowerCase());
-  if (ul) ul.textContent = CURRENT_USER.toUpperCase() + (isTester ? (betaDesativado ? ' · BETA OFF' : ' · BETA') : '');
+  if (ul) ul.textContent = CURRENT_USER.toUpperCase() + (isTester && hasAnyBetaFeature() ? (betaDesativado ? ' · BETA OFF' : ' · BETA') : '');
   const wrap = document.getElementById('userDropdown');
   if (wrap) wrap.style.display = 'none';
   const betaBtn = document.getElementById('userMenuBeta');
   if (betaBtn) {
-    betaBtn.style.display = isTester ? 'block' : 'none';
+    betaBtn.style.display = isTester && hasAnyBetaFeature() ? 'block' : 'none';
     betaBtn.textContent = betaDesativado ? 'Beta: desativado  →  ativar' : 'Beta: ativado  →  desativar';
   }
 }
@@ -1419,6 +1502,7 @@ function migrarParcelamentosMultiAno() {
 /** Encerra a sessão sem recarregar (evita auto-login com “Lembrar de mim”). */
 function sairDaConta() {
   clearTimeout(saveTimeout);
+  if (typeof wnChecked !== 'undefined') wnChecked = false;
   clearRemembered();
   CURRENT_USER = '';
   userPassword = '';
@@ -2845,7 +2929,11 @@ function applyNv() {
   if (tc) tc.content = on && document.body.getAttribute('data-theme') === 'light' ? '#eaf7f1' : on ? '#06110d' : '#0a0c10';
   if (!on) { nvSectionTotals(); return; }
   const nm = String(CURRENT_USER || '');
-  document.getElementById('nvAvatar').textContent = nm.charAt(0).toUpperCase() || '?';
+  const av = fullData ? appCfg().avatar : null;
+  const avEl = document.getElementById('nvAvatar');
+  avEl.textContent = av || nm.charAt(0).toUpperCase() || '?';
+  avEl.classList.toggle('emoji', !!av);
+  maybeShowWhatsNew();
   document.getElementById('nvHelloName').textContent = nm.charAt(0).toUpperCase() + nm.slice(1);
   document.getElementById('nvHelloSub').textContent = nvGreeting() + ' 👋';
   const src = document.getElementById('bellBadge'), dst = document.getElementById('nvBellBadge');
@@ -2869,8 +2957,8 @@ const nvDeskMarks = new Map();
 function nvDeskParts() {
   const panelOf = (id) => document.getElementById(id)?.closest('.panel');
   return {
-    side: [document.querySelector('body > .header') || nvDeskMarks.get('header')?.el, document.getElementById('nvQuick'), document.getElementById('nvTabs')],
-    hero: [document.getElementById('kpiGrid'), document.getElementById('nvChartPanel')],
+    side: [document.querySelector('body > .header'), document.getElementById('nvTabs'), document.getElementById('kpiGrid'), document.getElementById('nvChartPanel'), document.getElementById('nvQuick')],
+    hero: [],
     cal: [document.getElementById('calView')],
     alerts: [document.getElementById('dueAlerts')],
     colA: [panelOf('rendaSection'), panelOf('fixasSection'), panelOf('tempSection')],
@@ -2892,12 +2980,11 @@ function nvLayout() {
     let root = document.getElementById('nvDesk');
     if (!root) {
       root = document.createElement('div'); root.id = 'nvDesk';
-      root.innerHTML = '<aside id="nvSide"></aside><main id="nvMain"><div id="nvHeroRow"></div><div id="nvCalSlot"></div><div id="nvAlertSlot"></div><div id="nvCols"><div id="nvColA"></div><div id="nvColB"></div></div></main>';
+      root.innerHTML = '<aside id="nvSide"></aside><main id="nvMain"><div id="nvCalSlot"></div><div id="nvAlertSlot"></div><div id="nvCols"><div id="nvColA"></div><div id="nvColB"></div><div id="nvColC"></div></div></main>';
       header.parentNode.insertBefore(root, header);
     }
     const parts = nvDeskParts();
     parts.side.forEach(el => nvDeskMove(el, document.getElementById('nvSide')));
-    parts.hero.forEach(el => nvDeskMove(el, document.getElementById('nvHeroRow')));
     parts.cal.forEach(el => nvDeskMove(el, document.getElementById('nvCalSlot')));
     parts.alerts.forEach(el => nvDeskMove(el, document.getElementById('nvAlertSlot')));
     parts.colA.forEach(el => nvDeskMove(el, document.getElementById('nvColA')));
@@ -2910,6 +2997,10 @@ function nvLayout() {
   if (barInst) { try { barInst.resize(); } catch (_) {} }
 }
 NV_DESK_MQ.addEventListener?.('change', () => { nvLayout(); if (appData) render(); });
+const NV_3COL_MQ = window.matchMedia('(min-width: 1680px)');
+function nvCols() { return NV_3COL_MQ.matches ? 3 : 2; }
+NV_3COL_MQ.addEventListener?.('change', () => { document.body.classList.toggle('nv-3col', NV_3COL_MQ.matches); if (nvDeskOn && typeof secApplyOrder === 'function') { secApplyOrder(true); if (barInst) try { barInst.resize(); } catch (_) {} } });
+document.body.classList.toggle('nv-3col', NV_3COL_MQ.matches);
 function nvPlaceMenu(anchor) {
   const dd = document.getElementById('userDropdown'); if (!dd || !anchor || !nvOn()) return;
   const r = anchor.getBoundingClientRect();
@@ -3142,7 +3233,8 @@ function setNvView(v) {
 
 // ── Seções arrastáveis (segurar o título) ────────────────────────
 const SEC_IDS = ['renda', 'descontos', 'fixas', 'temp', 'cartoes'];
-const SEC_DEF = { desk: { A: ['renda', 'fixas', 'temp'], B: ['descontos', 'cartoes'] }, mob: ['renda', 'fixas', 'cartoes', 'temp', 'descontos'] };
+const SEC_DEF = { desk2: { A: ['renda', 'fixas', 'temp'], B: ['descontos', 'cartoes'] }, desk3: { A: ['renda', 'temp'], B: ['fixas'], C: ['descontos', 'cartoes'] }, mob: ['renda', 'fixas', 'cartoes', 'temp', 'descontos'] };
+const SEC_COLS = ['A', 'B', 'C'];
 function secEl(id) {
   if (id === 'cartoes') return document.getElementById('cardsSecPanel');
   const map = { renda: 'rendaSection', descontos: 'descontosSection', fixas: 'fixasSection', temp: 'tempSection' };
@@ -3152,11 +3244,17 @@ function secIdOf(el) { return el?.dataset?.sec || null; }
 function secNorm(list, used) { const out = (list || []).filter(id => SEC_IDS.includes(id) && !used.has(id)); out.forEach(id => used.add(id)); return out; }
 function secLayout() {
   const L = fullData ? (appCfg().layout || {}) : {};
-  const used = new Set();
-  const A = secNorm(L.desk?.A || SEC_DEF.desk.A, used), B = secNorm(L.desk?.B || SEC_DEF.desk.B, used);
-  SEC_IDS.forEach(id => { if (!used.has(id)) { (A.length <= B.length ? A : B).push(id); used.add(id); } });
+  const out = {};
+  [['desk2', 2], ['desk3', 3]].forEach(([key, n]) => {
+    const src = L[key] || (key === 'desk2' ? L.desk : null) || SEC_DEF[key];
+    const used = new Set(); const cols = {};
+    SEC_COLS.slice(0, n).forEach(c => { cols[c] = secNorm(src[c] || [], used); });
+    SEC_IDS.forEach(id => { if (!used.has(id)) { const c = SEC_COLS.slice(0, n).reduce((a, b) => cols[a].length <= cols[b].length ? a : b); cols[c].push(id); used.add(id); } });
+    out[key] = cols;
+  });
   const u2 = new Set(); const mob = secNorm(L.mob || SEC_DEF.mob, u2); SEC_IDS.forEach(id => { if (!u2.has(id)) mob.push(id); });
-  return { desk: { A, B }, mob };
+  out.mob = mob;
+  return out;
 }
 function secMark() {
   SEC_IDS.forEach(id => {
@@ -3167,17 +3265,17 @@ function secMark() {
   });
 }
 let secAppliedKey = '';
+function secDeskKey() { return 'desk' + nvCols(); }
 function secApplyOrder(force) {
   if (!nvOn()) return;
   secMark();
   const L = secLayout();
-  const key = (nvDeskOn ? 'd' : 'm') + JSON.stringify(nvDeskOn ? L.desk : L.mob);
+  const cur = nvDeskOn ? L[secDeskKey()] : L.mob;
+  const key = (nvDeskOn ? secDeskKey() : 'm') + JSON.stringify(cur);
   if (!force && key === secAppliedKey) return;
   secAppliedKey = key;
   if (nvDeskOn) {
-    const a = document.getElementById('nvColA'), b = document.getElementById('nvColB'); if (!a || !b) return;
-    L.desk.A.forEach(id => { const el = secEl(id); if (el) nvDeskMove(el, a); });
-    L.desk.B.forEach(id => { const el = secEl(id); if (el) nvDeskMove(el, b); });
+    SEC_COLS.forEach(c => { const box = document.getElementById('nvCol' + c); (cur[c] || []).forEach(id => { const el = secEl(id); if (el && box) nvDeskMove(el, box); }); });
   } else {
     const anchor = document.getElementById('nvChartPanel'); if (!anchor || anchor.parentNode !== document.body) return;
     let ref = anchor;
@@ -3188,19 +3286,20 @@ function secSave() {
   if (!fullData) return;
   const cfg = appCfg(); const L = secLayout();
   if (nvDeskOn) {
-    const ids = (c) => [...document.getElementById(c).children].map(secIdOf).filter(Boolean);
-    L.desk = { A: ids('nvColA'), B: ids('nvColB') };
+    const ids = (c) => [...(document.getElementById('nvCol' + c)?.children || [])].map(secIdOf).filter(Boolean);
+    const k = secDeskKey(); L[k] = {}; SEC_COLS.slice(0, nvCols()).forEach(c => { L[k][c] = ids(c); });
   } else {
     L.mob = [...document.body.children].map(secIdOf).filter(Boolean);
   }
+  delete L.desk;
   cfg.layout = L; autoSave();
-  secAppliedKey = (nvDeskOn ? 'd' : 'm') + JSON.stringify(nvDeskOn ? L.desk : L.mob);
+  secAppliedKey = (nvDeskOn ? secDeskKey() : 'm') + JSON.stringify(nvDeskOn ? L[secDeskKey()] : L.mob);
 }
 
 (function secDrag() {
   let pending = null, drag = null, raf = 0, lastY = 0, lastX = 0;
   const HOLD = 320;
-  function containers() { return nvDeskOn ? [document.getElementById('nvColA'), document.getElementById('nvColB')] : [document.body]; }
+  function containers() { return nvDeskOn ? SEC_COLS.slice(0, nvCols()).map(c => document.getElementById('nvCol' + c)) : [document.body]; }
   function start(panel, x, y) {
     drag = { panel };
     panel.classList.add('sec-dragging');
@@ -3264,6 +3363,37 @@ function secSave() {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drag) end(true); });
 })();
 // ───────────────────────────────────────────────────────────
+
+
+// ── Ícone de finanças + Novidades ───────────────────────────────
+const AVATARS = ['🐷', '💰', '💳', '📈', '🪙', '💵', '🏦', '💎', '🤑', '🧾', '📊', '👛', '💸', '🏆', '🚀', '🦁', '🦊', '🐻', '🌱', '☕', '🎯', '⭐', '🔥', '🌙'];
+function askAvatar() {
+  document.getElementById('userDropdown').style.display = 'none';
+  const cur = appCfg().avatar || '';
+  openR7Modal('Seu ícone', `<p class="r7-sub">Escolha um ícone para o seu perfil.</p>
+    <div class="av-grid">${AVATARS.map(a => `<button type="button" data-av="${a}" class="${a === cur ? 'on' : ''}">${a}</button>`).join('')}</div>`,
+    [cur ? { label: 'Voltar para a inicial do nome', fn: () => { delete appCfg().avatar; autoSave(); applyNv(); } } : null]);
+  document.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { appCfg().avatar = b.dataset.av; autoSave(); closeR7Modal(); applyNv(); });
+}
+const RELEASE_ID = 'r13-2026-10';
+let wnChecked = false;
+function maybeShowWhatsNew() {
+  if (wnChecked || !CURRENT_USER || !fullData) return;
+  wnChecked = true;
+  let seen = null; try { seen = localStorage.getItem('financas_seen_release_' + CURRENT_USER); } catch (_) {}
+  if (seen === RELEASE_ID || appCfg().seenRelease === RELEASE_ID) return;
+  setTimeout(() => openWhatsNew(false), 400);
+}
+function openWhatsNew(manual) {
+  const n = String(CURRENT_USER || ''); const t = document.getElementById('wnTitle');
+  if (t) t.textContent = manual ? 'Novidades ✨' : `Bem-vindo de volta, ${n.charAt(0).toUpperCase() + n.slice(1)} 👋`;
+  document.getElementById('whatsNew').classList.add('open');
+}
+function closeWhatsNew() {
+  document.getElementById('whatsNew').classList.remove('open');
+  try { localStorage.setItem('financas_seen_release_' + CURRENT_USER, RELEASE_ID); } catch (_) {}
+  if (fullData && appCfg().seenRelease !== RELEASE_ID) { appCfg().seenRelease = RELEASE_ID; autoSave(); }
+}
 
 // ── Pull to Refresh ─────────────────────────────────────────
 (function () {
