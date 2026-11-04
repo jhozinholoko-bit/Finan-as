@@ -675,7 +675,7 @@
     <span id="nvBellBadge" style="display:none"></span>
   </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.2</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.2.1</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -690,7 +690,7 @@
           <button type="button" class="menu-item nv-only" onclick="toggleTheme()" style="border-left:3px solid var(--muted);">🌓 Tema claro / escuro</button>
           <button type="button" class="menu-item" onclick="document.getElementById('helpModal').style.display='flex'" style="border-left:3px solid var(--muted);">❓ Ajuda</button>
           <button type="button" class="menu-item" onclick="sairDaConta()" style="border-left:3px solid var(--accent2);">Trocar conta</button>
-          <div class="menu-ver">Finanças v2.2</div>
+          <div class="menu-ver">Finanças v2.2.1</div>
         </div>
       </div>
       <button class="btn-ui" id="btnHide" onclick="toggleHideValues()" title="Ocultar valores" style="display:none">👁</button>
@@ -2161,19 +2161,14 @@ function copyPreviousMonth() {
     alert(`Não há dados de ${prevMn}/${prevYr} para replicar.`);
     return;
   }
-  showChoiceModal(
-    'Replicar mês anterior',
-    `Trazer de ${prevMn}${prevYr !== currentYear ? '/' + prevYr : ''} para ${curr} a mesma lista de itens (parcelas seguem para o próximo número). Escolha se os valores vêm iguais ou zerados para você preencher.`,
-    'Com valores',
-    'Sem valores (zerar)'
-  ).then(choice => {
-    if (choice === 'cancel') return;
-    const zerar = choice === 'all';
+  const de = `${prevMn}${prevYr !== currentYear ? '/' + prevYr : ''}`;
+  if (!confirm(`Replicar ${de} para ${curr}?\n\nAs contas vêm com os mesmos valores e as parcelas seguem para o próximo número. O que já existe em ${curr} não é alterado.`)) return;
+  {
         normalizeAppData();
     ['renda', 'fixas', 'temp', 'descontos'].forEach(cat => {
       const ent = Object.entries(prevYearData[prevMn][cat] || {});
       ent.forEach(([k, v]) => {
-        const valOut = zerar ? 0 : v;
+        const valOut = v;
         const p = parseParcelKey(k);
         let newKey = k;
         
@@ -2190,7 +2185,7 @@ function copyPreviousMonth() {
     });
     render();
     autoSave();
-  });
+  }
 }
 
 function updateKPIsOnly() {
@@ -3570,7 +3565,7 @@ function askAvatar() {
     [cur ? { label: 'Voltar para a inicial do nome', fn: () => { delete appCfg().avatar; autoSave(); applyNv(); } } : null]);
   document.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { appCfg().avatar = b.dataset.av; autoSave(); closeR7Modal(); applyNv(); });
 }
-const RELEASE_ID = 'r13-2026-10'; const APP_VERSION = 'v2.2';
+const RELEASE_ID = 'r13-2026-10'; const APP_VERSION = 'v2.2.1';
 let wnChecked = false;
 function maybeShowWhatsNew() {
   if (wnChecked || !CURRENT_USER || !fullData) return;
