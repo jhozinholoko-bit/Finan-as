@@ -627,7 +627,7 @@
     <details><summary>📅 Vencimentos e calendário</summary><div class="hb">Defina o dia segurando o ícone da conta. Contas com dia mostram o selo <b>dia X</b> (amarelo: vence em até 3 dias; vermelho: atrasada) e aparecem em <b>Atrasadas / Próximos 7 dias</b>.<br>No <b>Calendário</b>: grade do mês com bolinhas por dia, lista na <b>ordem de pagamento</b> (toque no ícone para pagar) e <b>Sem vencimento</b> com o botão <b>definir dia</b>.</div></details>
     <details><summary>⠿ Organizar a tela</summary><div class="hb">Segure o título de uma seção (Renda, Despesas, Cartões…) e <b>arraste</b> para onde quiser. No computador dá para trocar de coluna. A ordem fica salva na sua conta (uma para celular, outra para computador).</div></details>
     <details><summary>📊 Saldo real e 👁 ocultar</summary><div class="hb"><b>Saldo real</b> (atalhos): os totais consideram só o que já foi pago. <b>👁</b> no topo borra os valores — bom para abrir o app perto de outras pessoas.</div></details>
-    <details><summary>⬇ Exportar, importar e instalar</summary><div class="hb">No menu do seu ícone: <b>Exportar CSV</b> do ano (abre no Excel) e <b>Importar</b> planilha (Excel .xlsx, Planilhas Google ou CSV) ou extrato <b>OFX</b> do banco. A planilha precisa ter as colunas <b>item</b> (nome da conta) e <b>valor</b>; <b>mes</b>, <b>categoria</b>, <b>pago</b> e <b>vencimento</b> são opcionais. Se cada aba for um mês (JAN, FEV…), o mês vem do nome da aba. Também lê planilha no estilo <b>meses nas colunas</b>, com blocos Renda / Despesas fixas / Temporárias / Descontos (linhas de TOTAL e SALDO são ignoradas, células verdes viram pagas).<br><b>Instalar no celular:</b> abra no navegador → compartilhar/menu → <b>Adicionar à tela inicial</b>.</div></details>
+    <details><summary>⬇ Exportar, importar e instalar</summary><div class="hb">No menu do seu ícone: <b>Exportar CSV</b> do ano (abre no Excel) e <b>Importar</b> qualquer planilha (Excel, Planilhas Google ou CSV) ou extrato <b>OFX</b> do banco. O app lê do jeito que ela estiver — lista de contas, meses nas colunas, uma aba por mês, blocos de renda/despesas — separa por mês e categoria, ignora totais e zeros e mostra um resumo antes. Se algo sair errado, toque em <b>Ajustar</b> e diga qual coluna é o quê.<br><b>Instalar no celular:</b> abra no navegador → compartilhar/menu → <b>Adicionar à tela inicial</b>.</div></details>
     <details><summary>🎨 Seu ícone e tema</summary><div class="hb">No menu do seu ícone: <b>Trocar ícone</b> (vários de finanças 🐷💰📈) e <b>Tema claro/escuro</b>.</div></details>
     <div style="display:flex;gap:10px;margin-top:16px"><button class="login-btn secondary" style="flex:1" onclick="document.getElementById('helpModal').style.display='none';openWhatsNew(true)">✨ Novidades</button><button class="login-btn" style="flex:1" onclick="document.getElementById('helpModal').style.display='none'">Entendi</button></div>
   </div>
@@ -675,7 +675,7 @@
     <span id="nvBellBadge" style="display:none"></span>
   </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.3.1</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.4</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -690,7 +690,7 @@
           <button type="button" class="menu-item nv-only" onclick="toggleTheme()" style="border-left:3px solid var(--muted);">🌓 Tema claro / escuro</button>
           <button type="button" class="menu-item" onclick="document.getElementById('helpModal').style.display='flex'" style="border-left:3px solid var(--muted);">❓ Ajuda</button>
           <button type="button" class="menu-item" onclick="sairDaConta()" style="border-left:3px solid var(--accent2);">Trocar conta</button>
-          <div class="menu-ver">Finanças v2.3.1</div>
+          <div class="menu-ver">Finanças v2.4</div>
         </div>
       </div>
       <button class="btn-ui" id="btnHide" onclick="toggleHideValues()" title="Ocultar valores" style="display:none">👁</button>
@@ -2889,16 +2889,17 @@ function importCSV(text) { importTable([{ name: '', rows: parseCSV(text) }]); }
 function impNorm(v) { return String(v ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 const IMP_COLS = {
   ano: ['ano', 'year'],
-  mes: ['mes', 'month', 'competencia', 'referencia'],
-  categoria: ['categoria', 'tipo', 'grupo', 'secao', 'category', 'type'],
-  item: ['item', 'nome', 'conta', 'descricao', 'despesa', 'lancamento', 'name', 'description'],
-  valor: ['valor', 'valor (r$)', 'valor r$', 'total', 'quantia', 'preco', 'value', 'amount'],
+  mes: ['mes', 'month', 'competencia', 'referencia', 'data', 'date', 'dt'],
+  categoria: ['categoria', 'tipo', 'grupo', 'secao', 'classificacao', 'category', 'type'],
+  item: ['item', 'itens', 'nome', 'conta', 'contas', 'descricao', 'despesa', 'despesas', 'lancamento', 'historico', 'estabelecimento', 'titulo', 'name', 'description', 'memo', 'payee'],
+  valor: ['valor', 'valor (r$)', 'valor r$', 'valores', 'total', 'quantia', 'preco', 'custo', 'gasto', 'value', 'amount', 'price'],
   pago: ['pago', 'status', 'situacao', 'paid'],
   vencimento: ['vencimento', 'venc', 'dia', 'vence', 'dia venc', 'dia do vencimento', 'due'],
 };
 const IMP_CAT = { renda: 'renda', receita: 'renda', receitas: 'renda', entrada: 'renda', entradas: 'renda', salario: 'renda',
   fixas: 'fixas', fixa: 'fixas', 'despesa fixa': 'fixas', 'despesas fixas': 'fixas', 'contas fixas': 'fixas',
   temp: 'temp', temporaria: 'temp', temporarias: 'temp', variavel: 'temp', variaveis: 'temp', 'despesa variavel': 'temp', 'despesas variaveis': 'temp', avulsa: 'temp', avulsas: 'temp',
+  income: 'renda', receita: 'renda', credito: 'renda', expense: 'fixas', expenses: 'fixas', despesa: 'fixas', despesas: 'fixas', saida: 'fixas', saidas: 'fixas', debito: 'fixas',
   descontos: 'descontos', a_receber: 'descontos', 'a receber': 'descontos', receber: 'descontos' };
 function impMonth(v) {
   if (v instanceof Date && !isNaN(v)) return MONTHS[v.getMonth()];
@@ -2936,68 +2937,164 @@ function impMonthName(c) {
   if (c instanceof Date && !isNaN(c)) return MONTHS[c.getMonth()];
   if (typeof c !== 'string') return null;
   const s = impNorm(c).replace(/[^a-z]/g, ''); if (s.length < 3) return null;
-  const i = IMP_MESES.findIndex(m => m === s || m.slice(0, 3) === s); return i >= 0 ? MONTHS[i] : null;
+  const i = IMP_MESES.findIndex(m => m === s || m.slice(0, 3) === s); if (i >= 0) return MONTHS[i];
+  const e = IMP_MESES_EN.findIndex(m => m === s || m.slice(0, 3) === s); return e >= 0 ? MONTHS[e] : null;
 }
-function impWide(sh) {
+const IMP_MESES_EN = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+function impMonthCols(row) {
+  const m = {}; let str = 0;
+  row.forEach((c, j) => { const mm = impMonthName(c); if (mm) { m[j] = mm; if (typeof c === 'string') str++; } });
+  const n = Object.keys(m).length; return (str >= 2 || n >= 3) && new Set(Object.values(m)).size === n ? m : null;
+}
+function impWide(sh, opt = {}) {
   const rows = sh.rows || [], fills = sh.fills || [];
   let yr = null;
   for (let i = 0; i < Math.min(rows.length, 6) && !yr; i++) rows[i].forEach(c => { const m = String(c ?? '').match(/\b(20\d{2})\b/); if (m && !yr) yr = +m[1]; });
   const items = []; let sec = null, nSec = 0, paidCount = 0;
   rows.forEach((row, i) => {
     const months = {}; let labelCol = -1;
-    row.forEach((c, j) => { const mm = impMonthName(c); if (mm) months[j] = mm; else if (labelCol < 0 && String(c ?? '').trim()) labelCol = j; });
-    if (Object.keys(months).length >= 3) {
+    const mc = impMonthCols(row);
+    if (mc) Object.assign(months, mc);
+    row.forEach((c, j) => { if (!(j in months) && labelCol < 0 && String(c ?? '').trim()) labelCol = j; });
+    if (mc) {
       if (labelCol < 0) labelCol = Math.max(0, Math.min(...Object.keys(months).map(Number)) - 1);
-      sec = { cat: impSectionCat(row[labelCol], nSec++), months, labelCol }; return;
+      if (opt.name >= 0) labelCol = opt.name;
+      const h = row.map(impNorm); const catCol = h.findIndex(x => IMP_COLS.categoria.includes(x));
+      const lab = String(row[labelCol] ?? '');
+      const cat = opt.fixCat && opt.fixCat !== 'auto' ? opt.fixCat : (impSecCatStrict(lab) || (sec ? sec.cat : null) || impSectionCat(lab, nSec));
+      nSec++;
+      sec = { cat, months, labelCol, catCol, closed: false }; return;
     }
     if (!sec) return;
     const name = String(row[sec.labelCol] ?? '').replace(/:/g, ' -').replace(/\s+/g, ' ').trim();
     if (!name) return;
-    if (/^(total|saldo|soma|resultado)/.test(impNorm(name))) { sec = null; return; }
+    const hasVal = Object.keys(sec.months).some(j => impIsNum(row[j]) && String(row[j]).trim() !== '');
+    if (!hasVal) { const sc = impSecCatStrict(name); if (sc && !(opt.fixCat && opt.fixCat !== 'auto')) { sec.cat = sc; sec.closed = false; } return; }
+    if (/^(total|saldo|soma|resultado|subtotal|sobra)/.test(impNorm(name))) { sec.closed = true; return; }
+    if (sec.closed) return;
+    let cat = sec.cat;
+    if (sec.catCol >= 0 && !(opt.fixCat && opt.fixCat !== 'auto')) cat = IMP_CAT[impNorm(row[sec.catCol])] || impSecCatStrict(row[sec.catCol]) || cat;
     Object.entries(sec.months).forEach(([j, mn]) => {
-      const raw = row[j]; if (String(raw ?? '').trim() === '') return;
+      const raw = row[j]; if (String(raw ?? '').trim() === '' || !impIsNum(raw)) return;
       let val = parseMoneyBR(raw); if (!val) return; if (val < 0) val = -val;
-      const paid = sec.cat !== 'renda' && impIsPaidFill(fills[i]?.[j]); if (paid) paidCount++;
-      items.push({ yr: yr || currentYear, mn, cat: sec.cat, key: name, val, paid, day: null });
+      const paid = cat !== 'renda' && impIsPaidFill(fills[i]?.[j]); if (paid) paidCount++;
+      items.push({ yr: yr || currentYear, mn, cat, key: name, val, paid, day: null });
     });
   });
   return items.length ? { items, yr: yr || currentYear, paidCount } : null;
 }
-function importTable(sheets) {
-  const items = []; let semCat = 0, semMes = 0, achou = false, wideInfo = null;
-  sheets.forEach(sh => {
-    const rows = (sh.rows || []).filter(r => r.some(c => String(c ?? '').trim() !== ''));
-    const hd = impHeader(rows);
-    if (!hd) { const w = impWide(sh); if (w) { achou = true; items.push(...w.items); wideInfo = w; } return; }
-    achou = true;
-    const ix = hd.ix, has = k => ix[k] >= 0;
-    const shMonth = impMonth(sh.name);
-    rows.slice(hd.at + 1).forEach(r => {
-      const key = String(r[ix.item] ?? '').trim();
-      if (!key || /^total/i.test(impNorm(key))) return;
-      const rawV = r[ix.valor]; if (String(rawV ?? '').trim() === '') return;
-      let mn = has('mes') ? impMonth(r[ix.mes]) : null;
-      if (!mn) mn = shMonth; if (!mn) { mn = MONTHS[activeMes]; semMes++; }
-      let cat = has('categoria') ? IMP_CAT[impNorm(r[ix.categoria])] : null;
-      if (!cat) { cat = 'fixas'; semCat++; }
-      let val = parseMoneyBR(rawV); if (val < 0) val = -val;
-      let yr = has('ano') ? parseInt(r[ix.ano], 10) : NaN;
-      if (!(yr > 1900) && has('mes') && r[ix.mes] instanceof Date) yr = r[ix.mes].getFullYear();
-      if (!(yr > 1900)) yr = currentYear;
-      const pv = has('pago') ? impNorm(r[ix.pago]) : '';
-      let day = null;
-      if (has('vencimento')) { const vv = r[ix.vencimento]; day = vv instanceof Date ? vv.getDate() : parseInt(String(vv).match(/\d{1,2}/)?.[0], 10) || null; }
-      items.push({ yr, mn, cat, key, val, paid: /^(sim|s|1|true|x|pago|ok|quitado|verdadeiro|yes)$/.test(pv), day });
-    });
+// Auto: 1) cabeçalho com nome/valor  2) meses nas colunas  3) adivinha colunas de texto e número
+function impIsNum(c) { return typeof c === 'number' || (typeof c === 'string' && /^\s*-?\s*(r\$)?\s*-?\s*\d[\d.\s]*(,\d+)?\s*$/i.test(c)); }
+function impIsText(c) { return typeof c === 'string' && /[a-zà-ú]/i.test(c) && !impIsNum(c); }
+function impLong(sh, cfg) {
+  const rows = sh.rows || []; const items = []; const shMonth = impMonthName(sh.name) || impMonth(sh.name);
+  let semMes = 0, semCat = 0, cat = null;
+  rows.slice(cfg.head + 1).forEach(r => {
+    const key = String(r[cfg.name] ?? '').replace(/:/g, ' -').replace(/\s+/g, ' ').trim();
+    if (!key) return;
+    const rawV = r[cfg.val];
+    if (String(rawV ?? '').trim() === '' || !impIsNum(rawV)) { const sc = impSecCatStrict(key); if (sc) cat = sc; return; }
+    if (/^(total|saldo|soma|resultado|subtotal)/.test(impNorm(key))) return;
+    let val = parseMoneyBR(rawV); if (!val) return; if (val < 0) val = -val;
+    let mn = cfg.mes >= 0 ? impMonth(r[cfg.mes]) : (cfg.fixMes || null);
+    if (!mn) mn = shMonth; if (!mn) { mn = MONTHS[activeMes]; semMes++; }
+    let c = cfg.cat >= 0 ? (IMP_CAT[impNorm(r[cfg.cat])] || impSecCatStrict(r[cfg.cat])) : (cfg.fixCat && cfg.fixCat !== 'auto' ? cfg.fixCat : cat);
+    if (!c) { c = 'fixas'; semCat++; }
+    let yr = cfg.ano >= 0 ? parseInt(r[cfg.ano], 10) : NaN;
+    if (!(yr > 1900) && cfg.mes >= 0 && r[cfg.mes] instanceof Date) yr = r[cfg.mes].getFullYear();
+    if (!(yr > 1900)) yr = cfg.yr || currentYear;
+    const pv = cfg.pago >= 0 ? impNorm(r[cfg.pago]) : '';
+    let day = null;
+    if (cfg.venc >= 0) { const vv = r[cfg.venc]; day = vv instanceof Date ? vv.getDate() : parseInt(String(vv ?? '').match(/\d{1,2}/)?.[0], 10) || null; }
+    items.push({ yr, mn, cat: c, key, val, paid: /^(sim|s|1|true|x|pago|paga|ok|quitado|verdadeiro|yes)$/.test(pv), day });
   });
-  if (!achou) { alert('Não reconheci a planilha.\n\nEla precisa de uma linha de cabeçalho com pelo menos as colunas "item" (ou "nome"/"conta") e "valor".\nOpcionais: mes, categoria (renda, fixas, temporarias, a receber), pago, vencimento.\n\nDica: exporte pelo app (Exportar CSV) para ver o modelo.'); return; }
-  if (!items.length) { alert('Nenhuma linha com conta e valor foi encontrada na planilha.'); return; }
-  let overw = 0;
-  items.forEach(it => { if (fullData[String(it.yr)]?.[it.mn]?.[it.cat]?.[it.key] !== undefined) overw++; });
-  const nMeses = new Set(items.map(it => it.yr + it.mn)).size, nContas = new Set(items.map(it => it.cat + it.key)).size;
-  const resumo = ['renda', 'fixas', 'temp', 'descontos'].map(c => { const n = new Set(items.filter(it => it.cat === c).map(it => it.key)).size; return n ? `${n} ${{ renda: 'renda', fixas: 'fixas', temp: 'temporárias', descontos: 'a receber' }[c]}` : ''; }).filter(Boolean).join(', ');
-  const notas = [wideInfo ? `${nContas} contas (${resumo}) em ${nMeses} meses de ${wideInfo.yr}. Valores zerados foram ignorados.` : '', wideInfo && wideInfo.paidCount ? `${wideInfo.paidCount} células verdes marcadas como pagas.` : '', overw ? `${overw} já existem com o mesmo nome e terão o valor substituído.` : '', semCat ? `${semCat} sem categoria entram como Fixas.` : '', semMes ? `${semMes} sem mês entram em ${MONTHS[activeMes]}.` : ''].filter(Boolean);
-  if (!confirm(`Importar ${items.length} itens?${notas.length ? '\n\n' + notas.join('\n') : ''}`)) return;
+  return { items, semMes, semCat };
+}
+function impSecCatStrict(label) {
+  const s = impNorm(label); if (!s || s.length > 40) return null;
+  if (IMP_CAT[s]) return IMP_CAT[s];
+  if (/^(renda|receitas?|entradas?|ganhos?)\b/.test(s)) return 'renda';
+  if (/desconto|a receber|reembols/.test(s)) return 'descontos';
+  if (/^(despesas? )?(tempor|variav|avuls)/.test(s)) return 'temp';
+  if (/^(despesas?|contas?|gastos?)( |$)|fixa/.test(s)) return 'fixas';
+  return null;
+}
+function impYear(rows) {
+  for (let i = 0; i < Math.min(rows.length, 6); i++) for (const c of rows[i]) { const m = String(c ?? '').match(/\b(20\d{2})\b/); if (m) return +m[1]; }
+  return null;
+}
+function impGuess(sh) {
+  const rows = sh.rows || []; let best = null;
+  for (let h = 0; h < Math.min(rows.length, 20); h++) {
+    const body = rows.slice(h + 1, h + 200); if (body.length < 1) break;
+    const ncol = Math.max(...rows.map(r => r.length), 0);
+    const txt = [], num = [];
+    for (let c = 0; c < ncol; c++) { txt[c] = body.filter(r => impIsText(r[c])).length; num[c] = body.filter(r => impIsNum(r[c]) && parseMoneyBR(r[c])).length; }
+    const name = txt.indexOf(Math.max(...txt)); if (txt[name] < 1) continue;
+    const head = rows[h].map(impNorm);
+    let val = head.findIndex((x, c) => c !== name && IMP_COLS.valor.includes(x));
+    if (val < 0) { let m = 0; num.forEach((n, c) => { if (c !== name && n > m && !head[c].match(/venc|dia|ano/)) { m = n; val = c; } }); }
+    if (val < 0 || num[val] < 1) continue;
+    const noHead = impIsNum(rows[h][val]) && parseMoneyBR(rows[h][val]) && !impIsText(rows[h][val]);
+    const score = Math.min(txt[name], num[val]);
+    if (!best || score > best.score) {
+      const find = k => head.findIndex(x => IMP_COLS[k].includes(x));
+      let mes = find('mes'); if (mes < 0) { for (let c = 0; c < ncol; c++) if (c !== name && c !== val && body.filter(r => r[c] instanceof Date || (impIsText(r[c]) && impMonth(r[c]))).length > body.length / 2) { mes = c; break; } }
+      let cat = find('categoria'); if (cat < 0) { for (let c = 0; c < ncol; c++) if (c !== name && body.filter(r => IMP_CAT[impNorm(r[c])]).length > body.length / 3) { cat = c; break; } }
+      best = { score, cfg: { mode: 'long', head: noHead ? h - 1 : h, name, val, mes, cat, ano: find('ano'), pago: find('pago'), venc: find('vencimento'), fixCat: 'auto', fixMes: null, yr: impYear(rows) } };
+    }
+  }
+  return best ? best.cfg : null;
+}
+function impAuto(sh) {
+  const rows = sh.rows || [];
+  if (!rows.some(r => r.some(c => String(c ?? '').trim()))) return null;
+  for (let i = 0; i < Math.min(rows.length, 15); i++) {
+    const h = rows[i].map(impNorm); const f = k => h.findIndex(c => IMP_COLS[k].includes(c));
+    if (f('item') >= 0 && f('valor') >= 0)
+      return { mode: 'long', head: i, name: f('item'), val: f('valor'), mes: f('mes'), cat: f('categoria'), ano: f('ano'), pago: f('pago'), venc: f('vencimento'), fixCat: 'auto', fixMes: null, yr: impYear(rows) };
+  }
+  if (rows.some(r => impMonthCols(r))) return { mode: 'wide', name: -1, fixCat: 'auto' };
+  return impGuess(sh);
+}
+function impRun(sh, cfg) {
+  if (cfg.mode === 'wide') { const w = impWide(sh, cfg); return { items: w ? w.items : [], paidCount: w ? w.paidCount : 0, semMes: 0, semCat: 0 }; }
+  return impLong(sh, cfg);
+}
+let impState = null;
+function importTable(sheets) {
+  sheets = sheets.filter(sh => (sh.rows || []).some(r => r.some(c => String(c ?? '').trim())));
+  if (!sheets.length) { alert('A planilha está vazia.'); return; }
+  const cfgs = sheets.map(impAuto);
+  impState = { sheets, cfgs, sel: Math.max(0, cfgs.findIndex(Boolean)) };
+  if (!cfgs.some(Boolean)) { impManual(); return; }
+  impSummary();
+}
+function impCollect() {
+  const all = []; let paid = 0, semMes = 0, semCat = 0;
+  impState.sheets.forEach((sh, i) => { const c = impState.cfgs[i]; if (!c) return; const r = impRun(sh, c); all.push(...r.items); paid += r.paidCount || 0; semMes += r.semMes; semCat += r.semCat; });
+  const seen = new Map(); all.forEach(it => seen.set(it.yr + '|' + it.mn + '|' + it.cat + '|' + it.key, it));
+  return { items: [...seen.values()], paid, semMes, semCat };
+}
+const IMP_CATN = { renda: 'Renda', fixas: 'Fixas', temp: 'Temporárias', descontos: 'A receber' };
+function impSummary() {
+  const { items, paid, semMes, semCat } = impCollect();
+  if (!items.length) { impManual('Não achei contas com valor nessa leitura. Ajuste abaixo:'); return; }
+  const meses = [...new Set(items.map(it => it.yr + '|' + it.mn))].sort((a, b) => a.split('|')[0] - b.split('|')[0] || MONTHS.indexOf(a.split('|')[1]) - MONTHS.indexOf(b.split('|')[1]));
+  let overw = 0; items.forEach(it => { if (fullData[String(it.yr)]?.[it.mn]?.[it.cat]?.[it.key] !== undefined) overw++; });
+  const porCat = ['renda', 'fixas', 'temp', 'descontos'].map(c => {
+    const ks = [...new Set(items.filter(it => it.cat === c).map(it => it.key))]; if (!ks.length) return '';
+    return `<div style="margin-top:8px"><b>${IMP_CATN[c]}</b> <span class="r7-sub">(${ks.length})</span><div class="r7-sub" style="margin:2px 0 0">${ks.slice(0, 14).map(r7Esc).join(' · ')}${ks.length > 14 ? ` · +${ks.length - 14}` : ''}</div></div>`;
+  }).join('');
+  const fm = m => { const [y, mn] = m.split('|'); return mn + '/' + String(y).slice(2); };
+  openR7Modal('Importar planilha', `
+    <p class="r7-sub">Organizei <b>${items.length} lançamentos</b> em <b>${meses.length} ${meses.length === 1 ? 'mês' : 'meses'}</b> (${fm(meses[0])}${meses.length > 1 ? ' a ' + fm(meses[meses.length - 1]) : ''}).</p>
+    <div style="max-height:46vh;overflow:auto">${porCat}</div>
+    <p class="r7-sub" style="margin-top:10px">${[paid ? `${paid} marcados como pagos (células verdes ou coluna "pago").` : '', overw ? `${overw} já existem e terão o valor substituído.` : '', semCat ? `${semCat} sem categoria foram para Fixas.` : '', semMes ? `${semMes} sem mês foram para ${MONTHS[activeMes]}.` : '', 'Linhas de total/saldo e valores zerados foram ignorados.'].filter(Boolean).join('<br>')}</p>`,
+    [{ label: 'Importar', primary: true, fn: () => { impCommit(items); } },
+     { label: 'Ajustar', fn: () => { setTimeout(() => impManual(), 0); } }]);
+}
+function impCommit(items) {
   items.forEach(it => {
     const md = ensureYear(it.yr)[it.mn];
     md[it.cat][it.key] = it.val;
@@ -3010,6 +3107,60 @@ function importTable(sheets) {
   });
   appData = fullData[String(currentYear)]; normalizeAppData();
   autoSave(); render();
+}
+function impColLabel(c) { let s = ''; c++; while (c > 0) { const m = (c - 1) % 26; s = String.fromCharCode(65 + m) + s; c = Math.floor((c - 1) / 26); } return s; }
+function impManual(msg) {
+  const st = impState; const sh = st.sheets[st.sel];
+  if (!st.cfgs[st.sel]) st.cfgs[st.sel] = impGuess(sh) || { mode: 'long', head: 0, name: 0, val: 1, mes: -1, cat: -1, ano: -1, pago: -1, venc: -1, fixCat: 'auto', fixMes: null, yr: impYear(sh.rows) };
+  const cfg = st.cfgs[st.sel];
+  const ncol = Math.min(26, Math.max(...sh.rows.map(r => r.length), 1));
+  const prev = sh.rows.map((r, i) => [i, r]).filter(([, r]) => r.some(c => String(c ?? '').trim())).slice(0, 12);
+  const cell = v => r7Esc(v instanceof Date ? v.toLocaleDateString('pt-BR') : typeof v === 'number' ? formatMoneyBR(v) : String(v ?? '')).slice(0, 18);
+  const colOpts = (sel, opt) => (opt ? `<option value="-1"${sel < 0 ? ' selected' : ''}>${opt}</option>` : '') + Array.from({ length: ncol }, (_, c) => `<option value="${c}"${sel === c ? ' selected' : ''}>${impColLabel(c)}${cfg.mode === 'long' && sh.rows[cfg.head]?.[c] ? ' · ' + cell(sh.rows[cfg.head][c]) : ''}</option>`).join('');
+  const sel = (id, html) => `<select class="login-input r7-in" id="${id}" style="padding:8px">${html}</select>`;
+  const catOpts = `<option value="auto">Automático (pelos blocos)</option>` + Object.entries(IMP_CATN).map(([k, l]) => `<option value="${k}"${cfg.fixCat === k ? ' selected' : ''}>Tudo em ${l}</option>`).join('');
+  const r = impRun(sh, cfg);
+  openR7Modal('Ajustar importação', `
+    ${msg ? `<p class="r7-sub">${msg}</p>` : ''}
+    ${st.sheets.length > 1 ? `<label class="r7-lbl">Aba</label>${sel('impSheet', st.sheets.map((s, i) => `<option value="${i}"${i === st.sel ? ' selected' : ''}>${r7Esc(s.name)}${st.cfgs[i] ? '' : ' (ignorada)'}</option>`).join(''))}` : ''}
+    <div style="overflow:auto;max-height:28vh;border:1px solid var(--border);border-radius:8px;margin-top:8px"><table style="border-collapse:collapse;font-size:10px;white-space:nowrap">
+      <tr><th></th>${Array.from({ length: Math.min(ncol, 14) }, (_, c) => `<th style="padding:3px 6px;color:var(--muted)">${impColLabel(c)}</th>`).join('')}</tr>
+      ${prev.map(([i, row]) => `<tr><td style="padding:3px 6px;color:var(--muted)">${i + 1}</td>${Array.from({ length: Math.min(ncol, 14) }, (_, c) => `<td style="padding:3px 6px;border-top:1px solid var(--border)">${cell(row[c])}</td>`).join('')}</tr>`).join('')}
+    </table></div>
+    <label class="r7-lbl">Como a planilha está organizada</label>
+    ${sel('impMode', `<option value="long"${cfg.mode === 'long' ? ' selected' : ''}>Uma linha por conta (nome e valor em colunas)</option><option value="wide"${cfg.mode === 'wide' ? ' selected' : ''}>Meses nas colunas (Janeiro, Fevereiro…)</option>`)}
+    <label class="r7-lbl">Coluna com o nome da conta</label>${sel('impName', cfg.mode === 'wide' ? colOpts(cfg.name, 'Automático') : colOpts(cfg.name))}
+    ${cfg.mode === 'long' ? `
+      <label class="r7-lbl">Linha do cabeçalho</label><input class="login-input r7-in" id="impHead" type="number" min="1" value="${cfg.head + 1}">
+      <label class="r7-lbl">Coluna do valor</label>${sel('impVal', colOpts(cfg.val))}
+      <label class="r7-lbl">Mês</label>${sel('impMes', colOpts(cfg.mes, 'Não tem coluna de mês') )}
+      ${cfg.mes < 0 ? sel('impFixMes', `<option value="">Pelo nome da aba ou ${MONTHS[activeMes]}</option>` + MONTHS.map(m => `<option${cfg.fixMes === m ? ' selected' : ''}>${m}</option>`).join('')) : ''}
+      <label class="r7-lbl">Categoria</label>${sel('impCat', colOpts(cfg.cat, 'Não tem coluna de categoria'))}
+      ${cfg.cat < 0 ? sel('impFixCat', catOpts) : ''}
+      <label class="r7-lbl">Pago (opcional)</label>${sel('impPago', colOpts(cfg.pago, '—'))}
+      <label class="r7-lbl">Vencimento (opcional)</label>${sel('impVenc', colOpts(cfg.venc, '—'))}`
+    : `<label class="r7-lbl">Categoria</label>${sel('impFixCat', catOpts)}`}
+    <p class="r7-sub" style="margin-top:10px">Com essa leitura: <b>${r.items.length} lançamentos</b>.</p>`,
+    [{ label: 'Ver resumo', primary: true, fn: () => { setTimeout(impSummary, 0); } }]);
+  const g = id => document.getElementById(id);
+  const upd = () => {
+    const v = id => g(id) ? +g(id).value : undefined;
+    if (g('impSheet') && v('impSheet') !== st.sel) { st.sel = v('impSheet'); impManual(); return; }
+    const mode = g('impMode').value;
+    if (mode !== cfg.mode) {
+      if (mode === 'wide') Object.assign(cfg, { mode, name: -1, fixCat: 'auto' });
+      else Object.assign(cfg, impGuess(sh) || { mode, head: 0, name: 0, val: 1, mes: -1, cat: -1, ano: -1, pago: -1, venc: -1, fixCat: 'auto' }, { mode });
+    } else {
+      cfg.name = v('impName');
+      if (g('impFixCat')) cfg.fixCat = g('impFixCat').value;
+      if (mode === 'long') {
+        cfg.head = Math.max(0, (v('impHead') || 1) - 1); cfg.val = v('impVal'); cfg.mes = v('impMes'); cfg.cat = v('impCat'); cfg.pago = v('impPago'); cfg.venc = v('impVenc');
+        if (g('impFixMes')) cfg.fixMes = g('impFixMes').value || null;
+      }
+    }
+    impManual();
+  };
+  document.querySelectorAll('#r7Modal select, #impHead').forEach(e => e.addEventListener('change', upd));
 }
 function parseOFX(text) {
   const tag = (blk, t) => { const m = blk.match(new RegExp('<' + t + '>([^<\\r\\n]*)', 'i')); return m ? m[1].trim() : ''; };
@@ -3695,7 +3846,7 @@ function askAvatar() {
     [cur ? { label: 'Voltar para a inicial do nome', fn: () => { delete appCfg().avatar; autoSave(); applyNv(); } } : null]);
   document.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { appCfg().avatar = b.dataset.av; autoSave(); closeR7Modal(); applyNv(); });
 }
-const RELEASE_ID = 'r13-2026-10'; const APP_VERSION = 'v2.3.1';
+const RELEASE_ID = 'r13-2026-10'; const APP_VERSION = 'v2.4';
 let wnChecked = false;
 function maybeShowWhatsNew() {
   if (wnChecked || !CURRENT_USER || !fullData) return;
