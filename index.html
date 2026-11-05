@@ -627,7 +627,7 @@
     <details><summary>📅 Vencimentos e calendário</summary><div class="hb">Defina o dia segurando o ícone da conta. Contas com dia mostram o selo <b>dia X</b> (amarelo: vence em até 3 dias; vermelho: atrasada) e aparecem em <b>Atrasadas / Próximos 7 dias</b>.<br>No <b>Calendário</b>: grade do mês com bolinhas por dia, lista na <b>ordem de pagamento</b> (toque no ícone para pagar) e <b>Sem vencimento</b> com o botão <b>definir dia</b>.</div></details>
     <details><summary>⠿ Organizar a tela</summary><div class="hb">Segure o título de uma seção (Renda, Despesas, Cartões…) e <b>arraste</b> para onde quiser. No computador dá para trocar de coluna. A ordem fica salva na sua conta (uma para celular, outra para computador).</div></details>
     <details><summary>📊 Saldo real e 👁 ocultar</summary><div class="hb"><b>Saldo real</b> (atalhos): os totais consideram só o que já foi pago. <b>👁</b> no topo borra os valores — bom para abrir o app perto de outras pessoas.</div></details>
-    <details><summary>⬇ Exportar, importar e instalar</summary><div class="hb">No menu do seu ícone: <b>Exportar CSV</b> do ano (abre no Excel) e <b>Importar</b> planilha (Excel .xlsx, Planilhas Google ou CSV) ou extrato <b>OFX</b> do banco. A planilha precisa ter as colunas <b>item</b> (nome da conta) e <b>valor</b>; <b>mes</b>, <b>categoria</b>, <b>pago</b> e <b>vencimento</b> são opcionais. Se cada aba for um mês (JAN, FEV…), o mês vem do nome da aba.<br><b>Instalar no celular:</b> abra no navegador → compartilhar/menu → <b>Adicionar à tela inicial</b>.</div></details>
+    <details><summary>⬇ Exportar, importar e instalar</summary><div class="hb">No menu do seu ícone: <b>Exportar CSV</b> do ano (abre no Excel) e <b>Importar</b> planilha (Excel .xlsx, Planilhas Google ou CSV) ou extrato <b>OFX</b> do banco. A planilha precisa ter as colunas <b>item</b> (nome da conta) e <b>valor</b>; <b>mes</b>, <b>categoria</b>, <b>pago</b> e <b>vencimento</b> são opcionais. Se cada aba for um mês (JAN, FEV…), o mês vem do nome da aba. Também lê planilha no estilo <b>meses nas colunas</b>, com blocos Renda / Despesas fixas / Temporárias / Descontos (linhas de TOTAL e SALDO são ignoradas, células verdes viram pagas).<br><b>Instalar no celular:</b> abra no navegador → compartilhar/menu → <b>Adicionar à tela inicial</b>.</div></details>
     <details><summary>🎨 Seu ícone e tema</summary><div class="hb">No menu do seu ícone: <b>Trocar ícone</b> (vários de finanças 🐷💰📈) e <b>Tema claro/escuro</b>.</div></details>
     <div style="display:flex;gap:10px;margin-top:16px"><button class="login-btn secondary" style="flex:1" onclick="document.getElementById('helpModal').style.display='none';openWhatsNew(true)">✨ Novidades</button><button class="login-btn" style="flex:1" onclick="document.getElementById('helpModal').style.display='none'">Entendi</button></div>
   </div>
@@ -675,7 +675,7 @@
     <span id="nvBellBadge" style="display:none"></span>
   </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.3</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.3.1</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -690,7 +690,7 @@
           <button type="button" class="menu-item nv-only" onclick="toggleTheme()" style="border-left:3px solid var(--muted);">🌓 Tema claro / escuro</button>
           <button type="button" class="menu-item" onclick="document.getElementById('helpModal').style.display='flex'" style="border-left:3px solid var(--muted);">❓ Ajuda</button>
           <button type="button" class="menu-item" onclick="sairDaConta()" style="border-left:3px solid var(--accent2);">Trocar conta</button>
-          <div class="menu-ver">Finanças v2.3</div>
+          <div class="menu-ver">Finanças v2.3.1</div>
         </div>
       </div>
       <button class="btn-ui" id="btnHide" onclick="toggleHideValues()" title="Ocultar valores" style="display:none">👁</button>
@@ -2851,9 +2851,24 @@ async function importSheetFile(file) {
   let XL;
   try { XL = await loadXLSX(); } catch (_) { alert('Não consegui carregar o leitor de planilhas. Verifique a internet e tente de novo.'); return; }
   let wb;
-  try { wb = XL.read(await file.arrayBuffer(), { type: 'array', cellDates: true }); }
+  try { wb = XL.read(await file.arrayBuffer(), { type: 'array', cellDates: true, cellStyles: true }); }
   catch (_) { alert('Não consegui abrir essa planilha.'); return; }
-  const sheets = wb.SheetNames.map(n => ({ name: n, rows: XL.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: '' }) }));
+  const sheets = wb.SheetNames.map(n => {
+    const ws = wb.Sheets[n]; const rows = [], fills = [];
+    if (ws['!ref']) {
+      const R = XL.utils.decode_range(ws['!ref']);
+      for (let r = 0; r <= R.e.r; r++) {
+        const row = [], fr = [];
+        for (let c = 0; c <= R.e.c; c++) {
+          const cell = ws[XL.utils.encode_cell({ r, c })];
+          row.push(cell ? (cell.v ?? '') : '');
+          fr.push(cell?.s?.fgColor?.rgb || cell?.s?.bgColor?.rgb || '');
+        }
+        rows.push(row); fills.push(fr);
+      }
+    }
+    return { name: n, rows, fills };
+  });
   importTable(sheets);
 }
 function parseCSV(text) {
@@ -2902,11 +2917,59 @@ function impHeader(rows) {
   }
   return null;
 }
+// Planilha "larga": blocos (RENDA, DESPESAS FIXAS…) com os meses nas colunas
+function impSectionCat(label, n) {
+  const s = impNorm(label);
+  if (/renda|receita|entrada|ganho|salario/.test(s)) return 'renda';
+  if (/desconto|receber|reembols/.test(s)) return 'descontos';
+  if (/tempor|variav|avuls|extra/.test(s)) return 'temp';
+  if (/fixa|anual|mensal|despesa|conta|gasto/.test(s)) return 'fixas';
+  return ['renda', 'fixas', 'temp', 'descontos'][n] || 'fixas';
+}
+function impIsPaidFill(rgb) {
+  const h = String(rgb || '').replace(/^#/, '').slice(-6); if (!/^[0-9a-f]{6}$/i.test(h)) return false;
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  return g >= 0x90 && g - r >= 0x30 && g - b >= 0x30;
+}
+const IMP_MESES = ['janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+function impMonthName(c) {
+  if (c instanceof Date && !isNaN(c)) return MONTHS[c.getMonth()];
+  if (typeof c !== 'string') return null;
+  const s = impNorm(c).replace(/[^a-z]/g, ''); if (s.length < 3) return null;
+  const i = IMP_MESES.findIndex(m => m === s || m.slice(0, 3) === s); return i >= 0 ? MONTHS[i] : null;
+}
+function impWide(sh) {
+  const rows = sh.rows || [], fills = sh.fills || [];
+  let yr = null;
+  for (let i = 0; i < Math.min(rows.length, 6) && !yr; i++) rows[i].forEach(c => { const m = String(c ?? '').match(/\b(20\d{2})\b/); if (m && !yr) yr = +m[1]; });
+  const items = []; let sec = null, nSec = 0, paidCount = 0;
+  rows.forEach((row, i) => {
+    const months = {}; let labelCol = -1;
+    row.forEach((c, j) => { const mm = impMonthName(c); if (mm) months[j] = mm; else if (labelCol < 0 && String(c ?? '').trim()) labelCol = j; });
+    if (Object.keys(months).length >= 3) {
+      if (labelCol < 0) labelCol = Math.max(0, Math.min(...Object.keys(months).map(Number)) - 1);
+      sec = { cat: impSectionCat(row[labelCol], nSec++), months, labelCol }; return;
+    }
+    if (!sec) return;
+    const name = String(row[sec.labelCol] ?? '').replace(/:/g, ' -').replace(/\s+/g, ' ').trim();
+    if (!name) return;
+    if (/^(total|saldo|soma|resultado)/.test(impNorm(name))) { sec = null; return; }
+    Object.entries(sec.months).forEach(([j, mn]) => {
+      const raw = row[j]; if (String(raw ?? '').trim() === '') return;
+      let val = parseMoneyBR(raw); if (!val) return; if (val < 0) val = -val;
+      const paid = sec.cat !== 'renda' && impIsPaidFill(fills[i]?.[j]); if (paid) paidCount++;
+      items.push({ yr: yr || currentYear, mn, cat: sec.cat, key: name, val, paid, day: null });
+    });
+  });
+  return items.length ? { items, yr: yr || currentYear, paidCount } : null;
+}
 function importTable(sheets) {
-  const items = []; let semCat = 0, semMes = 0, achou = false;
+  const items = []; let semCat = 0, semMes = 0, achou = false, wideInfo = null;
   sheets.forEach(sh => {
     const rows = (sh.rows || []).filter(r => r.some(c => String(c ?? '').trim() !== ''));
-    const hd = impHeader(rows); if (!hd) return; achou = true;
+    const hd = impHeader(rows);
+    if (!hd) { const w = impWide(sh); if (w) { achou = true; items.push(...w.items); wideInfo = w; } return; }
+    achou = true;
     const ix = hd.ix, has = k => ix[k] >= 0;
     const shMonth = impMonth(sh.name);
     rows.slice(hd.at + 1).forEach(r => {
@@ -2931,7 +2994,9 @@ function importTable(sheets) {
   if (!items.length) { alert('Nenhuma linha com conta e valor foi encontrada na planilha.'); return; }
   let overw = 0;
   items.forEach(it => { if (fullData[String(it.yr)]?.[it.mn]?.[it.cat]?.[it.key] !== undefined) overw++; });
-  const notas = [overw ? `${overw} já existem com o mesmo nome e terão o valor substituído.` : '', semCat ? `${semCat} sem categoria entram como Fixas.` : '', semMes ? `${semMes} sem mês entram em ${MONTHS[activeMes]}.` : ''].filter(Boolean);
+  const nMeses = new Set(items.map(it => it.yr + it.mn)).size, nContas = new Set(items.map(it => it.cat + it.key)).size;
+  const resumo = ['renda', 'fixas', 'temp', 'descontos'].map(c => { const n = new Set(items.filter(it => it.cat === c).map(it => it.key)).size; return n ? `${n} ${{ renda: 'renda', fixas: 'fixas', temp: 'temporárias', descontos: 'a receber' }[c]}` : ''; }).filter(Boolean).join(', ');
+  const notas = [wideInfo ? `${nContas} contas (${resumo}) em ${nMeses} meses de ${wideInfo.yr}. Valores zerados foram ignorados.` : '', wideInfo && wideInfo.paidCount ? `${wideInfo.paidCount} células verdes marcadas como pagas.` : '', overw ? `${overw} já existem com o mesmo nome e terão o valor substituído.` : '', semCat ? `${semCat} sem categoria entram como Fixas.` : '', semMes ? `${semMes} sem mês entram em ${MONTHS[activeMes]}.` : ''].filter(Boolean);
   if (!confirm(`Importar ${items.length} itens?${notas.length ? '\n\n' + notas.join('\n') : ''}`)) return;
   items.forEach(it => {
     const md = ensureYear(it.yr)[it.mn];
@@ -3630,7 +3695,7 @@ function askAvatar() {
     [cur ? { label: 'Voltar para a inicial do nome', fn: () => { delete appCfg().avatar; autoSave(); applyNv(); } } : null]);
   document.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { appCfg().avatar = b.dataset.av; autoSave(); closeR7Modal(); applyNv(); });
 }
-const RELEASE_ID = 'r13-2026-10'; const APP_VERSION = 'v2.3';
+const RELEASE_ID = 'r13-2026-10'; const APP_VERSION = 'v2.3.1';
 let wnChecked = false;
 function maybeShowWhatsNew() {
   if (wnChecked || !CURRENT_USER || !fullData) return;
