@@ -627,7 +627,7 @@
     <details><summary>📅 Vencimentos e calendário</summary><div class="hb">Defina o dia segurando o ícone da conta. Contas com dia mostram o selo <b>dia X</b> (amarelo: vence em até 3 dias; vermelho: atrasada) e aparecem em <b>Atrasadas / Próximos 7 dias</b>.<br>No <b>Calendário</b>: grade do mês com bolinhas por dia, lista na <b>ordem de pagamento</b> (toque no ícone para pagar) e <b>Sem vencimento</b> com o botão <b>definir dia</b>.</div></details>
     <details><summary>⠿ Organizar a tela</summary><div class="hb">Segure o título de uma seção (Renda, Despesas, Cartões…) e <b>arraste</b> para onde quiser. No computador dá para trocar de coluna. A ordem fica salva na sua conta (uma para celular, outra para computador).</div></details>
     <details><summary>📊 Saldo real e 👁 ocultar</summary><div class="hb"><b>Saldo real</b> (atalhos): os totais consideram só o que já foi pago. <b>👁</b> no topo borra os valores — bom para abrir o app perto de outras pessoas.</div></details>
-    <details><summary>⬇ Exportar, importar e instalar</summary><div class="hb">No menu do seu ícone: <b>Exportar CSV</b> do ano (abre no Excel) e <b>Importar</b> CSV ou extrato <b>OFX</b> do banco.<br><b>Instalar no celular:</b> abra no navegador → compartilhar/menu → <b>Adicionar à tela inicial</b>.</div></details>
+    <details><summary>⬇ Exportar, importar e instalar</summary><div class="hb">No menu do seu ícone: <b>Exportar CSV</b> do ano (abre no Excel) e <b>Importar</b> planilha (Excel .xlsx, Planilhas Google ou CSV) ou extrato <b>OFX</b> do banco. A planilha precisa ter as colunas <b>item</b> (nome da conta) e <b>valor</b>; <b>mes</b>, <b>categoria</b>, <b>pago</b> e <b>vencimento</b> são opcionais. Se cada aba for um mês (JAN, FEV…), o mês vem do nome da aba.<br><b>Instalar no celular:</b> abra no navegador → compartilhar/menu → <b>Adicionar à tela inicial</b>.</div></details>
     <details><summary>🎨 Seu ícone e tema</summary><div class="hb">No menu do seu ícone: <b>Trocar ícone</b> (vários de finanças 🐷💰📈) e <b>Tema claro/escuro</b>.</div></details>
     <div style="display:flex;gap:10px;margin-top:16px"><button class="login-btn secondary" style="flex:1" onclick="document.getElementById('helpModal').style.display='none';openWhatsNew(true)">✨ Novidades</button><button class="login-btn" style="flex:1" onclick="document.getElementById('helpModal').style.display='none'">Entendi</button></div>
   </div>
@@ -675,7 +675,7 @@
     <span id="nvBellBadge" style="display:none"></span>
   </div>
   <div class="header-title">
-    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.2.1</small></h1>
+    <h1>FINANÇAS <span>2026</span> <small id="buildStamp" style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);font-weight:600;">v2.3</small></h1>
     <div class="tools-row">
       <div style="position:relative;">
         <button type="button" class="btn-ui" id="userLabel" onclick="toggleUserMenu(event)" style="letter-spacing:0.5px;"></button>
@@ -684,13 +684,13 @@
           <button type="button" class="menu-item" id="userMenuBeta" onclick="toggleBetaMode()" style="border-left:3px solid var(--accent3);">Beta: —</button>
           <div id="userMenuIO" style="display:none">
             <button type="button" class="menu-item" onclick="exportCSV()" style="border-left:3px solid var(--accent);">⬇ Exportar CSV do ano</button>
-            <button type="button" class="menu-item" onclick="pickImportFile()" style="border-left:3px solid var(--accent);">⬆ Importar CSV / OFX</button>
+            <button type="button" class="menu-item" onclick="pickImportFile()" style="border-left:3px solid var(--accent);">⬆ Importar planilha / OFX</button>
           </div>
           <button type="button" class="menu-item nv-only" onclick="askAvatar()" style="border-left:3px solid var(--muted);">🐷 Trocar ícone</button>
           <button type="button" class="menu-item nv-only" onclick="toggleTheme()" style="border-left:3px solid var(--muted);">🌓 Tema claro / escuro</button>
           <button type="button" class="menu-item" onclick="document.getElementById('helpModal').style.display='flex'" style="border-left:3px solid var(--muted);">❓ Ajuda</button>
           <button type="button" class="menu-item" onclick="sairDaConta()" style="border-left:3px solid var(--accent2);">Trocar conta</button>
-          <div class="menu-ver">Finanças v2.2.1</div>
+          <div class="menu-ver">Finanças v2.3</div>
         </div>
       </div>
       <button class="btn-ui" id="btnHide" onclick="toggleHideValues()" title="Ocultar valores" style="display:none">👁</button>
@@ -731,7 +731,7 @@
 <div id="cardsPanel" style="display:none"></div>
 <div id="nvTabs"><button type="button" class="on" data-view="contas" onclick="setNvView('contas')">Contas</button><button type="button" data-view="cal" onclick="setNvView('cal')">📅 Calendário</button></div>
 <div id="calView"></div>
-<input type="file" id="r7FileInput" accept=".csv,.ofx,text/csv,application/x-ofx" style="display:none" onchange="onImportFile(event)">
+<input type="file" id="r7FileInput" accept=".csv,.ofx,.xlsx,.xls,.ods,text/csv,application/x-ofx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="display:none" onchange="onImportFile(event)">
 <div id="r7Modal" onclick="if(event.target===this)closeR7Modal()">
   <div class="help-card" onclick="event.stopPropagation()">
     <h3 class="r7-title"></h3>
@@ -2828,10 +2828,33 @@ function pickImportFile() {
 }
 async function onImportFile(ev) {
   const file = ev.target.files?.[0]; if (!file) return;
+  if (/\.(xlsx|xls|ods)$/i.test(file.name)) { importSheetFile(file); return; }
   let text = await file.text();
-  if (/^﻿/.test(text)) text = text.slice(1);
+  if (/^\uFEFF/.test(text)) text = text.slice(1);
   if (/<OFX>|OFXHEADER/i.test(text)) importOFX(text);
   else importCSV(text);
+}
+let _xlsxLib = null;
+function loadXLSX() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (_xlsxLib) return _xlsxLib;
+  _xlsxLib = new Promise((ok, fail) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = () => window.XLSX ? ok(window.XLSX) : fail(new Error('XLSX'));
+    sc.onerror = () => { _xlsxLib = null; fail(new Error('load')); };
+    document.head.appendChild(sc);
+  });
+  return _xlsxLib;
+}
+async function importSheetFile(file) {
+  let XL;
+  try { XL = await loadXLSX(); } catch (_) { alert('Não consegui carregar o leitor de planilhas. Verifique a internet e tente de novo.'); return; }
+  let wb;
+  try { wb = XL.read(await file.arrayBuffer(), { type: 'array', cellDates: true }); }
+  catch (_) { alert('Não consegui abrir essa planilha.'); return; }
+  const sheets = wb.SheetNames.map(n => ({ name: n, rows: XL.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: '' }) }));
+  importTable(sheets);
 }
 function parseCSV(text) {
   const sep = (text.split(/\r?\n/)[0].match(/;/g) || []).length >= (text.split(/\r?\n/)[0].match(/,/g) || []).length ? ';' : ',';
@@ -2847,27 +2870,69 @@ function parseCSV(text) {
   if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
   return rows.filter(r => r.some(c => c.trim() !== ''));
 }
-function importCSV(text) {
-  const rows = parseCSV(text);
-  const head = (rows.shift() || []).map(h => h.trim().toLowerCase());
-  const ix = n => head.indexOf(n);
-  if (ix('mes') < 0 || ix('categoria') < 0 || ix('item') < 0 || ix('valor') < 0) {
-    alert('CSV não reconhecido. Use o formato exportado pelo app (colunas: ano;mes;categoria;item;valor;pago;vencimento).'); return;
+function importCSV(text) { importTable([{ name: '', rows: parseCSV(text) }]); }
+function impNorm(v) { return String(v ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+const IMP_COLS = {
+  ano: ['ano', 'year'],
+  mes: ['mes', 'month', 'competencia', 'referencia'],
+  categoria: ['categoria', 'tipo', 'grupo', 'secao', 'category', 'type'],
+  item: ['item', 'nome', 'conta', 'descricao', 'despesa', 'lancamento', 'name', 'description'],
+  valor: ['valor', 'valor (r$)', 'valor r$', 'total', 'quantia', 'preco', 'value', 'amount'],
+  pago: ['pago', 'status', 'situacao', 'paid'],
+  vencimento: ['vencimento', 'venc', 'dia', 'vence', 'dia venc', 'dia do vencimento', 'due'],
+};
+const IMP_CAT = { renda: 'renda', receita: 'renda', receitas: 'renda', entrada: 'renda', entradas: 'renda', salario: 'renda',
+  fixas: 'fixas', fixa: 'fixas', 'despesa fixa': 'fixas', 'despesas fixas': 'fixas', 'contas fixas': 'fixas',
+  temp: 'temp', temporaria: 'temp', temporarias: 'temp', variavel: 'temp', variaveis: 'temp', 'despesa variavel': 'temp', 'despesas variaveis': 'temp', avulsa: 'temp', avulsas: 'temp',
+  descontos: 'descontos', a_receber: 'descontos', 'a receber': 'descontos', receber: 'descontos' };
+function impMonth(v) {
+  if (v instanceof Date && !isNaN(v)) return MONTHS[v.getMonth()];
+  if (typeof v === 'number' && v >= 1 && v <= 12) return MONTHS[v - 1];
+  const s = impNorm(v);
+  const m = s.match(/^(\d{1,2})([\/\-.]|$)/); if (m && +m[1] >= 1 && +m[1] <= 12) return MONTHS[+m[1] - 1];
+  const d = s.match(/^\d{1,2}[\/\-.](\d{1,2})[\/\-.]\d{2,4}$/); if (d && +d[1] >= 1 && +d[1] <= 12) return MONTHS[+d[1] - 1];
+  const t = s.replace(/[^a-z]/g, '').slice(0, 3).toUpperCase();
+  return MONTHS.includes(t) ? t : null;
+}
+function impHeader(rows) {
+  for (let i = 0; i < Math.min(rows.length, 15); i++) {
+    const h = rows[i].map(impNorm); const ix = {};
+    Object.entries(IMP_COLS).forEach(([k, al]) => { const j = h.findIndex(c => al.includes(c)); if (j >= 0) ix[k] = j; });
+    if (ix.item >= 0 && ix.valor >= 0) return { at: i, ix };
   }
-  const items = [];
-  rows.forEach(r => {
-    const mn = String(r[ix('mes')] || '').trim().toUpperCase().slice(0, 3);
-    const cat = LABEL_CAT[String(r[ix('categoria')] || '').trim().toLowerCase()];
-    const key = String(r[ix('item')] || '').trim();
-    if (!MONTHS.includes(mn) || !cat || !key) return;
-    const yr = ix('ano') >= 0 ? parseInt(r[ix('ano')], 10) || currentYear : currentYear;
-    items.push({ yr, mn, cat, key, val: parseMoneyBR(r[ix('valor')]), paid: ix('pago') >= 0 ? /^(sim|s|1|true|x)$/i.test(String(r[ix('pago')]).trim()) : false,
-      day: ix('vencimento') >= 0 ? parseInt(r[ix('vencimento')], 10) || null : null });
+  return null;
+}
+function importTable(sheets) {
+  const items = []; let semCat = 0, semMes = 0, achou = false;
+  sheets.forEach(sh => {
+    const rows = (sh.rows || []).filter(r => r.some(c => String(c ?? '').trim() !== ''));
+    const hd = impHeader(rows); if (!hd) return; achou = true;
+    const ix = hd.ix, has = k => ix[k] >= 0;
+    const shMonth = impMonth(sh.name);
+    rows.slice(hd.at + 1).forEach(r => {
+      const key = String(r[ix.item] ?? '').trim();
+      if (!key || /^total/i.test(impNorm(key))) return;
+      const rawV = r[ix.valor]; if (String(rawV ?? '').trim() === '') return;
+      let mn = has('mes') ? impMonth(r[ix.mes]) : null;
+      if (!mn) mn = shMonth; if (!mn) { mn = MONTHS[activeMes]; semMes++; }
+      let cat = has('categoria') ? IMP_CAT[impNorm(r[ix.categoria])] : null;
+      if (!cat) { cat = 'fixas'; semCat++; }
+      let val = parseMoneyBR(rawV); if (val < 0) val = -val;
+      let yr = has('ano') ? parseInt(r[ix.ano], 10) : NaN;
+      if (!(yr > 1900) && has('mes') && r[ix.mes] instanceof Date) yr = r[ix.mes].getFullYear();
+      if (!(yr > 1900)) yr = currentYear;
+      const pv = has('pago') ? impNorm(r[ix.pago]) : '';
+      let day = null;
+      if (has('vencimento')) { const vv = r[ix.vencimento]; day = vv instanceof Date ? vv.getDate() : parseInt(String(vv).match(/\d{1,2}/)?.[0], 10) || null; }
+      items.push({ yr, mn, cat, key, val, paid: /^(sim|s|1|true|x|pago|ok|quitado|verdadeiro|yes)$/.test(pv), day });
+    });
   });
-  if (!items.length) { alert('Nenhuma linha válida no CSV.'); return; }
+  if (!achou) { alert('Não reconheci a planilha.\n\nEla precisa de uma linha de cabeçalho com pelo menos as colunas "item" (ou "nome"/"conta") e "valor".\nOpcionais: mes, categoria (renda, fixas, temporarias, a receber), pago, vencimento.\n\nDica: exporte pelo app (Exportar CSV) para ver o modelo.'); return; }
+  if (!items.length) { alert('Nenhuma linha com conta e valor foi encontrada na planilha.'); return; }
   let overw = 0;
   items.forEach(it => { if (fullData[String(it.yr)]?.[it.mn]?.[it.cat]?.[it.key] !== undefined) overw++; });
-  if (!confirm(`Importar ${items.length} itens?${overw ? `\n${overw} já existem com o mesmo nome e terão o valor substituído.` : ''}`)) return;
+  const notas = [overw ? `${overw} já existem com o mesmo nome e terão o valor substituído.` : '', semCat ? `${semCat} sem categoria entram como Fixas.` : '', semMes ? `${semMes} sem mês entram em ${MONTHS[activeMes]}.` : ''].filter(Boolean);
+  if (!confirm(`Importar ${items.length} itens?${notas.length ? '\n\n' + notas.join('\n') : ''}`)) return;
   items.forEach(it => {
     const md = ensureYear(it.yr)[it.mn];
     md[it.cat][it.key] = it.val;
@@ -3565,7 +3630,7 @@ function askAvatar() {
     [cur ? { label: 'Voltar para a inicial do nome', fn: () => { delete appCfg().avatar; autoSave(); applyNv(); } } : null]);
   document.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { appCfg().avatar = b.dataset.av; autoSave(); closeR7Modal(); applyNv(); });
 }
-const RELEASE_ID = 'r13-2026-10'; const APP_VERSION = 'v2.2.1';
+const RELEASE_ID = 'r13-2026-10'; const APP_VERSION = 'v2.3';
 let wnChecked = false;
 function maybeShowWhatsNew() {
   if (wnChecked || !CURRENT_USER || !fullData) return;
